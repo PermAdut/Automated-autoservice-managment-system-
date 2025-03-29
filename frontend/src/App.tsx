@@ -5,16 +5,21 @@ import { Provider } from "react-redux";
 import { store } from "./store";
 import Header from "./components/Header/Header";
 import { BrowserRouter } from "react-router-dom";
+import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
+import UserList from "./components/UserList/UserList";
 
 function App() {
   return (
     <Provider store={store}>
       <BrowserRouter>
-      <Header />
-      <Routes>
-      <Route path="/" element={<div>Home Page</div>} />
-        <Route path="*" element={<Page404 />}></Route>
-      </Routes>
+        <ErrorBoundary>
+          <Header />
+          <Routes>
+            <Route path="/" element={<div>Home Page</div>} />
+            <Route path="*" element={<Page404 />} />
+            <Route path="/clients" element={<UserList />} />
+          </Routes>
+        </ErrorBoundary>
       </BrowserRouter>
     </Provider>
   );
