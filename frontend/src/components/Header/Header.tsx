@@ -1,61 +1,50 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { 
-  CarIcon, 
-  UserIcon, 
-  WrenchIcon, 
-  CalendarIcon, 
-  LogoutIcon 
-} from '../icons';
+import React from "react";
+import { Link } from "react-router-dom";
 
 const Header: React.FC = () => {
   return (
-    <header className="bg-blue-600 text-black shadow-md">
-      <div className="container mx-auto flex justify-between items-center p-4">
+    <header className="shadow-lg bg-gradient-to-r from-indigo-600 to-blue-500">
+      <div className="container flex items-center justify-between px-8 py-4 mx-auto">
+        {/* Логотип */}
         <div className="flex items-center">
-          <WrenchIcon className="w-10 h-10 mr-3" />
-          <h1 className="text-2xl font-bold">АвтоСервис</h1>
+          <h1 className="text-3xl font-extrabold tracking-wide text-white">
+            АвтоСервис
+          </h1>
         </div>
-        <nav className="flex space-x-6">
-          <Link 
-            to="/dashboard" 
-            className="flex items-center hover:text-blue-200 transition"
+
+        <nav className="flex justify-between w-1/2">
+          <Link
+            to="/dashboard"
+            className="text-xl font-bold tracking-wide text-gray-100 no-underline transition-transform transform hover:text-white hover:scale-110"
           >
-            <CarIcon className="w-5 h-5 mr-2" />
             Машины
           </Link>
-          <Link 
-            to="/orders" 
-            className="flex items-center hover:text-blue-200 transition"
+          <Link
+            to="/orders"
+            className="text-xl font-bold tracking-wide text-gray-100 no-underline transition-transform transform hover:text-white hover:scale-110"
           >
-            <CalendarIcon className="w-5 h-5 mr-2" />
             Заказы
           </Link>
-          <Link 
-            to="/clients" 
-            className="flex items-center hover:text-blue-200 transition"
+          <Link
+            to="/clients"
+            className="text-xl font-bold tracking-wide text-gray-100 no-underline transition-transform transform hover:text-white hover:scale-110"
           >
-            <UserIcon className="w-5 h-5 mr-2" />
             Клиенты
           </Link>
         </nav>
-        <div className="flex items-center space-x-4">
-          {/* //{username && ( */}
-            <div className="flex items-center">
-              <UserIcon className="w-6 h-6 mr-2" />
-              <span>*Заглушка*</span>
-            </div>
-          {/* //)} */}
-          
-          {/* {onLogout && ( */}
-            <button 
-              onClick={() => {console.log(1)}}
-              className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded flex items-center"
-            >
-              <LogoutIcon className="w-5 h-5 mr-2" />
-              Выход
-            </button>
-          {/* )} */}
+
+        {/* Блок пользователя и выход */}
+        <div className="flex items-center space-x-6">
+          <div className="text-lg font-semibold text-white">*Заглушка*</div>
+
+          <button
+            onClick={() => {
+              console.log("Logout clicked");
+            }}
+            className="px-5 py-2 font-semibold text-white transition-transform transform bg-red-500 rounded-lg shadow-md hover:bg-red-600 hover:scale-105"
+          >
+            Выйти
+          </button>
         </div>
       </div>
     </header>

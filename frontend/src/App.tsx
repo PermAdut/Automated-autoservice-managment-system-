@@ -6,7 +6,7 @@ import { store } from "./store";
 import Header from "./components/Header/Header";
 import { BrowserRouter } from "react-router-dom";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
-import UserList from "./components/UserList/UserList";
+import UserList from "./components/UserComponents/UserList/UserList";
 
 function App() {
   return (
@@ -14,6 +14,7 @@ function App() {
       <BrowserRouter>
         <ErrorBoundary>
           <Header />
+          
           <Routes>
             <Route path="/" element={<div>Home Page</div>} />
             <Route path="*" element={<Page404 />} />
