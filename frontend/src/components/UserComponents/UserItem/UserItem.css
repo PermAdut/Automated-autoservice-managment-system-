@@ -1,0 +1,93 @@
+.useritem-card {
+    padding: 24px;
+    background-color: #ffffff;
+    border: 2px solid #000; /* gray-300, чуть толще для заметности */
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.3s ease, border-color 0.3s ease; /* Добавлен переход для бордера */
+  }
+  
+  .useritem-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: #9ca3af; /* gray-400 при наведении для эффекта */
+  }
+  
+  .useritem-header {
+    margin-bottom: 16px;
+  }
+  
+  .useritem-name {
+    font-size: 1.25rem; /* 20px */
+    font-weight: 600;
+    color: #1f2937; /* gray-800 */
+    margin: 0;
+  }
+  
+  .useritem-link {
+    color: #1f2937;
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+  
+  .useritem-link:hover {
+    color: #2563eb; /* blue-600 */
+  }
+  
+  .useritem-info {
+    font-size: 0.875rem; /* 14px */
+    color: #6b7280; /* gray-500 */
+    margin-top: 4px;
+  }
+  
+  .useritem-orders-title {
+    font-size: 1.125rem; /* 18px */
+    font-weight: 500;
+    color: #374151; /* gray-700 */
+    margin-bottom: 12px;
+  }
+  
+  .useritem-orders-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .useritem-order {
+    padding: 16px;
+    background-color: #f9fafb; /* gray-50 */
+    border: 1px solid #f3f4f6; /* gray-100 */
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .useritem-order:hover {
+    background-color: #f3f4f6; /* gray-100 */
+  }
+  
+  .useritem-order-title {
+    font-size: 1rem; /* 16px */
+    font-weight: 600;
+    color: #1f2937; /* gray-800 */
+    margin: 0 0 4px;
+  }
+  
+  .useritem-order-desc {
+    font-size: 0.875rem; /* 14px */
+    color: #6b7280; /* gray-600 */
+    margin: 4px 0;
+  }
+  
+  .useritem-order-dates {
+    font-size: 0.75rem; /* 12px */
+    color: #9ca3af; /* gray-400 */
+    margin: 0;
+  }
+  
+  .useritem-no-orders {
+    font-size: 0.875rem; /* 14px */
+    color: #9ca3af; /* gray-400 */
+    font-style: italic;
+  }

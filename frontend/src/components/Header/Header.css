@@ -1,0 +1,79 @@
+.header {
+    background: linear-gradient(to right, #4338ca, #4f46e5, #3b82f6);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  
+  .header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .header-logo h1 {
+    font-size: 1.875rem; /* 30px */
+    font-weight: 800;
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 0;
+  }
+  
+  .header-nav {
+    display: flex;
+    gap: 40px;
+  }
+  
+  .header-link {
+    font-size: 1.125rem; /* 18px */
+    font-weight: 500;
+    color: #e0e7ff; /* Светлый с оттенком indigo */
+    text-decoration: none;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .header-link:hover {
+    color: #ffffff;
+    transform: scale(1.05);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  
+  .header-user {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  
+  .header-placeholder {
+    font-size: 1.125rem; /* 18px */
+    font-weight: 600;
+    color: #e0e7ff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+  
+  .header-logout {
+    padding: 8px 20px;
+    background-color: #dc2626; /* red-600 */
+    color: #ffffff;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .header-logout:hover {
+    background-color: #b91c1c; /* red-700 */
+    transform: scale(1.05);
+  }
+  
+  .header-logout:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.5); /* red-400 ring */
+  }

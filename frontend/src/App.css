@@ -1,3 +1,10 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Растягиваем контейнер на всю высоту экрана */
+  }
+  
+  .app-main {
+    flex: 1; /* Основной контент занимает всё доступное пространство */
+    padding-bottom: 80px; /* Отступ снизу, чтобы контент не перекрывался футером */
+  }
