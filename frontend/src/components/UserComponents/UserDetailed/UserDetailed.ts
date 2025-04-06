@@ -8,15 +8,20 @@ export interface UserDetailed{
     phone:string,
     passwordHash?:string,
     createdAt:string,
-    updatedAt:string
+    updatedAt:string,
+    passport:UserPassport,
+    subscriptions:UserSubscriptions,
+    reviews:UserReviews,
+    cars:UserCars,
+    orders:UserOrders,
 }
 
-export interface UserRole{
+interface UserRole{
     id:number,
     name:string,
 }
 
-export interface UserPassport{
+interface UserPassport{
     identityNumber:string,
     nationality:string,
     birthDate:string,
@@ -24,14 +29,14 @@ export interface UserPassport{
     expiriationDate:string
 }
 
-export interface UserSubscriptions{
+interface UserSubscriptions{
     subscriptionDescription:string,
     subscriptionName:string,
     dateStart:string,
     dateEnd:string
 }
 
-export interface UserReviews{
+interface UserReviews{
     description:string,
     rate:number,
     createdAt:string,
@@ -39,7 +44,7 @@ export interface UserReviews{
     deletedAt:string,
 }
 
-export interface UserCars{
+interface UserCars{
     name:string,
     information:string,
     year:string,
@@ -47,8 +52,8 @@ export interface UserCars{
     licensePlate:string,
 }
 
-export interface UserOrders{
-    id:number,
+interface UserOrders{
+    id:string,
     status:string,
     createdAt:string,
     updateAt:string,

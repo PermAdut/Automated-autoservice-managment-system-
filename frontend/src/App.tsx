@@ -8,6 +8,9 @@ import { BrowserRouter } from "react-router-dom";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 import UserList from "./components/UserComponents/UserList/UserList";
 import Footer from "./components/Footer/Footer";
+import { About } from "./components/AboutUs/About";
+import {DetailedUserComponent} from './components/UserComponents/UserDetailed/UserDetailed.tsx'
+import EmployeeList from "./components/EmployeeComponents/EmployeeList/EmployeeList.tsx";
 
 function App() {
   return (
@@ -21,6 +24,9 @@ function App() {
                 <Route path="/" element={<div>Home Page</div>} />
                 <Route path="*" element={<Page404 />} />
                 <Route path="/clients" element={<UserList />} />
+                <Route path="/about" element={<About />}/>
+                <Route path="/user/:userId" element={<DetailedUserComponent />} />
+                <Route path="/employees" element={<EmployeeList />} />
               </Routes>
             </main>
             <Footer />

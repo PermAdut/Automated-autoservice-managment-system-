@@ -17,7 +17,8 @@ const Footer = () => {
           <Link to="/dashboard" className="footer-link">Машины</Link>
           <Link to="/orders" className="footer-link">Заказы</Link>
           <Link to="/clients" className="footer-link">Клиенты</Link>
-          <Link to="/about" className="footer-link">О нас</Link>
+          {/* <Link to="/about" className="footer-link">О нас</Link> */}
+          <Link to="/employees" className="footer-link">Рабочие</Link>
         </nav>
 
         {/* Копирайт */}
