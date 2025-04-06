@@ -11,6 +11,7 @@ import Footer from "./components/Footer/Footer";
 import { About } from "./components/AboutUs/About";
 import {DetailedUserComponent} from './components/UserComponents/UserDetailed/UserDetailed.tsx'
 import EmployeeList from "./components/EmployeeComponents/EmployeeList/EmployeeList.tsx";
+import OrderList from './components/OrderComponents/OrderList/OrderList.tsx'
 
 function App() {
   return (
@@ -27,6 +28,8 @@ function App() {
                 <Route path="/about" element={<About />}/>
                 <Route path="/user/:userId" element={<DetailedUserComponent />} />
                 <Route path="/employees" element={<EmployeeList />} />
+                <Route path="/orders" element={<OrderList />} />
+                <Route path="/dashboard" element={<>666</>}/>
               </Routes>
             </main>
             <Footer />

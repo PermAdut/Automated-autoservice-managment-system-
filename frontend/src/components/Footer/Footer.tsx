@@ -14,7 +14,7 @@ const Footer = () => {
 
         {/* Навигация */}
         <nav className="footer-nav">
-          <Link to="/dashboard" className="footer-link">Машины</Link>
+          <Link to="/dashboard" className="footer-link">Каталог</Link>
           <Link to="/orders" className="footer-link">Заказы</Link>
           <Link to="/clients" className="footer-link">Клиенты</Link>
           {/* <Link to="/about" className="footer-link">О нас</Link> */}

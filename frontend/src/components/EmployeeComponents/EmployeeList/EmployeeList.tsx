@@ -4,7 +4,7 @@ import { fetchEmployees } from "../../../store/slices/employeeSlice";
 import { EmployeeItem } from "../EmployeeItem/EmployeeItem";
 import "./EmployeeList.css";
 
-const EMPLOYEE_PER_PAGE = 5;
+const EMPLOYEE_PER_PAGE = 6;
 
 const EmployeeList: React.FC = () => {
   const dispatch = useAppDispatch();

@@ -1,71 +1,91 @@
 .employee-list-container {
-    padding: 24px;
-    max-width: 1200px;
-    margin: 0 auto;
+  padding: 24px;
+  padding-bottom: 80px; /* Увеличиваем отступ снизу для кнопок */
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative; /* Контейнер как точка отсчёта для sticky */
+}
+
+.employee-list-title {
+  font-size: 2rem; /* 32px */
+  font-weight: 700;
+  color: #1f2937; /* gray-800 */
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.employee-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.employee-list-loading {
+  margin-top: 40px;
+  text-align: center;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151; /* gray-700 */
+  animation: pulse 1.5s infinite;
+}
+
+.employee-list-error {
+  margin-top: 40px;
+  text-align: center;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #ef4444; /* red-500 */
+}
+
+.employee-list-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  position: sticky; /* Фиксируем пагинацию */
+  bottom: 20px; /* Отступ от низа контейнера */
+  background-color: #ffffff; /* Фон, чтобы кнопки не перекрывались контентом */
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.employee-list-button {
+  padding: 8px 16px;
+  font-size: 0.875rem; /* 14px */
+  font-weight: 500;
+  border: 1px solid #d1d5db; /* gray-300 */
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: #2563eb; /* blue-600 */
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.employee-list-button:hover:not(:disabled) {
+  background-color: #f3f4f6; /* gray-100 */
+}
+
+.employee-list-button:disabled {
+  color: #9ca3af; /* gray-400 */
+  cursor: not-allowed;
+}
+
+.employee-list-page-info {
+  font-size: 0.875rem; /* 14px */
+  font-weight: 500;
+  color: #374151; /* gray-700 */
+}
+
+/* Анимация пульсации для загрузки (если не была определена ранее) */
+@keyframes pulse {
+  0% {
+    opacity: 1;
   }
-  
-  .employee-list-title {
-    font-size: 2rem; /* 32px */
-    font-weight: 700;
-    color: #1f2937; /* gray-800 */
-    margin-bottom: 24px;
-    text-align: center;
+  50% {
+    opacity: 0.5;
   }
-  
-  .employee-list-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
+  100% {
+    opacity: 1;
   }
-  
-  .employee-list-loading {
-    margin-top: 40px;
-    text-align: center;
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #374151; /* gray-700 */
-    animation: pulse 1.5s infinite;
-  }
-  
-  .employee-list-error {
-    margin-top: 40px;
-    text-align: center;
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #ef4444; /* red-500 */
-  }
-  
-  .employee-list-pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 12px;
-    margin-top: 24px;
-  }
-  
-  .employee-list-button {
-    padding: 8px 16px;
-    font-size: 0.875rem; /* 14px */
-    font-weight: 500;
-    border: 1px solid #d1d5db; /* gray-300 */
-    border-radius: 6px;
-    background-color: #ffffff;
-    color: #2563eb; /* blue-600 */
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  
-  .employee-list-button:hover:not(:disabled) {
-    background-color: #f3f4f6; /* gray-100 */
-  }
-  
-  .employee-list-button:disabled {
-    color: #9ca3af; /* gray-400 */
-    cursor: not-allowed;
-  }
-  
-  .employee-list-page-info {
-    font-size: 0.875rem; /* 14px */
-    font-weight: 500;
-    color: #374151; /* gray-700 */
-  }
+}

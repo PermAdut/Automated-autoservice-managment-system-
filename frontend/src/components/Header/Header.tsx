@@ -10,7 +10,7 @@ const Header = () => {
           <h1>АвтоСервис</h1>
         </div>
         <nav className="header-nav">
-          <Link to="/dashboard" className="header-link">Машины</Link>
+          <Link to="/dashboard" className="header-link">Каталог</Link>
           <Link to="/orders" className="header-link">Заказы</Link>
           <Link to="/clients" className="header-link">Клиенты</Link>
           <Link to="/employees" className="header-link">Рабочие</Link>
