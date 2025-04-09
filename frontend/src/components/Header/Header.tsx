@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import './Header.css';
 
@@ -14,6 +13,7 @@ const Header = () => {
           <Link to="/orders" className="header-link">Заказы</Link>
           <Link to="/clients" className="header-link">Клиенты</Link>
           <Link to="/employees" className="header-link">Рабочие</Link>
+          <Link to="/suppliers" className="header-link">Поставки</Link>
         </nav>
         <div className="header-user">
           <div className="header-placeholder">*Заглушка*</div>

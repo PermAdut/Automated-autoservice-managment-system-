@@ -12,6 +12,7 @@ import { About } from "./components/AboutUs/About";
 import {DetailedUserComponent} from './components/UserComponents/UserDetailed/UserDetailed.tsx'
 import EmployeeList from "./components/EmployeeComponents/EmployeeList/EmployeeList.tsx";
 import OrderList from './components/OrderComponents/OrderList/OrderList.tsx'
+import Storage from "./components/StorageComponents/Storage.tsx";
 
 function App() {
   return (
@@ -29,7 +30,7 @@ function App() {
                 <Route path="/user/:userId" element={<DetailedUserComponent />} />
                 <Route path="/employees" element={<EmployeeList />} />
                 <Route path="/orders" element={<OrderList />} />
-                <Route path="/dashboard" element={<>666</>}/>
+                <Route path="/dashboard" element={<Storage />}/>
               </Routes>
             </main>
             <Footer />
