@@ -14,6 +14,7 @@ import EmployeeList from "./components/EmployeeComponents/EmployeeList/EmployeeL
 import OrderList from './components/OrderComponents/OrderList/OrderList.tsx'
 import Storage from "./components/StorageComponents/Storage.tsx";
 import SupplierList from "./components/SupplierComponent/SupplierList/SupplierList.tsx";
+import MainPage from "./components/MainPage/MainPage.tsx";
 
 function App() {
   return (
@@ -24,7 +25,7 @@ function App() {
             <Header />
             <main className="app-main">
               <Routes>
-                <Route path="/" element={<div>Home Page</div>} />
+                <Route path="/" element={<MainPage />} />
                 <Route path="*" element={<Page404 />} />
                 <Route path="/clients" element={<UserList />} />
                 <Route path="/about" element={<About />}/>
