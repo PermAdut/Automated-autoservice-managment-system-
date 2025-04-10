@@ -13,6 +13,7 @@ import {DetailedUserComponent} from './components/UserComponents/UserDetailed/Us
 import EmployeeList from "./components/EmployeeComponents/EmployeeList/EmployeeList.tsx";
 import OrderList from './components/OrderComponents/OrderList/OrderList.tsx'
 import Storage from "./components/StorageComponents/Storage.tsx";
+import SupplierList from "./components/SupplierComponent/SupplierList/SupplierList.tsx";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
                 <Route path="/employees" element={<EmployeeList />} />
                 <Route path="/orders" element={<OrderList />} />
                 <Route path="/dashboard" element={<Storage />}/>
+                <Route path="/suppliers" element={<SupplierList />}/>
               </Routes>
             </main>
             <Footer />
