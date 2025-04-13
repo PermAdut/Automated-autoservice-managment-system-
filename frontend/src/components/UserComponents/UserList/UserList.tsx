@@ -34,7 +34,6 @@ const UserList = () => {
               id={user.id}
               name={user.name}
               secondName={user.name}
-              orders={[]}
             />
           </div>
         ))}

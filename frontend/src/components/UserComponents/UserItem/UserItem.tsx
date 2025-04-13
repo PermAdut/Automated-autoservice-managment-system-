@@ -7,7 +7,6 @@ export const UserItem: FC<UserItemProps> = ({
   id,
   name,
   secondName,
-  orders,
 }) => {
   return (
     <div className="useritem-card">
@@ -19,27 +18,6 @@ export const UserItem: FC<UserItemProps> = ({
         </h2>
         <p className="useritem-info">Информация пользователя</p>
       </div>
-
-      {orders && orders.length > 0 ? (
-        <div>
-          <h3 className="useritem-orders-title">Заказы</h3>
-          <ul className="useritem-orders-list">
-            {orders.map((order, index) => (
-              <li key={index} className="useritem-order">
-                <h4 className="useritem-order-title">{order.title}</h4>
-                {order.description && (
-                  <p className="useritem-order-desc">{order.description}</p>
-                )}
-                <p className="useritem-order-dates">
-                  {order.dateStart} - {order.dateEnd}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : (
-        <p className="useritem-no-orders">Заказов не найдено</p>
-      )}
     </div>
   );
 };

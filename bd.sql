@@ -5,7 +5,7 @@ BEGIN;
 
 CREATE TABLE IF NOT EXISTS public."Users"
 (
-    id bigint NOT NULL,
+    id bigserial NOT NULL,
     "roleId" bigint NOT NULL,
     login character varying NOT NULL,
     name character varying NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS public."Users"
 
 CREATE TABLE IF NOT EXISTS public."Passport"
 (
-    id bigint NOT NULL,
+    id bigserial NOT NULL,
     "userId" bigint NOT NULL,
     "identityNumber" character varying NOT NULL,
     nationality character varying NOT NULL,
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS public."Passport"
 
 CREATE TABLE IF NOT EXISTS public."Suppliers"
 (
-    id bigint NOT NULL,
+    id bigserial NOT NULL,
     name character varying(100) NOT NULL,
     contact character varying(100),
     address text,
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS public."Suppliers"
 
 CREATE TABLE IF NOT EXISTS public."WorkSchedule"
 (
-    id bigint NOT NULL,
+    id bigserial NOT NULL,
     "employeeId" bigint NOT NULL,
     "startTime" timestamp without time zone NOT NULL,
     "endTime" timestamp without time zone NOT NULL,
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS public."WorkSchedule"
 
 CREATE TABLE IF NOT EXISTS public."Employees"
 (
-    id bigint NOT NULL,
+    id bigserial NOT NULL,
     "userId" bigint NOT NULL,
     "positionId" bigint NOT NULL,
     "hireDate" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS public."Employees"
 
 CREATE TABLE IF NOT EXISTS public."Position"
 (
-    id bigint NOT NULL,
+    id bigserial NOT NULL,
     name character varying NOT NULL,
     description text,
     PRIMARY KEY (id)
@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS public."Position"
 
 CREATE TABLE IF NOT EXISTS public."Store"
 (
-    id bigint NOT NULL,
+    id bigserial NOT NULL,
     "sparePartId" bigint NOT NULL,
     quantity bigint NOT NULL,
     location character varying(50) NOT NULL,
@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS public."Store"
 
 CREATE TABLE IF NOT EXISTS public."Services"
 (
-    id bigint NOT NULL,
+    id bigserial NOT NULL,
     name character varying NOT NULL,
     description character varying,
     price numeric NOT NULL,
@@ -88,7 +88,7 @@ CREATE TABLE IF NOT EXISTS public."Services"
 
 CREATE TABLE IF NOT EXISTS public."Cars"
 (
-    id bigint NOT NULL,
+    id bigserial NOT NULL,
     "userId" bigint NOT NULL,
     name character varying NOT NULL,
     information text,
@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS public."Cars"
 
 CREATE TABLE IF NOT EXISTS public."Subscriptions"
 (
-    id bigint NOT NULL,
+    id bigserial NOT NULL,
     "userId" bigint NOT NULL,
     "subscriptionDescription" text,
     "subscriptonName" character varying NOT NULL,
@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS public."Subscriptions"
 
 CREATE TABLE IF NOT EXISTS public."Payment"
 (
-    id bigint NOT NULL,
+    id bigserial NOT NULL,
     "orderId" bigint NOT NULL,
     amount numeric NOT NULL,
     status boolean NOT NULL,
@@ -122,28 +122,28 @@ CREATE TABLE IF NOT EXISTS public."Payment"
 
 CREATE TABLE IF NOT EXISTS public."PositionsForBuying"
 (
-    id bigint NOT NULL,
-    "sparePartId" bigint NOT NULL,
+    id bigserial NOT NULL,
     "supplierId" bigint NOT NULL,
     quantity bigint NOT NULL,
-    "orderDate" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deliveryDate" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     status character varying(20) NOT NULL,
     PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS public."SparePart"
 (
-    id bigint NOT NULL,
+    id bigserial NOT NULL,
     name character varying NOT NULL,
     "partNumber" character varying NOT NULL,
     price numeric NOT NULL,
     "categoryId" bigint NOT NULL,
+    "idStore" bigint NOT NULL,
     PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS public."Orders"
 (
-    id bigint NOT NULL,
+    id bigserial NOT NULL,
     "userId" bigint NOT NULL,
     "carId" bigint NOT NULL,
     "employeeId" bigint NOT NULL,
@@ -156,7 +156,7 @@ CREATE TABLE IF NOT EXISTS public."Orders"
 
 CREATE TABLE IF NOT EXISTS public."Reviews"
 (
-    id bigint NOT NULL,
+    id bigserial NOT NULL,
     "userId" bigint NOT NULL,
     description text,
     rate bigint NOT NULL,
@@ -168,14 +168,14 @@ CREATE TABLE IF NOT EXISTS public."Reviews"
 
 CREATE TABLE IF NOT EXISTS public."Role"
 (
-    id bigint NOT NULL,
+    id bigserial NOT NULL,
     name character varying NOT NULL,
     PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS public."Categories"
 (
-    id bigint NOT NULL,
+    id bigserial NOT NULL,
     name character varying(50) NOT NULL,
     description text,
     PRIMARY KEY (id)
@@ -183,31 +183,30 @@ CREATE TABLE IF NOT EXISTS public."Categories"
 
 CREATE TABLE IF NOT EXISTS public."Services_Orders"
 (
-    id bigint NOT NULL,
+    id bigserial NOT NULL,
     "Services_id" bigint NOT NULL,
     "Orders_id" bigint NOT NULL,
     quantity bigint NOT NULL DEFAULT 1,
     PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS public."SparePart_Orders"
-(
-    id bigint NOT NULL,
-    "SparePart_id" bigint NOT NULL,
-    "Orders_id" bigint NOT NULL,
-    quantity bigint NOT NULL,
-    "unitPrice" numeric NOT NULL,
-    PRIMARY KEY (id)
-);
-
 CREATE TABLE IF NOT EXISTS public."Invoices"
 (
-    id bigint NOT NULL,
+    id bigserial NOT NULL,
     "orderId" bigint NOT NULL,
     "positionForBuyingId" bigint NOT NULL,
     amount numeric NOT NULL,
     "invoiceDate" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     status character varying(20) NOT NULL,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public."SparePart_PositionsForBuying"
+(
+    id bigserial NOT NULL,
+    "SparePart_id" bigint NOT NULL,
+    "PositionsForBuying_id" bigint NOT NULL,
+    quantity bigint NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -251,14 +250,6 @@ ALTER TABLE IF EXISTS public."Employees"
     NOT VALID;
 
 
-ALTER TABLE IF EXISTS public."Store"
-    ADD FOREIGN KEY ("sparePartId")
-    REFERENCES public."SparePart" (id) MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
-
-
 ALTER TABLE IF EXISTS public."Cars"
     ADD FOREIGN KEY ("userId")
     REFERENCES public."Users" (id) MATCH SIMPLE
@@ -291,17 +282,17 @@ ALTER TABLE IF EXISTS public."PositionsForBuying"
     NOT VALID;
 
 
-ALTER TABLE IF EXISTS public."PositionsForBuying"
-    ADD FOREIGN KEY ("sparePartId")
-    REFERENCES public."SparePart" (id) MATCH SIMPLE
+ALTER TABLE IF EXISTS public."SparePart"
+    ADD FOREIGN KEY ("categoryId")
+    REFERENCES public."Categories" (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;
 
 
 ALTER TABLE IF EXISTS public."SparePart"
-    ADD FOREIGN KEY ("categoryId")
-    REFERENCES public."Categories" (id) MATCH SIMPLE
+    ADD FOREIGN KEY ("idStore")
+    REFERENCES public."Store" (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;
@@ -355,22 +346,6 @@ ALTER TABLE IF EXISTS public."Services_Orders"
     NOT VALID;
 
 
-ALTER TABLE IF EXISTS public."SparePart_Orders"
-    ADD FOREIGN KEY ("SparePart_id")
-    REFERENCES public."SparePart" (id) MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
-
-
-ALTER TABLE IF EXISTS public."SparePart_Orders"
-    ADD FOREIGN KEY ("Orders_id")
-    REFERENCES public."Orders" (id) MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
-
-
 ALTER TABLE IF EXISTS public."Invoices"
     ADD FOREIGN KEY ("orderId")
     REFERENCES public."Orders" (id) MATCH SIMPLE
@@ -381,6 +356,22 @@ ALTER TABLE IF EXISTS public."Invoices"
 
 ALTER TABLE IF EXISTS public."Invoices"
     ADD FOREIGN KEY ("positionForBuyingId")
+    REFERENCES public."PositionsForBuying" (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public."SparePart_PositionsForBuying"
+    ADD FOREIGN KEY ("SparePart_id")
+    REFERENCES public."SparePart" (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public."SparePart_PositionsForBuying"
+    ADD FOREIGN KEY ("PositionsForBuying_id")
     REFERENCES public."PositionsForBuying" (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
