@@ -38,6 +38,7 @@ export class UserService {
       if (user.length === 0) {
         throw new NotFoundException(`User with id ${id} not found`);
       }
+      console.log(`found user: ${user[0].name as string}`);
       return plainToInstance(UserRaw, user[0], {
         excludeExtraneousValues: true,
       });
@@ -95,6 +96,7 @@ export class UserService {
           ],
         );
         await client.query('COMMIT');
+        console.log(`created user: ${user.name}`);
         return user[0];
       } catch (error) {
         await client.query('ROLLBACK');
@@ -117,12 +119,43 @@ export class UserService {
   async deleteUser(id: string): Promise<void> {
     try {
       const user = await this.findByIdRaw(id);
+      const client = await this.databaseService.getClient();
       if (!user) {
         throw new NotFoundException(`User with id ${id} not found`);
       }
-      await this.databaseService.query(`DELETE FROM "Users" WHERE id = $1`, [
-        id,
-      ]);
+      try {
+        await client.query('BEGIN');
+        await this.databaseService.query(
+          `DELETE FROM "Passport" WHERE "userId" = $1`,
+          [id],
+        );
+        await this.databaseService.query(
+          `DELETE FROM "Orders" WHERE "userId" = $1`,
+          [id],
+        );
+        await this.databaseService.query(
+          `DELETE FROM "Cars" WHERE "userId" = $1`,
+          [id],
+        );
+        await this.databaseService.query(
+          `DELETE FROM "Reviews" WHERE "userId" = $1`,
+          [id],
+        );
+        await this.databaseService.query(
+          `DELETE FROM "Subscriptions" WHERE "userId" = $1`,
+          [id],
+        );
+        await this.databaseService.query(`DELETE FROM "Users" WHERE id = $1`, [
+          id,
+        ]);
+        await client.query('COMMIT');
+        console.log(`deleted user: ${user.name}`);
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally {
+        client.release();
+      }
     } catch {
       throw new NotFoundException(`User with id ${id} not found`);
     }
@@ -133,7 +166,7 @@ export class UserService {
       'SELECT * FROM "Users"',
     )) as unknown as User[];
     const roles: Role[] = (await this.databaseService.query(
-      'SELECT * FROM "Roles"',
+      'SELECT * FROM "Role"',
     )) as unknown as Role[];
     const userResponse: UserResponseDto[] = [];
 
@@ -162,7 +195,7 @@ export class UserService {
         });
       }),
     );
-
+    console.log(`found users: ${userResponse.length}`);
     return userResponse;
   }
 
@@ -176,6 +209,7 @@ export class UserService {
         throw new NotFoundException(`User with id ${id} not found`);
       }
       const role = await this.getRoleById(user[0].roleId);
+      console.log(`found detailed user: ${user[0].name}`);
       return plainToInstance(
         UserResponseDto,
         {
@@ -193,7 +227,7 @@ export class UserService {
 
   async getRoleById(id: number): Promise<Role> {
     const role = (await this.databaseService.query(
-      `SELECT * FROM "Roles" WHERE id = $1`,
+      `SELECT * FROM "Role" WHERE id = $1`,
       [id],
     )) as unknown as Role[];
     return role[0];
@@ -228,6 +262,7 @@ export class UserService {
           id,
         ],
       );
+      console.log(`updated user: ${user[0].name as string}`);
       return plainToInstance(UserResponseDto, user[0], {
         excludeExtraneousValues: true,
       });

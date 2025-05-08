@@ -29,13 +29,13 @@ export class UserController {
   }
 
   @HttpCode(200)
-  @Get('raw')
+  @Get('/rawData/users')
   async getRawUsers() {
     return await this.userService.findAllRaw();
   }
 
   @HttpCode(200)
-  @Get('raw/:id')
+  @Get('/rawData/users/:id')
   async getRawUser(@Param('id') id: string) {
     return await this.userService.findByIdRaw(id);
   }

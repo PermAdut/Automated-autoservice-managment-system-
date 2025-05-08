@@ -1,25 +1,29 @@
 .useritem-card {
     padding: 24px;
     background-color: #ffffff;
-    border: 2px solid #000; /* gray-300, чуть толще для заметности */
+    border: 2px solid #000;
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    transition: box-shadow 0.3s ease, border-color 0.3s ease; /* Добавлен переход для бордера */
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
   
   .useritem-card:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    border-color: #9ca3af; /* gray-400 при наведении для эффекта */
+    border-color: #9ca3af;
   }
   
   .useritem-header {
     margin-bottom: 16px;
+    flex: 1;
   }
   
   .useritem-name {
-    font-size: 1.25rem; /* 20px */
+    font-size: 1.25rem;
     font-weight: 600;
-    color: #1f2937; /* gray-800 */
+    color: #1f2937;
     margin: 0;
   }
   
@@ -30,19 +34,19 @@
   }
   
   .useritem-link:hover {
-    color: #2563eb; /* blue-600 */
+    color: #2563eb; 
   }
   
   .useritem-info {
-    font-size: 0.875rem; /* 14px */
-    color: #6b7280; /* gray-500 */
-    margin-top: 4px;
+    font-size: 0.875rem; 
+    color: #6b7280;
+    margin: 5px 0 0;
   }
   
   .useritem-orders-title {
-    font-size: 1.125rem; /* 18px */
+    font-size: 1.125rem; 
     font-weight: 500;
-    color: #374151; /* gray-700 */
+    color: #374151; 
     margin-bottom: 12px;
   }
   
@@ -57,37 +61,54 @@
   
   .useritem-order {
     padding: 16px;
-    background-color: #f9fafb; /* gray-50 */
-    border: 1px solid #f3f4f6; /* gray-100 */
+    background-color: #f9fafb; 
+    border: 1px solid #f3f4f6;
     border-radius: 8px;
     transition: background-color 0.3s ease;
   }
   
   .useritem-order:hover {
-    background-color: #f3f4f6; /* gray-100 */
+    background-color: #f3f4f6;
   }
   
   .useritem-order-title {
-    font-size: 1rem; /* 16px */
+    font-size: 1rem;
     font-weight: 600;
-    color: #1f2937; /* gray-800 */
+    color: #1f2937;
     margin: 0 0 4px;
   }
   
   .useritem-order-desc {
-    font-size: 0.875rem; /* 14px */
-    color: #6b7280; /* gray-600 */
+    font-size: 0.875rem;
+    color: #6b7280;
     margin: 4px 0;
   }
   
   .useritem-order-dates {
-    font-size: 0.75rem; /* 12px */
-    color: #9ca3af; /* gray-400 */
+    font-size: 0.75rem;
+    color: #9ca3af;
     margin: 0;
   }
   
   .useritem-no-orders {
-    font-size: 0.875rem; /* 14px */
-    color: #9ca3af; /* gray-400 */
+    font-size: 0.875rem;
+    color: #9ca3af;
     font-style: italic;
+  }
+  
+  .useritem-actions {
+    display: flex;
+    gap: 10px;
+    margin-left: 15px;
+  }
+  
+  .useritem-icon {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  
+  .useritem-icon:hover {
+    opacity: 0.7;
   }

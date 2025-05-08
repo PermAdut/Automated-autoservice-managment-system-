@@ -1,12 +1,14 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+import { serverConfig } from '../../configs/serverConfig';
 
 interface User {
   id: number;
   name: string;
+  surName: string;
 }
 
-interface UserDetailed {
+export interface UserDetailed {
   id: number;
   role: { id: number; name: string };
   login: string;
@@ -64,9 +66,9 @@ export const fetchUsers = createAsyncThunk(
   'users/fetchUsers',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get('https://jsonplaceholder.typicode.com/users');
+      const response = await axios.get(`${serverConfig.url}/api/v1.0/users/rawData/users`);
       return response.data;
-    } catch  {
+    } catch {
       return rejectWithValue('Failed to fetch users');
     }
   }
@@ -76,72 +78,39 @@ export const fetchUsersById = createAsyncThunk(
   'users/fetchUsersById',
   async (userId: number, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`https://jsonplaceholder.typicode.com/users/${userId}`);
+      const response = await axios.get(`${serverConfig.url}/api/v1.0/users/${userId}`);
       const userData = response.data;
-      const detailedUser: UserDetailed = {
-        id: userData.id,
-        role: { id: 1, name: 'Клиент' }, 
-        login: `user${userData.id}`, 
-        name: userData.name.split(' ')[0],
-        surName: userData.name.split(' ')[1] || 'Unknown', 
-        email: userData.email,
-        phone: userData.phone || '+1234567890', 
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        passport: {
-          identityNumber: `PASS${userData.id}123`, 
-          nationality: 'Russia', 
-          birthDate: '1990-01-01T00:00:00Z', 
-          gender: userData.id % 2 === 0 ? 'M' : 'F', 
-          expiriationDate: '2030-01-01T00:00:00Z', 
-        },
-        subscriptions: [{
-          subscriptionName: 'Premium Service',
-          subscriptionDescription: 'Полное обслуживание авто',
-          dateStart: new Date().toISOString(),
-          dateEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), 
-        }],
-        reviews: [{
-          description: 'Отличный сервис!',
-          rate: 5,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          deletedAt: '', 
-        }],
-        cars: [{
-          name: 'Toyota Camry',
-          information: 'Чёрный седан',
-          year: '2018',
-          vin: `VIN${userData.id}1234567890123`,
-          licensePlate: `A${userData.id}BC123`,
-        }],
-        orders: [{
-          id: userData.id * 100,
-          status: 'completed',
-          createdAt: new Date().toISOString(),
-          updateAt: new Date().toISOString(),
-          completedAt: new Date().toISOString(),
-        }, {
-          id: userData.id * 100,
-          status: 'completed',
-          createdAt: new Date().toISOString(),
-          updateAt: new Date().toISOString(),
-          completedAt: new Date().toISOString(),
-        }, {
-          id: userData.id * 100,
-          status: 'completed',
-          createdAt: new Date().toISOString(),
-          updateAt: new Date().toISOString(),
-          completedAt: new Date().toISOString(),
-        }],
-      };
-
-      return detailedUser;
+      return userData;
     } catch {
       return rejectWithValue('Failed to fetch user by ID');
     }
   }
 );
+
+export const deleteUser = createAsyncThunk(
+  'users/deleteUser',
+  async (userId: number, { rejectWithValue }) => {
+    try {
+      const response = await axios.delete(`${serverConfig.url}/api/v1.0/users/${userId}`);
+      return response.data;
+    } catch {
+      return rejectWithValue('Failed to delete user');
+    }
+  }
+);
+
+export const updateUser = createAsyncThunk(
+  'users/updateUser',
+  async (user: UserDetailed, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(`${serverConfig.url}/api/v1.0/users/${user.id}`, user);
+      return response.data;
+    } catch {
+      return rejectWithValue('Failed to update user');
+    }
+  }
+);
+
 
 const userSlice = createSlice({
   name: 'users',

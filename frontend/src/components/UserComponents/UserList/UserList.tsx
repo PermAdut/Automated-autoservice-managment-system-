@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../hooks/redux";
-import { fetchUsers } from "../../../store/slices/userSlice";
+import { deleteUser, fetchUsers, updateUser } from "../../../store/slices/userSlice";
 import { UserItem } from "../UserItem/UserItem.tsx";
 import "./UserList.css";
 
@@ -28,15 +28,21 @@ const UserList = () => {
     <div className="userlist-container">
       <h1 className="user userlist-title">Список пользователей</h1>
       <div className="userlist-grid">
-        {paginatedUsers.map((user) => (
+        {paginatedUsers.length > 0 ? paginatedUsers.map((user) => (
           <div className="userlist-item-wrapper" key={user.id}>
             <UserItem
               id={user.id}
               name={user.name}
-              secondName={user.name}
+              secondName={user.surName}
+              onDelete={() => {
+                dispatch(deleteUser(user.id));
+              }}
+              onUpdate={(body) => {
+                dispatch(updateUser(body));
+              }}
             />
           </div>
-        ))}
+        )) : <div className="userlist-empty">Пользователей нет</div>}
       </div>
 
       {totalPages > 1 && (
