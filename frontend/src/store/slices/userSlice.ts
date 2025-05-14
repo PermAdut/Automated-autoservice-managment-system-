@@ -67,6 +67,7 @@ export const fetchUsers = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.get(`${serverConfig.url}/api/v1.0/users/rawData/users`);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       return response.data;
     } catch {
       return rejectWithValue('Failed to fetch users');
@@ -79,6 +80,7 @@ export const fetchUsersById = createAsyncThunk(
   async (userId: number, { rejectWithValue }) => {
     try {
       const response = await axios.get(`${serverConfig.url}/api/v1.0/users/${userId}`);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       const userData = response.data;
       return userData;
     } catch {
@@ -92,6 +94,7 @@ export const deleteUser = createAsyncThunk(
   async (userId: number, { rejectWithValue }) => {
     try {
       const response = await axios.delete(`${serverConfig.url}/api/v1.0/users/${userId}`);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       return response.data;
     } catch {
       return rejectWithValue('Failed to delete user');
@@ -104,6 +107,7 @@ export const updateUser = createAsyncThunk(
   async (user: UserDetailed, { rejectWithValue }) => {
     try {
       const response = await axios.put(`${serverConfig.url}/api/v1.0/users/${user.id}`, user);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       return response.data;
     } catch {
       return rejectWithValue('Failed to update user');
