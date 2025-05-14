@@ -21,16 +21,16 @@ const ServiceList: React.FC = () => {
   if (error) return <div className="service-list-error">Ошибка: {error}</div>;
 
   const totalPages = Math.ceil(services.length / SERVICES_PER_PAGE);
-  const paginatedServices = services.slice(
+  const paginatedServices = services.length > 0 ? services.slice(
     (currentPage - 1) * SERVICES_PER_PAGE,
     currentPage * SERVICES_PER_PAGE
-  );
+  ) : [];
 
   return (
     <div className="service-list-container">
       <h1 className="service-list-title">Список услуг</h1>
       <div className="service-list-grid">
-        {paginatedServices.map((service) => (
+        {paginatedServices.length > 0 ? paginatedServices.map((service) => (
           <ServiceItem
             key={service.id}
             id={service.id}
@@ -38,7 +38,17 @@ const ServiceList: React.FC = () => {
             description={service.description}
             price={service.price}
           />
-        ))}
+        )) : (
+          <div style={{ 
+            gridColumn: '1 / -1',
+            textAlign: 'center',
+            padding: '2rem',
+            fontSize: '1.125rem',
+            color: '#6b7280'
+          }}>
+            Услуг нет
+          </div>
+        )}
       </div>
 
       {totalPages > 1 && (

@@ -1,8 +1,12 @@
+import { UserDetailed } from "../../../store/slices/userSlice";
+
 export interface UserItemProps{
-    id:number,
+    id:number,  
     name:string,
     secondName:string,
-    orders?:Order[]
+    orders?:Order[],
+    onDelete: (id: number) => void,
+    onUpdate: (userData: UserDetailed) => void
 }
 
 export interface Order{

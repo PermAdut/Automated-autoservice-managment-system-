@@ -1,93 +1,70 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-//import axios from "axios";
+import axios from "axios";
+import { serverConfig } from "../../configs/serverConfig";
 
-interface Store {
+interface SparePartStock {
+  id: number; // ID склада
+  quantity: number;
+  sparePart: {
     id: number;
-    quantity: number;
-    sparePart: {
-        id: number;
-        name: string;
-        price: number;
-        partNumber: string;
-        category: {
-            id: number;
-            name: string;
-            description: string;
-        }
+    name: string;
+    price: number;
+    partNumber: string;
+    category: {
+      id: number;
+      name: string;
+      description: string;
     };
-    location: string;
+  };
+  location: string;
 }
 
-interface StoreState {
-    stores: Store[];
-    isLoading: boolean;
-    error: string | null;
+interface SparePartStockState {
+  spareParts: SparePartStock[];
+  isLoading: boolean;
+  error: string | null;
 }
 
-export const fetchStores = createAsyncThunk('stores/fetchStores', async (_, { rejectWithValue }) => {
+const initialState: SparePartStockState = {
+  spareParts: [],
+  isLoading: false,
+  error: null,
+};
+
+export const fetchSparePartsStock = createAsyncThunk(
+  "spareParts/fetchSparePartsStock",
+  async (_, { rejectWithValue }) => {
     try {
-        const mockStores: Store[] = [
-            {
-                id: 1,
-                quantity: 10,
-                sparePart: {
-                    id: 1,
-                    name: "Тормозные колодки",
-                    price: 2500,
-                    partNumber: "BP-1234",
-                    category: {
-                        id: 1,
-                        name: "Тормозная система",
-                        description: "Детали тормозной системы"
-                    }
-                },
-                location: "Склад А"
-            },
-            {
-                id: 2,
-                quantity: 5,
-                sparePart: {
-                    id: 2, 
-                    name: "Масляный фильтр",
-                    price: 500,
-                    partNumber: "OF-5678",
-                    category: {
-                        id: 2,
-                        name: "Фильтры",
-                        description: "Фильтры для обслуживания"
-                    }
-                },
-                location: "Склад Б"
-            }
-        ];
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        return mockStores;
+      const response = await axios.get(
+        `${serverConfig.url}/api/v1.0/stores`
+      );
+      return response.data;
     } catch (error) {
-        return rejectWithValue(error);
+      console.error(error);
+      return rejectWithValue("Failed to fetch spare parts stock");
     }
+  }
+);
+
+const sparePartStockSlice = createSlice({
+  name: "spareParts",
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchSparePartsStock.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchSparePartsStock.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.spareParts = action.payload;
+      })
+      .addCase(fetchSparePartsStock.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      });
+  },
 });
 
-export const storeSlice = createSlice({
-    name: 'stores',
-    initialState: {
-        stores: [],
-        isLoading: false,
-        error: null
-    } as StoreState,
-    reducers: {},
-    extraReducers: (builder) => {
-        builder.addCase(fetchStores.pending, (state) => {
-            state.isLoading = true;
-        });
-        builder.addCase(fetchStores.fulfilled, (state, action) => {
-            state.isLoading = false;
-            state.stores = action.payload;
-        });
-        builder.addCase(fetchStores.rejected, (state, action) => {
-            state.isLoading = false;
-            state.error = action.payload as string;
-        });
-    }
-});
-
-export default storeSlice.reducer;
+export default sparePartStockSlice.reducer;

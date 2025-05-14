@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../../hooks/redux";
-import { fetchStores } from "../../../../store/slices/storeSlice";
+import { fetchSparePartsStock } from "../../../../store/slices/storeSlice";
 import { StorageItem } from "../StorageItem/StorageItem";
 import "./StorageList.css";
 
@@ -8,18 +8,18 @@ const STORES_PER_PAGE = 6;
 
 const StorageList: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { stores, isLoading, error } = useAppSelector((state) => state.store);
+  const { spareParts, isLoading, error } = useAppSelector((state) => state.store);
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    dispatch(fetchStores());
+    dispatch(fetchSparePartsStock());
   }, [dispatch]);
 
   if (isLoading) return <div className="storage-list-loading">Загрузка...</div>;
   if (error) return <div className="storage-list-error">Ошибка: {error}</div>;
 
-  const totalPages = Math.ceil(stores.length / STORES_PER_PAGE);
-  const paginatedStores = stores.slice(
+  const totalPages = Math.ceil(spareParts.length / STORES_PER_PAGE);
+  const paginatedSpareParts = spareParts.slice(
     (currentPage - 1) * STORES_PER_PAGE,
     currentPage * STORES_PER_PAGE
   );
@@ -28,13 +28,13 @@ const StorageList: React.FC = () => {
     <div className="storage-list-container">
       <h1 className="storage-list-title">Список запчастей на складах</h1>
       <div className="storage-list-grid">
-        {paginatedStores.map((store) => (
+        {paginatedSpareParts.map((sparePart) => (
           <StorageItem
-            key={store.id}
-            id={store.id}
-            quantity={store.quantity}
-            sparePart={store.sparePart}
-            location={store.location}
+            key={sparePart.id}
+            id={sparePart.id}
+            quantity={sparePart.quantity}
+            sparePart={sparePart.sparePart}
+            location={sparePart.location}
           />
         ))}
       </div>

@@ -53,7 +53,8 @@ export const OrderItem: React.FC<OrderItemProps> = ({
           <strong>Создан:</strong> {new Date(createdAt).toLocaleString()}
         </p>
         <p>
-          <strong>Обновлён:</strong> {new Date(updatedAt).toLocaleString()}
+          <strong>Обновлён:</strong>{" "}
+          {updatedAt ? new Date(updatedAt).toLocaleString() : "Не обновлён"}
         </p>
         <p>
           <strong>Завершён:</strong>{" "}
