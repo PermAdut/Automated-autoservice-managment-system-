@@ -201,25 +201,109 @@ export class UserService {
 
   async findById(id: string): Promise<UserResponseDto> {
     try {
-      const user = (await this.databaseService.query(
-        `SELECT * FROM "Users" WHERE id = $1`,
+      const userResult = await this.databaseService.query(
+        `
+        SELECT 
+          u.id,
+          u.login,
+          u.name,
+          u."surName",
+          u.email,
+          u.phone,
+          u."createdAt",
+          u."updatedAt",
+          json_build_object('id', r.id, 'name', r.name) as role,
+          json_build_object(
+            'identityNumber', p."identityNumber",
+            'nationality', p.nationality,
+            'birthDate', p."birthDate",
+            'gender', p.gender,
+            'expiriationDate', p."expirationDate"
+          ) as passport,
+          COALESCE(
+            (SELECT json_agg(
+              json_build_object(
+                'subscriptionDescription', s."subscriptionDescription",
+                'subscriptionName', s."subscriptonName",
+                'dateStart', s."dateStart",
+                'dateEnd', s."dateEnd"
+              )
+            ) FROM public."Subscriptions" s WHERE s."userId" = u.id),
+            '[]'
+          ) as subscriptions,
+          COALESCE(
+            (SELECT json_agg(
+              json_build_object(
+                'description', rev.description,
+                'rate', rev.rate,
+                'createdAt', rev."createdAt",
+                'updatedAt', rev."updatedAt",
+                'deletedAt', rev."deletedAt"
+              )
+            ) FROM public."Reviews" rev WHERE rev."userId" = u.id),
+            '[]'
+          ) as reviews,
+          COALESCE(
+            (SELECT json_agg(
+              json_build_object(
+                'name', c.name,
+                'information', c.information,
+                'year', c.year,
+                'vin', c.vin,
+                'licensePlate', c."licensePlate"
+              )
+            ) FROM public."Cars" c WHERE c."userId" = u.id),
+            '[]'
+          ) as cars,
+          COALESCE(
+            (SELECT json_agg(
+              json_build_object(
+                'id', o.id,
+                'status', o.status,
+                'createdAt', o."createdAt",
+                'updateAt', o."updatedAt",
+                'completedAt', o."completedAt"
+              )
+            ) FROM public."Orders" o WHERE o."userId" = u.id),
+            '[]'
+          ) as orders
+        FROM public."Users" u
+        LEFT JOIN public."Role" r ON u."roleId" = r.id
+        LEFT JOIN public."Passport" p ON u.id = p."userId"
+        WHERE u.id = $1
+        `,
         [id],
-      )) as unknown as User[];
-      if (user.length === 0) {
+      );
+
+      if (!userResult || userResult.length === 0) {
         throw new NotFoundException(`User with id ${id} not found`);
       }
-      const role = await this.getRoleById(user[0].roleId);
-      console.log(`found detailed user: ${user[0].name}`);
+
+      const user = userResult[0];
+      console.log(`Found detailed user: ${user.name as string}`);
+
       return plainToInstance(
         UserResponseDto,
         {
-          ...user[0],
-          role: role.name,
+          id: user.id,
+          role: user.role,
+          login: user.login,
+          name: user.name,
+          surName: user.surName,
+          email: user.email,
+          phone: user.phone,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+          passport: user.passport ? user.passport : undefined,
+          subscriptions: user.subscriptions,
+          reviews: user.reviews,
+          cars: user.cars,
+          orders: user.orders,
         },
         {
           excludeExtraneousValues: true,
         },
-      ) as unknown as UserResponseDto;
+      );
     } catch {
       throw new NotFoundException(`User with id ${id} not found`);
     }

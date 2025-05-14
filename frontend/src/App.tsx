@@ -15,7 +15,7 @@ import OrderList from './components/OrderComponents/OrderList/OrderList.tsx'
 import Storage from "./components/StorageComponents/Storage.tsx";
 import SupplierList from "./components/SupplierComponent/SupplierList/SupplierList.tsx";
 import MainPage from "./components/MainPage/MainPage.tsx";
-
+import ReportGenerator from "./components/Reports/ReportGenerator.tsx";
 function App() {
   return (
     <Provider store={store}>
@@ -34,6 +34,7 @@ function App() {
                 <Route path="/orders" element={<OrderList />} />
                 <Route path="/dashboard" element={<Storage />}/>
                 <Route path="/suppliers" element={<SupplierList />}/>
+                <Route path="/reports" element={<ReportGenerator />}/>
               </Routes>
             </main>
             <Footer />

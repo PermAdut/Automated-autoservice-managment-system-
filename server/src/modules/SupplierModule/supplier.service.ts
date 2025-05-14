@@ -1,31 +1,40 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { Category, SparePart, PositionForBuying } from './schemas/Supplier';
-
+import { SupplierResponseDto } from './Dto/SupplierResponseDto';
+import { plainToInstance } from 'class-transformer';
 @Injectable()
 export class SupplierService {
   constructor(private readonly databaseService: DatabaseService) {}
-  async findAll() {
+  async findAll(): Promise<SupplierResponseDto[]> {
     try {
-      return [];
-      // async function createSupplierBody(): Promise<SupplierResponseDto[]> {
-      //   const supplierBody = await Promise.all(
-      //     suppliers.map(async (supplier) => {
-      //       const positionForBuying: PositionForBuying[] =
-      //         await this.getPositionForBuying(supplier.id);
-      //       if (positionForBuying.length === 0) {
-      //         return {
-      //           ...supplier,
-      //           positionForBuying: [],
-      //         };
-      //       }
-
-      //   );
-      //   return supplierBody;
-      // }
-      // return await createSupplierBody();
-    } catch (error) {
-      throw new BadRequestException(error);
+      const suppliersResult = await this.databaseService.query(
+        `
+SELECT 
+  s.id,
+  s.name,
+  s.contact,
+  s.address,
+  COALESCE(
+    (SELECT json_agg(
+      json_build_object(
+        'id', pfb.id,
+        'quantity', pfb.quantity,
+        'deliverDate', pfb."deliveryDate",
+        'status', pfb.status
+      )
+    ) FROM public."PositionsForBuying" pfb
+    WHERE pfb."supplierId" = s.id),
+    '[]'
+  ) as positionsForBuying
+FROM public."Suppliers" s
+        `,
+      );
+      return plainToInstance(SupplierResponseDto, suppliersResult, {
+        excludeExtraneousValues: true,
+      });
+    } catch {
+      throw new BadRequestException('Failed to fetch suppliers');
     }
   }
 
