@@ -36,8 +36,9 @@ export class UserResponseDto {
   @ApiProperty({
     description: 'User phone',
     type: String,
+    nullable: true,
   })
-  phone: string;
+  phone: string | null;
 
   @Expose()
   @ApiProperty({
@@ -63,8 +64,9 @@ export class UserResponseDto {
   @Expose()
   @ApiProperty({
     description: 'User passport',
+    nullable: true,
   })
-  passport: Passport;
+  passport?: Passport;
 
   @Expose()
   @ApiProperty({

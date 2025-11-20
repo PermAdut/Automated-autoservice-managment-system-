@@ -14,7 +14,7 @@ export class OrderResponseDto {
   employeeId: number | null;
 
   @Expose()
-  status: string;
+  status: string | null;
 
   @Expose()
   createdAt: string;
@@ -29,7 +29,7 @@ export class OrderResponseDto {
   services: {
     id: number;
     name: string;
-    description: string;
+    description: string | null;
     price: number;
   }[];
 
@@ -42,7 +42,7 @@ export class OrderResponseDto {
     category: {
       id: number;
       name: string;
-      description: string;
+      description: string | null;
     };
   }[];
 }

@@ -224,7 +224,7 @@ export class ReportService {
                   <td>${row.payment_amount || '-'}</td>
                   <td>${row.payment_status ? 'Оплачено' : 'Не оплачено'}</td>
                 </tr>
-              `,
+              `
             )
             .join('')}
         </tbody>
@@ -307,12 +307,12 @@ export class ReportService {
                     row.suppliers
                       .map(
                         (sup: any) =>
-                          `${sup.supplier_name} (${new Date(sup.delivery_date).toLocaleDateString()})`,
+                          `${sup.supplier_name} (${new Date(sup.delivery_date).toLocaleDateString()})`
                       )
                       .join(', ') || '-'
                   }</td>
                 </tr>
-              `,
+              `
             )
             .join('')}
         </tbody>
@@ -365,7 +365,7 @@ export class ReportService {
                   <td>${row.total_revenue}</td>
                   <td>${Math.round(row.avg_price)}</td>
                 </tr>
-              `,
+              `
             )
             .join('')}
         </tbody>
@@ -429,12 +429,12 @@ export class ReportService {
                         (ws: any) =>
                           `${new Date(ws.start_time).toLocaleString()} - ${new Date(ws.end_time).toLocaleString()} (${
                             ws.is_available ? 'Доступен' : 'Недоступен'
-                          })`,
+                          })`
                       )
                       .join(', ') || '-'
                   }</td>
                 </tr>
-              `,
+              `
             )
             .join('')}
         </tbody>
@@ -501,12 +501,12 @@ export class ReportService {
                     row.reviews
                       .map(
                         (r: any) =>
-                          `${r.description} (Рейтинг: ${r.rate}, ${new Date(r.createdAt).toLocaleDateString()})`,
+                          `${r.description} (Рейтинг: ${r.rate}, ${new Date(r.createdAt).toLocaleDateString()})`
                       )
                       .join(', ') || '-'
                   }</td>
                 </tr>
-              `,
+              `
             )
             .join('')}
         </tbody>

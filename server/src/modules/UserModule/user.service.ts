@@ -6,399 +6,432 @@ import {
 import { DatabaseService } from '../database/database.service';
 import { UserRaw } from './Dto/UserRaw';
 import { plainToInstance } from 'class-transformer';
-import { UserRequestDto } from './Dto/UserRequestDto';
+import { CreateUserDto } from './Dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
-import {
-  Passport,
-  Role,
-  User,
-  Order,
-  Car,
-  Review,
-  Subscription,
-} from './schemas/User';
 import { UserResponseDto } from './Dto/UserResponseDto';
-import { UpdateUserDto } from './Dto/UpdateUserDto';
+import { UpdateUserDto } from './Dto/update-user.dto';
+import {
+  users,
+  roles,
+  passports,
+  orders,
+  cars,
+  reviews,
+  subscriptions,
+} from '../database/schema';
+import { eq, or, like } from 'drizzle-orm';
 
 @Injectable()
 export class UserService {
   constructor(private readonly databaseService: DatabaseService) {}
 
   async findAllRaw(): Promise<UserRaw[]> {
-    const users = await this.databaseService.query('SELECT * FROM "Users"');
-    return plainToInstance(UserRaw, users, { excludeExtraneousValues: true });
+    const usersList = await this.databaseService.db.select().from(users);
+    return plainToInstance(UserRaw, usersList, {
+      excludeExtraneousValues: true,
+    });
   }
 
   async findByIdRaw(id: string): Promise<UserRaw> {
-    try {
-      const user = await this.databaseService.query(
-        `SELECT * FROM "Users" WHERE id = $1`,
-        [id],
-      );
-      if (user.length === 0) {
-        throw new NotFoundException(`User with id ${id} not found`);
-      }
-      console.log(`found user: ${user[0].name as string}`);
-      return plainToInstance(UserRaw, user[0], {
-        excludeExtraneousValues: true,
-      });
-    } catch {
+    const user = await this.databaseService.db
+      .select()
+      .from(users)
+      .where(eq(users.id, parseInt(id)))
+      .limit(1);
+
+    if (user.length === 0) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
+
+    console.log(`found user: ${user[0].name}`);
+    return plainToInstance(UserRaw, user[0], {
+      excludeExtraneousValues: true,
+    });
   }
 
-  async createUser(userBody: UserRequestDto): Promise<UserRaw> {
+  async createUser(userBody: CreateUserDto): Promise<UserRaw> {
+    const conditions = [
+      eq(users.login, userBody.login),
+      eq(users.email, userBody.email),
+    ];
+
+    // Only check phone if it's provided
+    if (userBody.phone) {
+      conditions.push(eq(users.phone, userBody.phone));
+    }
+
+    const existingUser = await this.databaseService.db
+      .select()
+      .from(users)
+      .where(or(...conditions))
+      .limit(1);
+
+    if (existingUser.length > 0) {
+      const fields: string[] = [];
+      if (existingUser[0].login === userBody.login) fields.push('login');
+      if (existingUser[0].email === userBody.email) fields.push('email');
+      if (userBody.phone && existingUser[0].phone === userBody.phone)
+        fields.push('phone');
+
+      throw new BadRequestException({
+        message: `User with this ${fields.join(', ')} already exists`,
+        fields: fields,
+      });
+    }
+
+    const passHash: string = await bcrypt.hash(userBody.password, 10);
+
+    // Get customer role ID
+    const customerRole = await this.databaseService.db
+      .select()
+      .from(roles)
+      .where(eq(roles.name, 'customer'))
+      .limit(1);
+
+    const defaultRoleId = customerRole[0]?.id || 1; // Fallback to first role if customer doesn't exist
+
     try {
-      const existingUser = await this.databaseService.query(
-        `SELECT * FROM "Users" WHERE login = $1 OR email = $2 OR phone = $3`,
-        [userBody.login, userBody.email, userBody.phone],
-      );
+      const result = await this.databaseService.db.transaction(async tx => {
+        const [newUser] = await tx
+          .insert(users)
+          .values({
+            login: userBody.login,
+            name: userBody.name,
+            surName: userBody.surName,
+            email: userBody.email,
+            phone: userBody.phone,
+            passwordHash: passHash,
+            roleId: defaultRoleId,
+          })
+          .returning();
 
-      if (existingUser.length > 0) {
-        const fields: string[] = [];
-        if (existingUser[0].login === userBody.login) fields.push('login');
-        if (existingUser[0].email === userBody.email) fields.push('email');
-        if (existingUser[0].phone === userBody.phone) fields.push('phone');
-
-        throw new BadRequestException({
-          message: `User with this ${fields.join(', ')} already exists`,
-          fields: fields,
+        await tx.insert(passports).values({
+          userId: newUser.id,
+          identityNumber: userBody.passportIdentityNumber,
+          nationality: userBody.passportNationality,
+          birthDate: new Date(userBody.passportBirthDate),
+          gender: userBody.passportGender,
+          expirationDate: new Date(userBody.passportExpirationDate),
         });
-      }
-      const passHash: string = await bcrypt.hash(userBody.password, 10);
-      const client = await this.databaseService.getClient();
-      try {
-        await client.query('BEGIN');
-        const user = (
-          await client.query(
-            `INSERT INTO "Users" (login, name, "surName", email, phone, "passwordHash") 
-           VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-            [
-              userBody.login,
-              userBody.name,
-              userBody.surName,
-              userBody.email,
-              userBody.phone,
-              passHash,
-            ],
-          )
-        ).rows[0] as User;
-        await client.query(
-          `INSERT INTO "Passport" ("userId", "identityNumber", nationality, "birthDate", gender, "expirationDate")
-           VALUES ($1, $2, $3, $4, $5, $6)`,
-          [
-            user.id,
-            userBody.passportIdentityNumber,
-            userBody.passportNationality,
-            userBody.passportBirthDate,
-            userBody.passportGender,
-            userBody.passportExpirationDate,
-          ],
-        );
-        await client.query('COMMIT');
-        console.log(`created user: ${user.name}`);
-        return user[0];
-      } catch (error) {
-        await client.query('ROLLBACK');
-        throw error;
-      } finally {
-        client.release();
-      }
+
+        return newUser;
+      });
+
+      console.log(`created user: ${result.name}`);
+      return plainToInstance(UserRaw, result, {
+        excludeExtraneousValues: true,
+      });
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
       }
       throw new BadRequestException({
         message: 'Error creating user',
-        error: error.message,
-        details: error.details,
+        error: (error as Error).message,
       });
     }
   }
 
   async deleteUser(id: string): Promise<void> {
+    const user = await this.databaseService.db
+      .select()
+      .from(users)
+      .where(eq(users.id, parseInt(id)))
+      .limit(1);
+
+    if (user.length === 0) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+
     try {
-      const user = await this.findByIdRaw(id);
-      const client = await this.databaseService.getClient();
-      if (!user) {
-        throw new NotFoundException(`User with id ${id} not found`);
-      }
-      try {
-        await client.query('BEGIN');
-        await this.databaseService.query(
-          `DELETE FROM "Passport" WHERE "userId" = $1`,
-          [id],
-        );
-        await this.databaseService.query(
-          `DELETE FROM "Orders" WHERE "userId" = $1`,
-          [id],
-        );
-        await this.databaseService.query(
-          `DELETE FROM "Cars" WHERE "userId" = $1`,
-          [id],
-        );
-        await this.databaseService.query(
-          `DELETE FROM "Reviews" WHERE "userId" = $1`,
-          [id],
-        );
-        await this.databaseService.query(
-          `DELETE FROM "Subscriptions" WHERE "userId" = $1`,
-          [id],
-        );
-        await this.databaseService.query(`DELETE FROM "Users" WHERE id = $1`, [
-          id,
-        ]);
-        await client.query('COMMIT');
-        console.log(`deleted user: ${user.name}`);
-      } catch (error) {
-        await client.query('ROLLBACK');
-        throw error;
-      } finally {
-        client.release();
-      }
+      await this.databaseService.db.transaction(async tx => {
+        await tx.delete(passports).where(eq(passports.userId, parseInt(id)));
+        await tx.delete(orders).where(eq(orders.userId, parseInt(id)));
+        await tx.delete(cars).where(eq(cars.userId, parseInt(id)));
+        await tx.delete(reviews).where(eq(reviews.userId, parseInt(id)));
+        await tx
+          .delete(subscriptions)
+          .where(eq(subscriptions.userId, parseInt(id)));
+        await tx.delete(users).where(eq(users.id, parseInt(id)));
+      });
+
+      console.log(`deleted user: ${user[0].name}`);
     } catch {
       throw new NotFoundException(`User with id ${id} not found`);
     }
   }
 
-  async findAll(): Promise<UserResponseDto[]> {
-    const users: User[] = (await this.databaseService.query(
-      'SELECT * FROM "Users"',
-    )) as unknown as User[];
-    const roles: Role[] = (await this.databaseService.query(
-      'SELECT * FROM "Role"',
-    )) as unknown as Role[];
-    const userResponse: UserResponseDto[] = [];
+  async findAll(search?: string): Promise<UserResponseDto[]> {
+    let query = this.databaseService.db
+      .select({
+        id: users.id,
+        name: users.name,
+        surName: users.surName,
+        email: users.email,
+        phone: users.phone,
+        roleId: users.roleId,
+        roleName: roles.name,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
+      .from(users)
+      .leftJoin(roles, eq(users.roleId, roles.id));
 
-    await Promise.all(
-      users.map(async (user) => {
-        const role = roles.find((role) => role.id === user.roleId);
-        const passport = await this.getUserPassport(user.id);
-        const orders = await this.getUserOrders(user.id);
-        const cars = await this.getUserCars(user.id);
-        const reviews = await this.getUserReviews(user.id);
-        const subscriptions = await this.getUserSubscriptions(user.id);
-        userResponse.push({
+    if (search) {
+      query = query.where(
+        or(
+          like(users.name, `%${search}%`),
+          like(users.surName, `%${search}%`),
+          like(users.email, `%${search}%`),
+          like(users.phone, `%${search}%`)
+        )
+      ) as any;
+    }
+
+    const usersList = await query;
+
+    const userResponseData = await Promise.all(
+      usersList.map(async user => {
+        const [passport] = await this.databaseService.db
+          .select()
+          .from(passports)
+          .where(eq(passports.userId, user.id))
+          .limit(1);
+
+        const userOrders = await this.databaseService.db
+          .select()
+          .from(orders)
+          .where(eq(orders.userId, user.id));
+
+        const userCars = await this.databaseService.db
+          .select()
+          .from(cars)
+          .where(eq(cars.userId, user.id));
+
+        const userReviews = await this.databaseService.db
+          .select()
+          .from(reviews)
+          .where(eq(reviews.userId, user.id));
+
+        const userSubscriptions = await this.databaseService.db
+          .select()
+          .from(subscriptions)
+          .where(eq(subscriptions.userId, user.id));
+
+        return {
           id: user.id,
           name: user.name,
           surName: user.surName,
           email: user.email,
           phone: user.phone,
-          role: role!.name,
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt,
-          passport: passport,
-          orders: orders,
-          cars: cars,
-          reviews: reviews,
-          subscriptions: subscriptions,
-        });
-      }),
+          role: user.roleName || '',
+          createdAt: user.createdAt?.toISOString() || '',
+          updatedAt: user.updatedAt?.toISOString() || '',
+          passport: passport
+            ? {
+                identityNumber: passport.identityNumber,
+                nationality: passport.nationality,
+                birthDate: passport.birthDate.toISOString(),
+                gender: passport.gender,
+                expirationDate: passport.expirationDate.toISOString(),
+              }
+            : undefined,
+          orders: userOrders.map(o => ({
+            id: o.id,
+            status: o.status || '',
+            createdAt: o.createdAt?.toISOString() || '',
+            updateAt: o.updatedAt?.toISOString() || '',
+            completedAt: o.completedAt?.toISOString() || '',
+          })),
+          cars: userCars.map(c => ({
+            id: c.id,
+            name: c.name,
+            information: c.information || '',
+            year: c.year.toString(),
+            vin: c.vin,
+            licensePlate: c.licensePlate || '',
+          })),
+          reviews: userReviews.map(r => ({
+            id: r.id,
+            description: r.description || '',
+            rate: r.rate,
+            createdAt: r.createdAt?.toISOString() || '',
+            updatedAt: r.updatedAt?.toISOString() || '',
+            deletedAt: r.deletedAt?.toISOString() || '',
+          })),
+          subscriptions: userSubscriptions.map(s => ({
+            subscriptionDescription: s.subscriptionDescription || '',
+            subscriptionName: s.subscriptionName,
+            dateStart: s.dateStart.toISOString(),
+            dateEnd: s.dateEnd.toISOString(),
+          })),
+        };
+      })
     );
+
+    const userResponse = plainToInstance(UserResponseDto, userResponseData, {
+      excludeExtraneousValues: true,
+    });
+
     console.log(`found users: ${userResponse.length}`);
     return userResponse;
   }
 
   async findById(id: string): Promise<UserResponseDto> {
-    try {
-      const userResult = await this.databaseService.query(
-        `
-        SELECT 
-          u.id,
-          u.login,
-          u.name,
-          u."surName",
-          u.email,
-          u.phone,
-          u."createdAt",
-          u."updatedAt",
-          json_build_object('id', r.id, 'name', r.name) as role,
-          json_build_object(
-            'identityNumber', p."identityNumber",
-            'nationality', p.nationality,
-            'birthDate', p."birthDate",
-            'gender', p.gender,
-            'expiriationDate', p."expirationDate"
-          ) as passport,
-          COALESCE(
-            (SELECT json_agg(
-              json_build_object(
-                'subscriptionDescription', s."subscriptionDescription",
-                'subscriptionName', s."subscriptonName",
-                'dateStart', s."dateStart",
-                'dateEnd', s."dateEnd"
-              )
-            ) FROM public."Subscriptions" s WHERE s."userId" = u.id),
-            '[]'
-          ) as subscriptions,
-          COALESCE(
-            (SELECT json_agg(
-              json_build_object(
-                'description', rev.description,
-                'rate', rev.rate,
-                'createdAt', rev."createdAt",
-                'updatedAt', rev."updatedAt",
-                'deletedAt', rev."deletedAt"
-              )
-            ) FROM public."Reviews" rev WHERE rev."userId" = u.id),
-            '[]'
-          ) as reviews,
-          COALESCE(
-            (SELECT json_agg(
-              json_build_object(
-                'name', c.name,
-                'information', c.information,
-                'year', c.year,
-                'vin', c.vin,
-                'licensePlate', c."licensePlate"
-              )
-            ) FROM public."Cars" c WHERE c."userId" = u.id),
-            '[]'
-          ) as cars,
-          COALESCE(
-            (SELECT json_agg(
-              json_build_object(
-                'id', o.id,
-                'status', o.status,
-                'createdAt', o."createdAt",
-                'updateAt', o."updatedAt",
-                'completedAt', o."completedAt"
-              )
-            ) FROM public."Orders" o WHERE o."userId" = u.id),
-            '[]'
-          ) as orders
-        FROM public."Users" u
-        LEFT JOIN public."Role" r ON u."roleId" = r.id
-        LEFT JOIN public."Passport" p ON u.id = p."userId"
-        WHERE u.id = $1
-        `,
-        [id],
-      );
+    const userResult = await this.databaseService.db
+      .select({
+        id: users.id,
+        login: users.login,
+        name: users.name,
+        surName: users.surName,
+        email: users.email,
+        phone: users.phone,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        roleId: roles.id,
+        roleName: roles.name,
+      })
+      .from(users)
+      .leftJoin(roles, eq(users.roleId, roles.id))
+      .where(eq(users.id, parseInt(id)))
+      .limit(1);
 
-      if (!userResult || userResult.length === 0) {
-        throw new NotFoundException(`User with id ${id} not found`);
-      }
-
-      const user = userResult[0];
-      console.log(`Found detailed user: ${user.name as string}`);
-
-      return plainToInstance(
-        UserResponseDto,
-        {
-          id: user.id,
-          role: user.role,
-          login: user.login,
-          name: user.name,
-          surName: user.surName,
-          email: user.email,
-          phone: user.phone,
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt,
-          passport: user.passport ? user.passport : undefined,
-          subscriptions: user.subscriptions,
-          reviews: user.reviews,
-          cars: user.cars,
-          orders: user.orders,
-        },
-        {
-          excludeExtraneousValues: true,
-        },
-      );
-    } catch {
+    if (userResult.length === 0) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
+
+    const user = userResult[0];
+
+    const [passport] = await this.databaseService.db
+      .select()
+      .from(passports)
+      .where(eq(passports.userId, user.id))
+      .limit(1);
+
+    const userSubscriptions = await this.databaseService.db
+      .select()
+      .from(subscriptions)
+      .where(eq(subscriptions.userId, user.id));
+
+    const userReviews = await this.databaseService.db
+      .select()
+      .from(reviews)
+      .where(eq(reviews.userId, user.id));
+
+    const userCars = await this.databaseService.db
+      .select()
+      .from(cars)
+      .where(eq(cars.userId, user.id));
+
+    const userOrders = await this.databaseService.db
+      .select()
+      .from(orders)
+      .where(eq(orders.userId, user.id));
+
+    console.log(`Found detailed user: ${user.name}`);
+
+    return plainToInstance(
+      UserResponseDto,
+      {
+        id: user.id,
+        role: user.roleName || '',
+        login: user.login,
+        name: user.name,
+        surName: user.surName,
+        email: user.email,
+        phone: user.phone,
+        createdAt: user.createdAt?.toISOString() || '',
+        updatedAt: user.updatedAt?.toISOString() || '',
+        passport: passport
+          ? {
+              identityNumber: passport.identityNumber,
+              nationality: passport.nationality,
+              birthDate: passport.birthDate.toISOString(),
+              gender: passport.gender,
+              expirationDate: passport.expirationDate.toISOString(),
+            }
+          : undefined,
+        subscriptions: userSubscriptions.map(s => ({
+          subscriptionDescription: s.subscriptionDescription || '',
+          subscriptionName: s.subscriptionName,
+          dateStart: s.dateStart.toISOString(),
+          dateEnd: s.dateEnd.toISOString(),
+        })),
+        reviews: userReviews.map(r => ({
+          description: r.description || '',
+          rate: r.rate,
+          createdAt: r.createdAt?.toISOString() || '',
+          updatedAt: r.updatedAt?.toISOString() || '',
+          deletedAt: r.deletedAt?.toISOString() || '',
+        })),
+        cars: userCars.map(c => ({
+          id: c.id,
+          name: c.name,
+          information: c.information || '',
+          year: c.year.toString(),
+          vin: c.vin,
+          licensePlate: c.licensePlate || '',
+        })),
+        orders: userOrders.map(o => ({
+          id: o.id,
+          status: o.status || '',
+          createdAt: o.createdAt?.toISOString() || '',
+          updateAt: o.updatedAt?.toISOString() || '',
+          completedAt: o.completedAt?.toISOString() || '',
+        })),
+      },
+      {
+        excludeExtraneousValues: true,
+      }
+    );
   }
 
-  async getRoleById(id: number): Promise<Role> {
-    const role = (await this.databaseService.query(
-      `SELECT * FROM "Role" WHERE id = $1`,
-      [id],
-    )) as unknown as Role[];
+  async getRoleById(id: number): Promise<{ id: number; name: string }> {
+    const role = await this.databaseService.db
+      .select()
+      .from(roles)
+      .where(eq(roles.id, id))
+      .limit(1);
     return role[0];
   }
 
   async updateUser(
     id: string,
-    userBody: UpdateUserDto,
+    userBody: UpdateUserDto
   ): Promise<UserResponseDto> {
-    try {
-      const userCheck = (await this.databaseService.query(
-        `SELECT * FROM "Users" WHERE id = $1`,
-        [id],
-      )) as unknown as User[];
-      if (userCheck.length === 0) {
-        throw new NotFoundException(`User with id ${id} not found`);
-      }
-      const passHash: string = await bcrypt.hash(userBody.password, 10);
-      if (passHash !== userCheck[0].passwordHash) {
-        throw new BadRequestException({
-          message: 'Invalid password',
-        });
-      }
-      const user = await this.databaseService.query(
-        `UPDATE "Users" SET name = $1, surName = $2, email = $3, phone = $4, "passwordHash" = $5 WHERE id = $6 RETURNING *`,
-        [
-          userBody.name ?? userCheck[0].name,
-          userBody.surName ?? userCheck[0].surName,
-          userBody.email ?? userCheck[0].email,
-          userBody.phone ?? userCheck[0].phone,
-          passHash ?? userCheck[0].passwordHash,
-          id,
-        ],
-      );
-      console.log(`updated user: ${user[0].name as string}`);
-      return plainToInstance(UserResponseDto, user[0], {
-        excludeExtraneousValues: true,
-      });
-    } catch {
+    const userCheck = await this.databaseService.db
+      .select()
+      .from(users)
+      .where(eq(users.id, parseInt(id)))
+      .limit(1);
+
+    if (userCheck.length === 0) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
-  }
 
-  async getUserPassport(id: number): Promise<Passport> {
-    try {
-      const passport = (await this.databaseService.query(
-        `SELECT * FROM "Passport" WHERE "userId" = $1`,
-        [id],
-      )) as unknown as Passport[];
-      if (passport.length === 0) {
-        throw new NotFoundException(`User passport with id ${id} not found`);
-      }
-      return passport[0];
-    } catch {
-      throw new NotFoundException(`User passport with id ${id} not found`);
+    const passHash: string = await bcrypt.hash(userBody.password, 10);
+    if (passHash !== userCheck[0].passwordHash) {
+      throw new BadRequestException({
+        message: 'Invalid password',
+      });
     }
-  }
 
-  async getUserOrders(id: number): Promise<Order[]> {
-    const orders = (await this.databaseService.query(
-      `SELECT * FROM "Orders" WHERE "userId" = $1`,
-      [id],
-    )) as unknown as Order[];
-    return orders;
-  }
+    const [updatedUser] = await this.databaseService.db
+      .update(users)
+      .set({
+        name: userBody.name ?? userCheck[0].name,
+        surName: userBody.surName ?? userCheck[0].surName,
+        email: userBody.email ?? userCheck[0].email,
+        phone: userBody.phone ?? userCheck[0].phone,
+        passwordHash: passHash ?? userCheck[0].passwordHash,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, parseInt(id)))
+      .returning();
 
-  async getUserCars(id: number): Promise<Car[]> {
-    const cars = (await this.databaseService.query(
-      `SELECT * FROM "Cars" WHERE "userId" = $1`,
-      [id],
-    )) as unknown as Car[];
-    return cars;
-  }
-
-  async getUserReviews(id: number): Promise<Review[]> {
-    const reviews = (await this.databaseService.query(
-      `SELECT * FROM "Reviews" WHERE "userId" = $1`,
-      [id],
-    )) as unknown as Review[];
-    return reviews;
-  }
-
-  async getUserSubscriptions(id: number): Promise<Subscription[]> {
-    const subscriptions = (await this.databaseService.query(
-      `SELECT * FROM "Subscriptions" WHERE "userId" = $1`,
-      [id],
-    )) as unknown as Subscription[];
-    return subscriptions;
+    console.log(`updated user: ${updatedUser.name}`);
+    return plainToInstance(UserResponseDto, updatedUser, {
+      excludeExtraneousValues: true,
+    });
   }
 }

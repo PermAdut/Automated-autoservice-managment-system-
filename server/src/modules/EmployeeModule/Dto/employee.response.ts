@@ -18,9 +18,10 @@ export class EmployeeResponse {
       id: 1,
       name: 'Manager',
     },
+    nullable: true,
   })
   @Expose()
-  position: PositionResponse;
+  position?: PositionResponse;
 
   @ApiProperty({
     description: 'The hire date of the employee',
@@ -41,13 +42,16 @@ export class EmployeeResponse {
   @ApiProperty({
     description: 'The schedule of the employee',
     example: {
-      startTime: '09:00',
-      endTime: '17:00',
+      id: 1,
+      employeeId: 1,
+      startTime: '2024-01-01T09:00:00Z',
+      endTime: '2024-01-01T17:00:00Z',
       isAvailable: true,
     },
+    nullable: true,
   })
   @Expose()
-  schedule: ScheduleResponse;
+  schedule?: ScheduleResponse;
 
   @ApiProperty({
     description: 'The orders of the employee',
@@ -55,6 +59,7 @@ export class EmployeeResponse {
       id: 1,
       status: 'Pending',
     },
+    nullable: true,
   })
   @Expose()
   orders?: OrderResponse;
@@ -81,17 +86,34 @@ export class PositionResponse {
   @ApiProperty({
     description: 'The description of the position',
     example: 'Manager of the company',
+    nullable: true,
   })
   @IsString()
   @Expose()
-  description: string;
+  description: string | null;
 }
 
 @Exclude()
 export class ScheduleResponse {
   @ApiProperty({
+    description: 'The id of the schedule',
+    example: 1,
+  })
+  @IsInt()
+  @Expose()
+  id: number;
+
+  @ApiProperty({
+    description: 'The employee id',
+    example: 1,
+  })
+  @IsInt()
+  @Expose()
+  employeeId: number;
+
+  @ApiProperty({
     description: 'The start time of the schedule',
-    example: '09:00',
+    example: '2024-01-01T09:00:00Z',
   })
   @IsString()
   @Expose()
@@ -99,7 +121,7 @@ export class ScheduleResponse {
 
   @ApiProperty({
     description: 'The end time of the schedule',
-    example: '17:00',
+    example: '2024-01-01T17:00:00Z',
   })
   @IsString()
   @Expose()
@@ -127,8 +149,9 @@ export class OrderResponse {
   @ApiProperty({
     description: 'The status of the order',
     example: 'Pending',
+    nullable: true,
   })
   @IsString()
   @Expose()
-  status: string;
+  status: string | null;
 }

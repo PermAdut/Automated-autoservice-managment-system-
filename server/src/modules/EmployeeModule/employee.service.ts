@@ -1,58 +1,207 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { EmployeeResponse } from './Dto/employee.response';
-import { PoolClient } from 'pg';
-import { Employee, Order, Position, Schedule } from './schemas/employee.types';
+import {
+  employees,
+  positions,
+  workSchedules,
+  orders,
+} from '../database/schema';
+import { eq, and } from 'drizzle-orm';
 
 @Injectable()
 export class EmployeeService {
   constructor(private readonly databaseService: DatabaseService) {}
 
   async getEmployees(): Promise<EmployeeResponse[]> {
-    const client: PoolClient = await this.databaseService.getClient();
     try {
-      await client.query('BEGIN');
-      const employees = (await client.query(`SELECT * FROM "Employees"`))
-        .rows as unknown as Employee[];
-      if (employees.length === 0) {
-        await client.query('COMMIT');
+      const query = this.databaseService.db
+        .select({
+          id: employees.id,
+          positionId: employees.positionId,
+          hireDate: employees.hireDate,
+          salary: employees.salary,
+        })
+        .from(employees);
+
+      const employeesList = await query;
+
+      if (employeesList.length === 0) {
         return [];
       }
-      console.log(employees);
+
       const employeesResponse: EmployeeResponse[] = await Promise.all(
-        employees.map(async (employee) => {
-          const position = (
-            await client.query(`SELECT * FROM "Position" WHERE id = $1`, [
-              employee.positionId,
-            ])
-          ).rows[0] as unknown as Position;
-          const schedule = (
-            await client.query(
-              `SELECT * FROM "WorkSchedule" WHERE "employeeId" = $1`,
-              [employee.id],
+        employeesList.map(async employee => {
+          const [position] = await this.databaseService.db
+            .select()
+            .from(positions)
+            .where(eq(positions.id, employee.positionId))
+            .limit(1);
+
+          const [schedule] = await this.databaseService.db
+            .select()
+            .from(workSchedules)
+            .where(eq(workSchedules.employeeId, employee.id))
+            .limit(1);
+
+          const [currentOrder] = await this.databaseService.db
+            .select()
+            .from(orders)
+            .where(
+              and(
+                eq(orders.employeeId, employee.id),
+                eq(orders.status, 'pending')
+              )
             )
-          ).rows[0] as unknown as Schedule;
-          const orders = (
-            await client.query(
-              `SELECT * FROM "Orders" WHERE "employeeId" = $1 AND status = 'pending' LIMIT 1`,
-              [employee.id],
-            )
-          ).rows as unknown as Order[];
-          const currentOrder = orders[0] ?? undefined;
+            .limit(1);
+
           return {
-            ...employee,
-            position,
-            schedule,
-            orders: currentOrder,
+            id: employee.id,
+            positionId: employee.positionId,
+            hireDate: employee.hireDate.toISOString(),
+            salary: parseFloat(employee.salary.toString()),
+            position: position
+              ? {
+                  id: position.id,
+                  name: position.name,
+                  description: position.description,
+                }
+              : undefined,
+            schedule: schedule
+              ? {
+                  id: schedule.id,
+                  employeeId: schedule.employeeId,
+                  startTime: schedule.startTime.toISOString(),
+                  endTime: schedule.endTime.toISOString(),
+                  isAvailable: schedule.isAvailable,
+                }
+              : undefined,
+            orders: currentOrder
+              ? {
+                  id: currentOrder.id,
+                  status: currentOrder.status,
+                }
+              : undefined,
           };
-        }),
+        })
       );
-      await client.query('COMMIT');
+
       return employeesResponse;
     } catch (error: unknown) {
       throw new BadRequestException((error as Error).message);
-    } finally {
-      client.release();
     }
+  }
+
+  async getEmployeeById(id: string): Promise<EmployeeResponse> {
+    const [employee] = await this.databaseService.db
+      .select()
+      .from(employees)
+      .where(eq(employees.id, parseInt(id)))
+      .limit(1);
+
+    if (!employee) {
+      throw new NotFoundException(`Employee with id ${id} not found`);
+    }
+
+    const [position] = await this.databaseService.db
+      .select()
+      .from(positions)
+      .where(eq(positions.id, employee.positionId))
+      .limit(1);
+
+    const [schedule] = await this.databaseService.db
+      .select()
+      .from(workSchedules)
+      .where(eq(workSchedules.employeeId, employee.id))
+      .limit(1);
+
+    const [currentOrder] = await this.databaseService.db
+      .select()
+      .from(orders)
+      .where(
+        and(eq(orders.employeeId, employee.id), eq(orders.status, 'pending'))
+      )
+      .limit(1);
+
+    return {
+      id: employee.id,
+      hireDate: employee.hireDate.toISOString(),
+      salary: parseFloat(employee.salary.toString()),
+      position: position
+        ? {
+            id: position.id,
+            name: position.name,
+            description: position.description,
+          }
+        : undefined,
+      schedule: schedule
+        ? {
+            id: schedule.id,
+            employeeId: schedule.employeeId,
+            startTime: schedule.startTime.toISOString(),
+            endTime: schedule.endTime.toISOString(),
+            isAvailable: schedule.isAvailable,
+          }
+        : undefined,
+      orders: currentOrder
+        ? {
+            id: currentOrder.id,
+            status: currentOrder.status,
+          }
+        : undefined,
+    };
+  }
+
+  async createEmployee(employeeData: any): Promise<EmployeeResponse> {
+    const [newEmployee] = await this.databaseService.db
+      .insert(employees)
+      .values({
+        positionId: employeeData.positionId,
+        hireDate: employeeData.hireDate || new Date(),
+        salary: employeeData.salary,
+      })
+      .returning();
+
+    return this.getEmployeeById(newEmployee.id.toString());
+  }
+
+  async updateEmployee(
+    id: string,
+    employeeData: any
+  ): Promise<EmployeeResponse> {
+    const [updatedEmployee] = await this.databaseService.db
+      .update(employees)
+      .set({
+        positionId: employeeData.positionId,
+        salary: employeeData.salary,
+      })
+      .where(eq(employees.id, parseInt(id)))
+      .returning();
+
+    if (!updatedEmployee) {
+      throw new NotFoundException(`Employee with id ${id} not found`);
+    }
+
+    return this.getEmployeeById(id);
+  }
+
+  async deleteEmployee(id: string): Promise<void> {
+    const employee = await this.databaseService.db
+      .select()
+      .from(employees)
+      .where(eq(employees.id, parseInt(id)))
+      .limit(1);
+
+    if (employee.length === 0) {
+      throw new NotFoundException(`Employee with id ${id} not found`);
+    }
+
+    await this.databaseService.db
+      .delete(employees)
+      .where(eq(employees.id, parseInt(id)));
   }
 }

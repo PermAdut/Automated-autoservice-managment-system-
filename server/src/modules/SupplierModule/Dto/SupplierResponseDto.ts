@@ -20,7 +20,7 @@ export class SupplierResponseDto {
     quantity: number;
     deliverDate: string;
     status: string;
-    sparePart: {
+    sparePart?: {
       id: number;
       name: string;
       price: number;

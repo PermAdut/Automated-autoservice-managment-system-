@@ -1,16 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { Pool, PoolClient, QueryResult } from 'pg';
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
 import { config } from 'dotenv';
+import * as schema from './schema';
 
 config();
 
-interface QueryResultRow {
-  [key: string]: unknown;
-}
-
 @Injectable()
-export class DatabaseService {
-  private readonly pool: Pool;
+export class DatabaseService implements OnModuleInit {
+  private pool: Pool;
+  public db: ReturnType<typeof drizzle>;
 
   constructor() {
     this.pool = new Pool({
@@ -18,26 +17,20 @@ export class DatabaseService {
       host: process.env.DB_HOST,
       database: process.env.DB_NAME,
       password: process.env.DB_PASSWORD,
-      port: process.env.DB_PORT,
+      port: parseInt(process.env.DB_PORT || '5432'),
     });
+
+    this.db = drizzle(this.pool, { schema });
   }
 
-  async query<T extends QueryResultRow = QueryResultRow>(
-    sql: string,
-    params: unknown[] = [],
-  ): Promise<T[]> {
-    let client: PoolClient | null = null;
+  async onModuleInit() {
+    // Test connection
     try {
-      client = await this.pool.connect();
-      const result: QueryResult<T> = await client.query<T>(sql, params);
-      return result.rows;
+      await this.pool.query('SELECT NOW()');
+      console.log('Database connection established');
     } catch (error) {
-      console.error(error);
-      throw new Error(`Database query failed: ${(error as Error).message}`);
-    } finally {
-      if (client) {
-        client.release();
-      }
+      console.error('Database connection failed:', error);
+      throw error;
     }
   }
 
@@ -45,7 +38,11 @@ export class DatabaseService {
     await this.pool.end();
   }
 
-  async getClient(): Promise<PoolClient> {
+  async getClient() {
     return await this.pool.connect();
+  }
+
+  async query(text: string, params?: any[]) {
+    return this.pool.query(text, params);
   }
 }

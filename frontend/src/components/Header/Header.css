@@ -23,10 +23,50 @@
     margin: 0;
   }
   
+.header-nav {
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 1024px) {
   .header-nav {
-    display: flex;
-    gap: 40px;
+    gap: 20px;
   }
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .header-nav {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    gap: 1rem;
+    font-size: 0.875rem;
+  }
+
+  .header-user {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .header-logo h1 {
+    font-size: 1.5rem;
+  }
+
+  .header-link {
+    font-size: 0.875rem;
+  }
+
+  .header-user-info {
+    display: none;
+  }
+}
   
   .header-link {
     font-size: 1.125rem; /* 18px */
@@ -43,18 +83,48 @@
     text-underline-offset: 4px;
   }
   
-  .header-user {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-  }
-  
-  .header-placeholder {
-    font-size: 1.125rem; /* 18px */
-    font-weight: 600;
-    color: #e0e7ff;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  }
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.header-user-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.header-user-role {
+  font-size: 0.75rem;
+  color: #e0e7ff;
+  text-transform: capitalize;
+}
+
+.header-login-button {
+  padding: 8px 20px;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-weight: 600;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
+}
+
+.header-login-button:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
+}
   
   .header-logout {
     padding: 8px 20px;

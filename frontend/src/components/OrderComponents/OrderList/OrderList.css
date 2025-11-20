@@ -18,6 +18,21 @@
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 20px;
   }
+
+  @media (max-width: 768px) {
+    .order-list-container {
+      padding: 16px 8px;
+    }
+
+    .order-list-title {
+      font-size: 1.5rem;
+    }
+
+    .order-list-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+  }
   
   .order-list-loading {
     font-size: 1.25rem; /* 20px */

@@ -1,36 +1,68 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { Category, SparePart, PositionForBuying } from './schemas/Supplier';
 import { SupplierResponseDto } from './Dto/SupplierResponseDto';
 import { plainToInstance } from 'class-transformer';
+import { suppliers, positionsForBuying } from '../database/schema';
+import { eq, like, or, desc, asc } from 'drizzle-orm';
+
 @Injectable()
 export class SupplierService {
   constructor(private readonly databaseService: DatabaseService) {}
-  async findAll(): Promise<SupplierResponseDto[]> {
+
+  async findAll(
+    search?: string,
+    sortBy?: string,
+    sortOrder?: 'asc' | 'desc'
+  ): Promise<SupplierResponseDto[]> {
     try {
-      const suppliersResult = await this.databaseService.query(
-        `
-SELECT 
-  s.id,
-  s.name,
-  s.contact,
-  s.address,
-  COALESCE(
-    (SELECT json_agg(
-      json_build_object(
-        'id', pfb.id,
-        'quantity', pfb.quantity,
-        'deliverDate', pfb."deliveryDate",
-        'status', pfb.status
-      )
-    ) FROM public."PositionsForBuying" pfb
-    WHERE pfb."supplierId" = s.id),
-    '[]'
-  ) as positionsForBuying
-FROM public."Suppliers" s
-        `,
+      let baseQuery = this.databaseService.db.select().from(suppliers);
+
+      if (search) {
+        baseQuery = baseQuery.where(
+          or(
+            like(suppliers.name, `%${search}%`),
+            like(suppliers.contact, `%${search}%`),
+            like(suppliers.address, `%${search}%`)
+          )
+        ) as typeof baseQuery;
+      }
+
+      if (sortBy === 'name') {
+        const orderBy = sortOrder === 'desc' ? desc : asc;
+        baseQuery = baseQuery.orderBy(
+          orderBy(suppliers.name)
+        ) as typeof baseQuery;
+      }
+
+      const suppliersList = await baseQuery;
+
+      const suppliersResponse: SupplierResponseDto[] = await Promise.all(
+        suppliersList.map(async supplier => {
+          const positions = await this.databaseService.db
+            .select()
+            .from(positionsForBuying)
+            .where(eq(positionsForBuying.supplierId, supplier.id));
+
+          return {
+            id: supplier.id,
+            name: supplier.name,
+            contact: supplier.contact || '',
+            address: supplier.address || '',
+            positionsForBuying: positions.map(p => ({
+              id: p.id,
+              quantity: p.quantity,
+              deliverDate: p.deliveryDate.toISOString(),
+              status: p.status,
+            })),
+          };
+        })
       );
-      return plainToInstance(SupplierResponseDto, suppliersResult, {
+
+      return plainToInstance(SupplierResponseDto, suppliersResponse, {
         excludeExtraneousValues: true,
       });
     } catch {
@@ -38,33 +70,91 @@ FROM public."Suppliers" s
     }
   }
 
-  async getPositionForBuying(supplierId: number): Promise<PositionForBuying[]> {
-    const positionForBuying = await this.databaseService.query(
-      `
-      SELECT * FROM "PositionForBuying" WHERE "supplierId" = $1
-    `,
-      [supplierId],
-    );
-    return positionForBuying as unknown as PositionForBuying[];
+  async findById(id: string): Promise<SupplierResponseDto> {
+    const [supplier] = await this.databaseService.db
+      .select()
+      .from(suppliers)
+      .where(eq(suppliers.id, parseInt(id)))
+      .limit(1);
+
+    if (!supplier) {
+      throw new NotFoundException(`Supplier with id ${id} not found`);
+    }
+
+    const positions = await this.databaseService.db
+      .select()
+      .from(positionsForBuying)
+      .where(eq(positionsForBuying.supplierId, supplier.id));
+
+    return {
+      id: supplier.id,
+      name: supplier.name,
+      contact: supplier.contact || '',
+      address: supplier.address || '',
+      positionsForBuying: positions.map(p => ({
+        id: p.id,
+        quantity: p.quantity,
+        deliverDate: p.deliveryDate.toISOString(),
+        status: p.status,
+      })),
+    };
   }
 
-  async getSparePart(positionForBuyingId: number): Promise<SparePart[]> {
-    const sparePart = await this.databaseService.query(
-      `
-      SELECT * FROM "SparePart" WHERE "positionForBuyingId" = $1
-    `,
-      [positionForBuyingId],
-    );
-    return sparePart as unknown as SparePart[];
+  async create(supplierData: {
+    name: string;
+    contact?: string;
+    address?: string;
+  }): Promise<SupplierResponseDto> {
+    const [newSupplier] = await this.databaseService.db
+      .insert(suppliers)
+      .values({
+        name: supplierData.name,
+        contact: supplierData.contact,
+        address: supplierData.address,
+      })
+      .returning();
+
+    return this.findById(newSupplier.id.toString());
   }
 
-  async getCategory(sparePartId: number): Promise<Category> {
-    const category = (await this.databaseService.query(
-      `
-      SELECT * FROM "Category" WHERE "sparePartId" = $1
-    `,
-      [sparePartId],
-    )) as unknown as Category;
-    return category;
+  async update(
+    id: string,
+    supplierData: {
+      name?: string;
+      contact?: string;
+      address?: string;
+    }
+  ): Promise<SupplierResponseDto> {
+    const [updatedSupplier] = await this.databaseService.db
+      .update(suppliers)
+      .set({
+        name: supplierData.name,
+        contact: supplierData.contact,
+        address: supplierData.address,
+      })
+      .where(eq(suppliers.id, parseInt(id)))
+      .returning();
+
+    if (!updatedSupplier) {
+      throw new NotFoundException(`Supplier with id ${id} not found`);
+    }
+
+    return this.findById(id);
+  }
+
+  async delete(id: string): Promise<void> {
+    const supplier = await this.databaseService.db
+      .select()
+      .from(suppliers)
+      .where(eq(suppliers.id, parseInt(id)))
+      .limit(1);
+
+    if (supplier.length === 0) {
+      throw new NotFoundException(`Supplier with id ${id} not found`);
+    }
+
+    await this.databaseService.db
+      .delete(suppliers)
+      .where(eq(suppliers.id, parseInt(id)));
   }
 }

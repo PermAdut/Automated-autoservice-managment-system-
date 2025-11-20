@@ -1,0 +1,15 @@
+export const apiTags = {
+  USERS: 'Users',
+  USER: 'User',
+  EMPLOYEES: 'Employees',
+  EMPLOYEE: 'Employee',
+  ORDERS: 'Orders',
+  ORDER: 'Order',
+  SERVICES: 'Services',
+  SERVICE: 'Service',
+  SUPPLIERS: 'Suppliers',
+  SUPPLIER: 'Supplier',
+  SPARE_PARTS: 'SpareParts',
+  SPARE_PART: 'SparePart',
+} as const;
+
