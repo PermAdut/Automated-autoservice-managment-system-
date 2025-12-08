@@ -7,7 +7,9 @@ import { DatabaseService } from '../database/database.service';
 import { SupplierResponseDto } from './Dto/SupplierResponseDto';
 import { plainToInstance } from 'class-transformer';
 import { suppliers, positionsForBuying } from '../database/schema';
-import { eq, like, or, desc, asc } from 'drizzle-orm';
+import { eq, ilike, desc, asc, or, sql } from 'drizzle-orm';
+import { CreateSupplierDto } from './Dto/create-supplier.dto';
+import { UpdateSupplierDto } from './Dto/update-supplier.dto';
 
 @Injectable()
 export class SupplierService {
@@ -15,8 +17,8 @@ export class SupplierService {
 
   async findAll(
     search?: string,
-    sortBy?: string,
-    sortOrder?: 'asc' | 'desc'
+    sortBy: 'name' | 'id' | undefined = 'name',
+    sortOrder: 'asc' | 'desc' = 'asc'
   ): Promise<SupplierResponseDto[]> {
     try {
       let baseQuery = this.databaseService.db.select().from(suppliers);
@@ -24,9 +26,14 @@ export class SupplierService {
       if (search) {
         baseQuery = baseQuery.where(
           or(
-            like(suppliers.name, `%${search}%`),
-            like(suppliers.contact, `%${search}%`),
-            like(suppliers.address, `%${search}%`)
+            ilike(suppliers.name, `%${search}%`),
+            suppliers.contact
+              ? ilike(suppliers.contact, `%${search}%`)
+              : sql`FALSE`,
+            suppliers.address
+              ? ilike(suppliers.address, `%${search}%`)
+              : sql`FALSE`,
+            sql`CAST(${suppliers.id} AS TEXT) LIKE ${`%${search}%`}`
           )
         ) as typeof baseQuery;
       }
@@ -35,6 +42,11 @@ export class SupplierService {
         const orderBy = sortOrder === 'desc' ? desc : asc;
         baseQuery = baseQuery.orderBy(
           orderBy(suppliers.name)
+        ) as typeof baseQuery;
+      } else if (sortBy === 'id') {
+        const orderBy = sortOrder === 'desc' ? desc : asc;
+        baseQuery = baseQuery.orderBy(
+          orderBy(suppliers.id)
         ) as typeof baseQuery;
       }
 
@@ -70,11 +82,11 @@ export class SupplierService {
     }
   }
 
-  async findById(id: string): Promise<SupplierResponseDto> {
+  async findById(id: number): Promise<SupplierResponseDto> {
     const [supplier] = await this.databaseService.db
       .select()
       .from(suppliers)
-      .where(eq(suppliers.id, parseInt(id)))
+      .where(eq(suppliers.id, id))
       .limit(1);
 
     if (!supplier) {
@@ -100,11 +112,7 @@ export class SupplierService {
     };
   }
 
-  async create(supplierData: {
-    name: string;
-    contact?: string;
-    address?: string;
-  }): Promise<SupplierResponseDto> {
+  async create(supplierData: CreateSupplierDto): Promise<SupplierResponseDto> {
     const [newSupplier] = await this.databaseService.db
       .insert(suppliers)
       .values({
@@ -114,25 +122,35 @@ export class SupplierService {
       })
       .returning();
 
-    return this.findById(newSupplier.id.toString());
+    return this.findById(newSupplier.id);
   }
 
   async update(
-    id: string,
-    supplierData: {
-      name?: string;
-      contact?: string;
-      address?: string;
-    }
+    id: number,
+    supplierData: UpdateSupplierDto
   ): Promise<SupplierResponseDto> {
+    const updatePayload: Partial<typeof suppliers.$inferInsert> = {};
+
+    if (supplierData.name !== undefined) {
+      updatePayload.name = supplierData.name;
+    }
+
+    if (supplierData.contact !== undefined) {
+      updatePayload.contact = supplierData.contact;
+    }
+
+    if (supplierData.address !== undefined) {
+      updatePayload.address = supplierData.address;
+    }
+
+    if (Object.keys(updatePayload).length === 0) {
+      throw new BadRequestException('No supplier fields provided for update');
+    }
+
     const [updatedSupplier] = await this.databaseService.db
       .update(suppliers)
-      .set({
-        name: supplierData.name,
-        contact: supplierData.contact,
-        address: supplierData.address,
-      })
-      .where(eq(suppliers.id, parseInt(id)))
+      .set(updatePayload)
+      .where(eq(suppliers.id, id))
       .returning();
 
     if (!updatedSupplier) {
@@ -142,19 +160,17 @@ export class SupplierService {
     return this.findById(id);
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: number): Promise<void> {
     const supplier = await this.databaseService.db
       .select()
       .from(suppliers)
-      .where(eq(suppliers.id, parseInt(id)))
+      .where(eq(suppliers.id, id))
       .limit(1);
 
     if (supplier.length === 0) {
       throw new NotFoundException(`Supplier with id ${id} not found`);
     }
 
-    await this.databaseService.db
-      .delete(suppliers)
-      .where(eq(suppliers.id, parseInt(id)));
+    await this.databaseService.db.delete(suppliers).where(eq(suppliers.id, id));
   }
 }

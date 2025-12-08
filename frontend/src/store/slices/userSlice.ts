@@ -1,6 +1,7 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
-import { serverConfig } from '../../configs/serverConfig';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
+import { serverConfig } from "../../configs/serverConfig";
+import type { RootState } from "..";
 
 interface User {
   id: number;
@@ -23,7 +24,7 @@ export interface UserDetailed {
     identityNumber: string;
     nationality: string;
     birthDate: string;
-    gender: 'M' | 'F';
+    gender: "M" | "F";
     expiriationDate: string;
   };
   subscriptions?: {
@@ -62,67 +63,101 @@ interface UserState {
   error: string | null;
 }
 
+const withAuth = (getState: () => unknown) => {
+  const state = getState() as RootState;
+  return state.auth?.accessToken ?? localStorage.getItem("access_token");
+};
+
 export const fetchUsers = createAsyncThunk(
-  'users/fetchUsers',
-  async (_, { rejectWithValue }) => {
+  "users/fetchUsers",
+  async (
+    params: { search?: string; sortOrder?: "asc" | "desc" } | undefined,
+    { rejectWithValue, getState }
+  ) => {
     try {
-      const response = await axios.get(`${serverConfig.url}/api/v1.0/users/rawData/users`);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const token = withAuth(getState);
+      const response = await axios.get(
+        `${serverConfig.url}/api/v1.0/users/rawData/users`,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          params: {
+            search: params?.search,
+            sortBy: "name",
+            sortOrder: params?.sortOrder ?? "asc",
+          },
+        }
+      );
       return response.data;
     } catch {
-      return rejectWithValue('Failed to fetch users');
+      return rejectWithValue("Failed to fetch users");
     }
   }
 );
 
 export const fetchUsersById = createAsyncThunk(
-  'users/fetchUsersById',
-  async (userId: number, { rejectWithValue }) => {
+  "users/fetchUsersById",
+  async (userId: number, { rejectWithValue, getState }) => {
     try {
-      const response = await axios.get(`${serverConfig.url}/api/v1.0/users/${userId}`);
+      const token = withAuth(getState);
+      const response = await axios.get(
+        `${serverConfig.url}/api/v1.0/users/${userId}`,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }
+      );
       await new Promise((resolve) => setTimeout(resolve, 1000));
       const userData = response.data;
       return userData;
     } catch {
-      return rejectWithValue('Failed to fetch user by ID');
+      return rejectWithValue("Failed to fetch user by ID");
     }
   }
 );
 
 export const deleteUser = createAsyncThunk(
-  'users/deleteUser',
-  async (userId: number, { rejectWithValue }) => {
+  "users/deleteUser",
+  async (userId: number, { rejectWithValue, getState }) => {
     try {
-      const response = await axios.delete(`${serverConfig.url}/api/v1.0/users/${userId}`);
+      const token = withAuth(getState);
+      const response = await axios.delete(
+        `${serverConfig.url}/api/v1.0/users/${userId}`,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }
+      );
       await new Promise((resolve) => setTimeout(resolve, 1000));
       return response.data;
     } catch {
-      return rejectWithValue('Failed to delete user');
+      return rejectWithValue("Failed to delete user");
     }
   }
 );
 
 export const updateUser = createAsyncThunk(
-  'users/updateUser',
-  async (user: UserDetailed, { rejectWithValue }) => {
+  "users/updateUser",
+  async (user: UserDetailed, { rejectWithValue, getState }) => {
     try {
-      const response = await axios.put(`${serverConfig.url}/api/v1.0/users/${user.id}`, user);
+      const token = withAuth(getState);
+      const response = await axios.put(
+        `${serverConfig.url}/api/v1.0/users/${user.id}`,
+        user,
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
       await new Promise((resolve) => setTimeout(resolve, 1000));
       return response.data;
     } catch {
-      return rejectWithValue('Failed to update user');
+      return rejectWithValue("Failed to update user");
     }
   }
 );
 
-
 const userSlice = createSlice({
-  name: 'users',
+  name: "users",
   initialState: {
     users: [],
-    detailedUser:null,
+    detailedUser: null,
     loading: false,
-    error: null
+    error: null,
   } as UserState,
   reducers: {},
   extraReducers: (builder) => {
@@ -151,7 +186,7 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       });
-  }
+  },
 });
 
 export default userSlice.reducer;

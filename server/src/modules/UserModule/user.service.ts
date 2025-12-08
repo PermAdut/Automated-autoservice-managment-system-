@@ -19,7 +19,7 @@ import {
   reviews,
   subscriptions,
 } from '../database/schema';
-import { eq, or, like } from 'drizzle-orm';
+import { asc, desc, eq, like, or } from 'drizzle-orm';
 
 @Injectable()
 export class UserService {
@@ -32,11 +32,11 @@ export class UserService {
     });
   }
 
-  async findByIdRaw(id: string): Promise<UserRaw> {
+  async findByIdRaw(id: number): Promise<UserRaw> {
     const user = await this.databaseService.db
       .select()
       .from(users)
-      .where(eq(users.id, parseInt(id)))
+      .where(eq(users.id, id))
       .limit(1);
 
     if (user.length === 0) {
@@ -132,11 +132,11 @@ export class UserService {
     }
   }
 
-  async deleteUser(id: string): Promise<void> {
+  async deleteUser(id: number): Promise<void> {
     const user = await this.databaseService.db
       .select()
       .from(users)
-      .where(eq(users.id, parseInt(id)))
+      .where(eq(users.id, id))
       .limit(1);
 
     if (user.length === 0) {
@@ -145,14 +145,12 @@ export class UserService {
 
     try {
       await this.databaseService.db.transaction(async tx => {
-        await tx.delete(passports).where(eq(passports.userId, parseInt(id)));
-        await tx.delete(orders).where(eq(orders.userId, parseInt(id)));
-        await tx.delete(cars).where(eq(cars.userId, parseInt(id)));
-        await tx.delete(reviews).where(eq(reviews.userId, parseInt(id)));
-        await tx
-          .delete(subscriptions)
-          .where(eq(subscriptions.userId, parseInt(id)));
-        await tx.delete(users).where(eq(users.id, parseInt(id)));
+        await tx.delete(passports).where(eq(passports.userId, id));
+        await tx.delete(orders).where(eq(orders.userId, id));
+        await tx.delete(cars).where(eq(cars.userId, id));
+        await tx.delete(reviews).where(eq(reviews.userId, id));
+        await tx.delete(subscriptions).where(eq(subscriptions.userId, id));
+        await tx.delete(users).where(eq(users.id, id));
       });
 
       console.log(`deleted user: ${user[0].name}`);
@@ -161,7 +159,11 @@ export class UserService {
     }
   }
 
-  async findAll(search?: string): Promise<UserResponseDto[]> {
+  async findAll(
+    search?: string,
+    sortBy: 'name' | undefined = 'name',
+    sortOrder: 'asc' | 'desc' = 'asc'
+  ): Promise<UserResponseDto[]> {
     let query = this.databaseService.db
       .select({
         id: users.id,
@@ -186,6 +188,11 @@ export class UserService {
           like(users.phone, `%${search}%`)
         )
       ) as any;
+    }
+
+    if (sortBy === 'name') {
+      const orderBy = sortOrder === 'desc' ? desc(users.name) : asc(users.name);
+      query = query.orderBy(orderBy) as any;
     }
 
     const usersList = await query;
@@ -277,7 +284,7 @@ export class UserService {
     return userResponse;
   }
 
-  async findById(id: string): Promise<UserResponseDto> {
+  async findById(id: number): Promise<UserResponseDto> {
     const userResult = await this.databaseService.db
       .select({
         id: users.id,
@@ -293,7 +300,7 @@ export class UserService {
       })
       .from(users)
       .leftJoin(roles, eq(users.roleId, roles.id))
-      .where(eq(users.id, parseInt(id)))
+      .where(eq(users.id, id))
       .limit(1);
 
     if (userResult.length === 0) {
@@ -395,43 +402,55 @@ export class UserService {
     return role[0];
   }
 
+  async getRoles(): Promise<{ id: number; name: string }[]> {
+    return await this.databaseService.db.select().from(roles);
+  }
+
   async updateUser(
-    id: string,
+    id: number,
     userBody: UpdateUserDto
   ): Promise<UserResponseDto> {
     const userCheck = await this.databaseService.db
       .select()
       .from(users)
-      .where(eq(users.id, parseInt(id)))
+      .where(eq(users.id, id))
       .limit(1);
 
     if (userCheck.length === 0) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
 
-    const passHash: string = await bcrypt.hash(userBody.password, 10);
-    if (passHash !== userCheck[0].passwordHash) {
-      throw new BadRequestException({
-        message: 'Invalid password',
-      });
+    let newPasswordHash = userCheck[0].passwordHash;
+    if (userBody.password) {
+      newPasswordHash = await bcrypt.hash(userBody.password, 10);
     }
 
-    const [updatedUser] = await this.databaseService.db
+    if (userBody.roleId !== undefined) {
+      const role = await this.databaseService.db
+        .select()
+        .from(roles)
+        .where(eq(roles.id, userBody.roleId))
+        .limit(1);
+      if (role.length === 0) {
+        throw new BadRequestException(
+          `Role with id ${userBody.roleId} not found`
+        );
+      }
+    }
+
+    await this.databaseService.db
       .update(users)
       .set({
         name: userBody.name ?? userCheck[0].name,
         surName: userBody.surName ?? userCheck[0].surName,
         email: userBody.email ?? userCheck[0].email,
         phone: userBody.phone ?? userCheck[0].phone,
-        passwordHash: passHash ?? userCheck[0].passwordHash,
+        passwordHash: newPasswordHash,
+        roleId: userBody.roleId ?? userCheck[0].roleId,
         updatedAt: new Date(),
       })
-      .where(eq(users.id, parseInt(id)))
-      .returning();
+      .where(eq(users.id, id));
 
-    console.log(`updated user: ${updatedUser.name}`);
-    return plainToInstance(UserResponseDto, updatedUser, {
-      excludeExtraneousValues: true,
-    });
+    return this.findById(id);
   }
 }

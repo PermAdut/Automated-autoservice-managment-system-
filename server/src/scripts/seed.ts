@@ -11,13 +11,34 @@ import {
   stores,
   sparePartStore,
   cars,
-} from '../modules/database/schema';
+  orders,
+  servicesOrders,
+  sparePartOrders,
+  payments,
+} from '../drizzle/schema';
 import * as bcrypt from 'bcrypt';
 
 async function seed() {
   const dbService = new DatabaseService();
 
   try {
+    // Clear tables (order respects FK)
+    await dbService.db.delete(sparePartStore);
+    await dbService.db.delete(servicesOrders);
+    await dbService.db.delete(sparePartOrders);
+    await dbService.db.delete(payments);
+    await dbService.db.delete(orders);
+    await dbService.db.delete(cars);
+    await dbService.db.delete(spareParts);
+    await dbService.db.delete(categories);
+    await dbService.db.delete(stores);
+    await dbService.db.delete(services);
+    await dbService.db.delete(employees);
+    await dbService.db.delete(positions);
+    await dbService.db.delete(users);
+    await dbService.db.delete(suppliers);
+    await dbService.db.delete(roles);
+
     // Create roles
     await dbService.db.insert(roles).values({ name: 'guest' });
     const [adminRole] = await dbService.db
@@ -33,31 +54,64 @@ async function seed() {
       .values({ name: 'customer' })
       .returning();
 
-    // Create users (10+)
+    // Create users
     const passwordHash: string = await bcrypt.hash('password123', 10);
-    const usersData: Array<{
-      login: string;
-      name: string;
-      surName: string;
-      email: string;
-      phone: string | null;
-      passwordHash: string | null;
-      oauthProvider?: 'google' | 'local' | null;
-      oauthId?: string | null;
-      roleId: number;
-    }> = [];
-    for (let i = 1; i <= 12; i++) {
-      usersData.push({
-        login: `user${i}`,
-        name: `Name${i}`,
-        surName: `Surname${i}`,
-        email: `user${i}@example.com`,
-        phone: `+123456789${i}`,
+    const usersData = [
+      {
+        login: 'alice',
+        name: 'Alice',
+        surName: 'Johnson',
+        email: 'alice@example.com',
+        phone: '+1-202-555-0101',
         passwordHash,
-        roleId:
-          i <= 2 ? adminRole.id : i <= 4 ? managerRole.id : customerRole.id,
-      });
-    }
+        roleId: adminRole.id,
+      },
+      {
+        login: 'bob',
+        name: 'Bob',
+        surName: 'Williams',
+        email: 'bob@example.com',
+        phone: '+1-202-555-0102',
+        passwordHash,
+        roleId: managerRole.id,
+      },
+      {
+        login: 'carol',
+        name: 'Carol',
+        surName: 'Smith',
+        email: 'carol@example.com',
+        phone: '+1-202-555-0103',
+        passwordHash,
+        roleId: customerRole.id,
+      },
+      {
+        login: 'dave',
+        name: 'Dave',
+        surName: 'Brown',
+        email: 'dave@example.com',
+        phone: '+1-202-555-0104',
+        passwordHash,
+        roleId: customerRole.id,
+      },
+      {
+        login: 'eva',
+        name: 'Eva',
+        surName: 'Miller',
+        email: 'eva@example.com',
+        phone: '+1-202-555-0105',
+        passwordHash,
+        roleId: customerRole.id,
+      },
+      {
+        login: 'frank',
+        name: 'Frank',
+        surName: 'Taylor',
+        email: 'frank@example.com',
+        phone: '+1-202-555-0106',
+        passwordHash,
+        roleId: customerRole.id,
+      },
+    ];
     const createdUsers = await dbService.db
       .insert(users)
       .values(usersData)
@@ -76,54 +130,99 @@ async function seed() {
       .returning();
 
     // Create employees (10+)
-    const employeesData: Array<{
-      positionId: number;
-      hireDate: Date;
-      salary: string;
-    }> = [];
-    for (let i = 0; i < 12; i++) {
-      employeesData.push({
-        positionId: createdPositions[i % createdPositions.length].id,
-        hireDate: new Date(2020 + i, 0, 1),
-        salary: (30000 + i * 5000).toString(),
-      });
-    }
+    const employeesData = [
+      {
+        positionId: createdPositions[0].id,
+        hireDate: new Date(2020, 0, 1),
+        salary: '45000',
+        name: 'Антон',
+        surName: 'Громов',
+        lastName: 'Игоревич',
+      },
+      {
+        positionId: createdPositions[0].id,
+        hireDate: new Date(2021, 2, 10),
+        salary: '48000',
+        name: 'Мария',
+        surName: 'Сидорова',
+        lastName: 'Андреевна',
+      },
+      {
+        positionId: createdPositions[1].id,
+        hireDate: new Date(2019, 5, 5),
+        salary: '60000',
+        name: 'Дмитрий',
+        surName: 'Семенов',
+        lastName: 'Петрович',
+      },
+      {
+        positionId: createdPositions[2].id,
+        hireDate: new Date(2022, 3, 15),
+        salary: '35000',
+        name: 'Юлия',
+        surName: 'Орлова',
+      },
+      {
+        positionId: createdPositions[3].id,
+        hireDate: new Date(2023, 1, 20),
+        salary: '52000',
+        name: 'Владислав',
+        surName: 'Козлов',
+      },
+    ];
     const createdEmployees = await dbService.db
       .insert(employees)
       .values(employeesData)
       .returning();
 
     // Create services (10+)
-    const servicesData: Array<{
-      name: string;
-      description: string;
-      price: string;
-    }> = [];
-    for (let i = 1; i <= 12; i++) {
-      servicesData.push({
-        name: `Service ${i}`,
-        description: `Description for service ${i}`,
-        price: (100 + i * 10).toString(),
-      });
-    }
+    const servicesData = [
+      {
+        name: 'Замена масла',
+        description: 'Полная замена масла и фильтра',
+        price: 120,
+      },
+      {
+        name: 'Диагностика',
+        description: 'Комплексная диагностика',
+        price: 80,
+      },
+      {
+        name: 'Замена тормозных колодок',
+        description: 'Передняя ось',
+        price: 150,
+      },
+      { name: 'Замена свечей', description: 'Свечи зажигания', price: 90 },
+      { name: 'Ремонт подвески', description: 'Шаровые, стойки', price: 200 },
+      {
+        name: 'Ремонт электрики',
+        description: 'Электрооборудование',
+        price: 180,
+      },
+    ];
     const createdServices = await dbService.db
       .insert(services)
       .values(servicesData)
       .returning();
 
     // Create suppliers (10+)
-    const suppliersData: Array<{
-      name: string;
-      contact: string;
-      address: string;
-    }> = [];
-    for (let i = 1; i <= 12; i++) {
-      suppliersData.push({
-        name: `Supplier ${i}`,
-        contact: `contact${i}@supplier.com`,
-        address: `Address ${i}, City ${i}`,
-      });
-    }
+    const suppliersData = [
+      {
+        name: 'AutoParts Ltd',
+        contact: 'sales@autoparts.com',
+        address: 'Минск, ул. Ленина 10',
+      },
+      {
+        name: 'Brake&Co',
+        contact: 'info@brakeco.com',
+        address: 'Минск, пр-т Победителей 25',
+      },
+      {
+        name: 'EngineMaster',
+        contact: 'hello@engine-master.com',
+        address: 'Гомель, ул. Кирова 5',
+      },
+    ];
     const createdSuppliers = await dbService.db
       .insert(suppliers)
       .values(suppliersData)
@@ -131,10 +230,10 @@ async function seed() {
 
     // Create categories
     const categoriesData = [
-      { name: 'Engine Parts', description: 'Engine components' },
-      { name: 'Brake System', description: 'Brake components' },
-      { name: 'Suspension', description: 'Suspension parts' },
-      { name: 'Electrical', description: 'Electrical components' },
+      { name: 'Двигатель', description: 'Детали двигателя' },
+      { name: 'Тормоза', description: 'Тормозные системы' },
+      { name: 'Подвеска', description: 'Подвеска и рулевое' },
+      { name: 'Электрика', description: 'Электрооборудование' },
     ];
     const createdCategories = await dbService.db
       .insert(categories)
@@ -142,20 +241,44 @@ async function seed() {
       .returning();
 
     // Create spare parts (10+)
-    const sparePartsData: Array<{
-      name: string;
-      partNumber: string;
-      price: string;
-      categoryId: number;
-    }> = [];
-    for (let i = 1; i <= 12; i++) {
-      sparePartsData.push({
-        name: `Spare Part ${i}`,
-        partNumber: `PART-${i.toString().padStart(4, '0')}`,
-        price: (50 + i * 5).toString(),
-        categoryId: createdCategories[i % createdCategories.length].id,
-      });
-    }
+    const sparePartsData = [
+      {
+        name: 'Фильтр масляный',
+        partNumber: 'OF-1001',
+        price: '25.50',
+        categoryId: createdCategories[0].id,
+      },
+      {
+        name: 'Свеча зажигания',
+        partNumber: 'SP-2002',
+        price: '12.90',
+        categoryId: createdCategories[0].id,
+      },
+      {
+        name: 'Колодки тормозные',
+        partNumber: 'BR-3003',
+        price: '45.00',
+        categoryId: createdCategories[1].id,
+      },
+      {
+        name: 'Амортизатор передний',
+        partNumber: 'SU-4004',
+        price: '110.00',
+        categoryId: createdCategories[2].id,
+      },
+      {
+        name: 'Рулевой наконечник',
+        partNumber: 'ST-5005',
+        price: '38.70',
+        categoryId: createdCategories[2].id,
+      },
+      {
+        name: 'Аккумулятор 60Ah',
+        partNumber: 'EL-6006',
+        price: '95.00',
+        categoryId: createdCategories[3].id,
+      },
+    ];
     const createdSpareParts = await dbService.db
       .insert(spareParts)
       .values(sparePartsData)
@@ -163,9 +286,9 @@ async function seed() {
 
     // Create stores
     const storesData = [
-      { location: 'Warehouse A' },
-      { location: 'Warehouse B' },
-      { location: 'Main Store' },
+      { location: 'Склад Центральный' },
+      { location: 'Склад Северный' },
+      { location: 'Магазин на пр-т Победителей' },
     ];
     const createdStores = await dbService.db
       .insert(stores)
@@ -173,18 +296,11 @@ async function seed() {
       .returning();
 
     // Create spare part store relationships
-    const sparePartStoreData: Array<{
-      sparePartId: number;
-      storeId: number;
-      quantity: number;
-    }> = [];
-    for (let i = 0; i < createdSpareParts.length; i++) {
-      sparePartStoreData.push({
-        sparePartId: createdSpareParts[i].id,
-        storeId: createdStores[i % createdStores.length].id,
-        quantity: 10 + i,
-      });
-    }
+    const sparePartStoreData = createdSpareParts.map((part, idx) => ({
+      sparePartId: part.id,
+      storeId: createdStores[idx % createdStores.length].id,
+      quantity: 10 + idx * 2,
+    }));
     await dbService.db.insert(sparePartStore).values(sparePartStoreData);
 
     // Create cars for users

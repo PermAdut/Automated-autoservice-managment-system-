@@ -4,19 +4,19 @@ import "./OrderItem.css";
 interface OrderItemProps {
   id: number;
   userId: number;
-  carId: string | null;
-  employeeId: string | null;
+  carId: number | null;
+  employeeId: number | null;
   status: string;
   createdAt: string;
-  updatedAt: string;
-  completedAt: string;
+  updatedAt: string | null;
+  completedAt: string | null;
   services?: { id: number; name: string; description: string; price: number }[];
   sparePart?: {
     id: number;
     name: string;
     partNumber: string;
     price: number;
-    categorie: { id: number; name: string; description: string };
+    category?: { id: number; name: string; description?: string };
   }[];
 }
 
@@ -96,8 +96,9 @@ export const OrderItem: React.FC<OrderItemProps> = ({
                 <strong>Цена:</strong> {part.price} руб.
               </p>
               <p>
-                <strong>Категория:</strong> {part.categorie.name} (
-                {part.categorie.description})
+                <strong>Категория:</strong>{" "}
+                {part.category?.name ?? "Не указано"} (
+                {part.category?.description ?? "—"})
               </p>
             </div>
           ))}

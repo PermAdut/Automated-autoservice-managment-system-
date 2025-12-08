@@ -19,8 +19,7 @@ async function runMigrations() {
 
   console.log('Running migrations...');
 
-  // Get the migrations folder path relative to the project root
-  const migrationsFolder = path.resolve(process.cwd(), 'drizzle');
+  const migrationsFolder = path.resolve(process.cwd(), 'drizzle/migrations');
 
   await migrate(db, {
     migrationsFolder,

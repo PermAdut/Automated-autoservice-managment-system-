@@ -11,22 +11,65 @@ import {
   workSchedules,
   orders,
 } from '../database/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, asc, desc, ilike, or, sql } from 'drizzle-orm';
+import { CreateEmployeeDto } from './Dto/create-employee.dto';
+import { UpdateEmployeeDto } from './Dto/update-employee.dto';
 
 @Injectable()
 export class EmployeeService {
   constructor(private readonly databaseService: DatabaseService) {}
 
-  async getEmployees(): Promise<EmployeeResponse[]> {
+  async getEmployees(
+    search?: string,
+    sortBy: 'name' | 'salary' | 'hireDate' | 'id' | undefined = 'name',
+    sortOrder: 'asc' | 'desc' = 'asc'
+  ): Promise<EmployeeResponse[]> {
     try {
-      const query = this.databaseService.db
+      let query = this.databaseService.db
         .select({
           id: employees.id,
+          name: employees.name,
+          surName: employees.surName,
+          lastName: employees.lastName,
           positionId: employees.positionId,
           hireDate: employees.hireDate,
           salary: employees.salary,
         })
-        .from(employees);
+        .from(employees)
+        .leftJoin(positions, eq(positions.id, employees.positionId));
+
+      if (search) {
+        query = query.where(
+          or(
+            ilike(employees.name, `%${search}%`),
+            ilike(employees.surName, `%${search}%`),
+            ilike(employees.lastName ?? sql`''`, `%${search}%`),
+            ilike(positions.name, `%${search}%`),
+            sql`CAST(${employees.id} AS TEXT) LIKE ${`%${search}%`}`,
+            sql`CAST(${employees.salary} AS TEXT) LIKE ${`%${search}%`}`
+          )
+        ) as any;
+      }
+
+      if (sortBy === 'name') {
+        query = query.orderBy(
+          sortOrder === 'asc' ? asc(employees.name) : desc(employees.name)
+        ) as any;
+      } else if (sortBy === 'salary') {
+        query = query.orderBy(
+          sortOrder === 'asc' ? asc(employees.salary) : desc(employees.salary)
+        ) as any;
+      } else if (sortBy === 'hireDate') {
+        query = query.orderBy(
+          sortOrder === 'asc'
+            ? asc(employees.hireDate)
+            : desc(employees.hireDate)
+        ) as any;
+      } else if (sortBy === 'id') {
+        query = query.orderBy(
+          sortOrder === 'asc' ? asc(employees.id) : desc(employees.id)
+        ) as any;
+      }
 
       const employeesList = await query;
 
@@ -61,6 +104,9 @@ export class EmployeeService {
 
           return {
             id: employee.id,
+            name: employee.name,
+            surName: employee.surName,
+            lastName: employee.lastName,
             positionId: employee.positionId,
             hireDate: employee.hireDate.toISOString(),
             salary: parseFloat(employee.salary.toString()),
@@ -96,11 +142,11 @@ export class EmployeeService {
     }
   }
 
-  async getEmployeeById(id: string): Promise<EmployeeResponse> {
+  async getEmployeeById(id: number): Promise<EmployeeResponse> {
     const [employee] = await this.databaseService.db
       .select()
       .from(employees)
-      .where(eq(employees.id, parseInt(id)))
+      .where(eq(employees.id, id))
       .limit(1);
 
     if (!employee) {
@@ -129,6 +175,9 @@ export class EmployeeService {
 
     return {
       id: employee.id,
+      name: employee?.name ?? '',
+      surName: employee?.surName ?? '',
+      lastName: employee?.lastName ?? '',
       hireDate: employee.hireDate.toISOString(),
       salary: parseFloat(employee.salary.toString()),
       position: position
@@ -156,52 +205,97 @@ export class EmployeeService {
     };
   }
 
-  async createEmployee(employeeData: any): Promise<EmployeeResponse> {
+  async createEmployee(
+    employeeData: CreateEmployeeDto
+  ): Promise<EmployeeResponse> {
     const [newEmployee] = await this.databaseService.db
       .insert(employees)
       .values({
+        name: employeeData.name,
+        surName: employeeData.surName,
+        lastName: employeeData.lastName ?? null,
         positionId: employeeData.positionId,
-        hireDate: employeeData.hireDate || new Date(),
-        salary: employeeData.salary,
+        hireDate: employeeData.hireDate
+          ? new Date(employeeData.hireDate)
+          : new Date(),
+        salary: employeeData.salary.toString(),
       })
       .returning();
 
-    return this.getEmployeeById(newEmployee.id.toString());
+    return this.getEmployeeById(newEmployee.id);
   }
 
   async updateEmployee(
-    id: string,
-    employeeData: any
+    id: number,
+    employeeData: UpdateEmployeeDto
   ): Promise<EmployeeResponse> {
+    const updatePayload: Partial<typeof employees.$inferInsert> = {};
+
+    if (employeeData.positionId !== undefined) {
+      updatePayload.positionId = employeeData.positionId;
+    }
+
+    if (employeeData.name !== undefined) {
+      updatePayload.name = employeeData.name;
+    }
+
+    if (employeeData.surName !== undefined) {
+      updatePayload.surName = employeeData.surName;
+    }
+
+    if (employeeData.lastName !== undefined) {
+      updatePayload.lastName = employeeData.lastName ?? null;
+    }
+
+    if (employeeData.salary !== undefined) {
+      updatePayload.salary = employeeData.salary.toString();
+    }
+
+    if (employeeData.hireDate !== undefined) {
+      updatePayload.hireDate = new Date(employeeData.hireDate);
+    }
+
+    if (Object.keys(updatePayload).length === 0) {
+      throw new BadRequestException('No employee fields provided for update');
+    }
+
     const [updatedEmployee] = await this.databaseService.db
       .update(employees)
-      .set({
-        positionId: employeeData.positionId,
-        salary: employeeData.salary,
-      })
-      .where(eq(employees.id, parseInt(id)))
+      .set(updatePayload)
+      .where(eq(employees.id, id))
       .returning();
 
     if (!updatedEmployee) {
-      throw new NotFoundException(`Employee with id ${id} not found`);
+      throw new NotFoundException(
+        `Employee with id ${id.toString()} not found`
+      );
     }
 
     return this.getEmployeeById(id);
   }
 
-  async deleteEmployee(id: string): Promise<void> {
+  async deleteEmployee(id: number): Promise<void> {
     const employee = await this.databaseService.db
       .select()
       .from(employees)
-      .where(eq(employees.id, parseInt(id)))
+      .where(eq(employees.id, id))
       .limit(1);
 
     if (employee.length === 0) {
       throw new NotFoundException(`Employee with id ${id} not found`);
     }
 
-    await this.databaseService.db
-      .delete(employees)
-      .where(eq(employees.id, parseInt(id)));
+    await this.databaseService.db.delete(employees).where(eq(employees.id, id));
+  }
+
+  async getPositions() {
+    const positionsList = await this.databaseService.db
+      .select()
+      .from(positions);
+    return positionsList.map(position => ({
+      id: position.id,
+      name: position.name,
+      description: position.description || '',
+    }));
   }
 }

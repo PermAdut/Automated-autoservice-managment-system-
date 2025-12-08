@@ -29,10 +29,18 @@ const initialState: SupplierState = {
 
 export const fetchSuppliers = createAsyncThunk(
   'suppliers/fetchSuppliers',
-  async (_, { rejectWithValue }) => {
+  async (
+    params: { search?: string; sortOrder?: 'asc' | 'desc' } | undefined,
+    { rejectWithValue },
+  ) => {
     try {
-      const response = await axios.get(`${serverConfig.url}/api/v1.0/supplier`);
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Симуляция задержки
+      const response = await axios.get(`${serverConfig.url}/api/v1.0/supplier`, {
+        params: {
+          search: params?.search,
+          sortBy: 'name',
+          sortOrder: params?.sortOrder ?? 'asc',
+        },
+      });
       return response.data;
     } catch {
       return rejectWithValue('Failed to fetch suppliers');

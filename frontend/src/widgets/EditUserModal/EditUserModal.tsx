@@ -1,12 +1,12 @@
-import { FC, useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { UserDetailed } from '../../store/slices/userSlice';
-import './EditUserModal.css';
+import { FC, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { UserDetailed, useGetRolesQuery } from "../../api/usersApi";
+import "./EditUserModal.css";
 
 interface EditUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (userData: UserDetailed) => void;
+  onSave: (userData: Partial<UserDetailed>) => void;
   initialData: UserDetailed;
 }
 
@@ -17,15 +17,16 @@ export const EditUserModal: FC<EditUserModalProps> = ({
   initialData,
 }) => {
   const [formData, setFormData] = useState<UserDetailed>(initialData);
+  const { data: roles = [] } = useGetRolesQuery();
 
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     }
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, [isOpen]);
 
@@ -35,16 +36,25 @@ export const EditUserModal: FC<EditUserModalProps> = ({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    onSave({ ...formData, roleId: formData.role?.id });
     onClose();
+  };
+  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const roleId = Number(e.target.value);
+    const roleName =
+      roles.find((r) => r.id === roleId)?.name || formData.role?.name || "";
+    setFormData((prev) => ({
+      ...prev,
+      role: { id: roleId, name: roleName },
+    }));
   };
 
   if (!isOpen) return null;
@@ -99,18 +109,29 @@ export const EditUserModal: FC<EditUserModalProps> = ({
             />
           </div>
           <div className="form-group">
-            <label htmlFor="login">Логин:</label>
-            <input
-              type="text"
-              id="login"
-              name="login"
-              value={formData.login}
-              onChange={handleInputChange}
+            <label htmlFor="role">Роль:</label>
+            <select
+              id="role"
+              value={formData.role?.id ?? ""}
+              onChange={handleRoleChange}
               required
-            />
+            >
+              <option value="" disabled>
+                Выберите роль
+              </option>
+              {roles.map((role) => (
+                <option key={role.id} value={role.id}>
+                  {role.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="edit-modal-buttons">
-            <button type="button" className="edit-modal-button cancel" onClick={onClose}>
+            <button
+              type="button"
+              className="edit-modal-button cancel"
+              onClick={onClose}
+            >
               Отмена
             </button>
             <button type="submit" className="edit-modal-button save">
@@ -122,4 +143,4 @@ export const EditUserModal: FC<EditUserModalProps> = ({
     </div>,
     document.body
   );
-}; 
+};

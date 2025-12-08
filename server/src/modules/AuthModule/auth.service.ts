@@ -1,10 +1,15 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import { DatabaseService } from '../database/database.service';
-import { users, refreshTokens, roles } from '../database/schema';
+import { users, refreshTokens, roles, passports } from '../database/schema';
 import { eq } from 'drizzle-orm';
+import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
@@ -12,6 +17,72 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly databaseService: DatabaseService
   ) {}
+
+  private async getDefaultRoleId() {
+    const customerRole = await this.databaseService.db
+      .select()
+      .from(roles)
+      .where(eq(roles.name, 'customer'))
+      .limit(1);
+
+    const guestRole = await this.databaseService.db
+      .select()
+      .from(roles)
+      .where(eq(roles.name, 'guest'))
+      .limit(1);
+
+    return customerRole[0]?.id || guestRole[0]?.id || 1;
+  }
+
+  async register(dto: RegisterDto) {
+    // uniqueness checks
+    const existing = await this.databaseService.db
+      .select()
+      .from(users)
+      .where(eq(users.email, dto.email))
+      .limit(1);
+    if (existing.length > 0) {
+      throw new BadRequestException('Email already in use');
+    }
+
+    const existingLogin = await this.databaseService.db
+      .select()
+      .from(users)
+      .where(eq(users.login, dto.login))
+      .limit(1);
+    if (existingLogin.length > 0) {
+      throw new BadRequestException('Login already in use');
+    }
+
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+    const roleId = await this.getDefaultRoleId();
+
+    const [createdUser] = await this.databaseService.db
+      .insert(users)
+      .values({
+        login: dto.login,
+        email: dto.email,
+        name: dto.name,
+        surName: dto.surName,
+        phone: dto.phone || null,
+        passwordHash,
+        roleId,
+      })
+      .returning();
+
+    await this.databaseService.db.insert(passports).values({
+      userId: createdUser.id,
+      identityNumber: dto.passportIdentityNumber,
+      nationality: dto.passportNationality,
+      birthDate: new Date(dto.passportBirthDate),
+      gender: dto.passportGender,
+      expirationDate: new Date(dto.passportExpirationDate),
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { passwordHash: _pwd, ...userWithoutPassword } = createdUser;
+    return this.login(userWithoutPassword);
+  }
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.databaseService.db
@@ -175,21 +246,7 @@ export class AuthService {
       return result;
     }
 
-    // Create new user from Google profile
-    // Get customer role (or guest if customer doesn't exist)
-    const customerRole = await this.databaseService.db
-      .select()
-      .from(roles)
-      .where(eq(roles.name, 'customer'))
-      .limit(1);
-
-    const guestRole = await this.databaseService.db
-      .select()
-      .from(roles)
-      .where(eq(roles.name, 'guest'))
-      .limit(1);
-
-    const defaultRoleId = customerRole[0]?.id || guestRole[0]?.id || 1;
+    const defaultRoleId = await this.getDefaultRoleId();
 
     const newUser = await this.databaseService.db
       .insert(users)

@@ -11,6 +11,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 import { Public } from './decorators/public.decorator';
 import { Response } from 'express';
 
@@ -27,6 +28,13 @@ export class AuthController {
       loginDto.password
     );
     return this.authService.login(user);
+  }
+
+  @Post('register')
+  @Public()
+  @HttpCode(201)
+  async register(@Body() dto: RegisterDto) {
+    return this.authService.register(dto);
   }
 
   @Post('refresh')

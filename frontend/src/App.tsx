@@ -19,6 +19,7 @@ import ReportGenerator from "./components/Reports/ReportGenerator.tsx";
 import Login from "./components/Auth/Login";
 import AuthCallback from "./components/Auth/AuthCallback";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
+import Register from "./components/Auth/Register";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<MainPage />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/about" element={<About />}/>
                 <Route path="/dashboard" element={<Storage />}/>

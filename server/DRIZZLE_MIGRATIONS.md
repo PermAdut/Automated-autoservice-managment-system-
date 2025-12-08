@@ -16,7 +16,7 @@ This project uses Drizzle ORM for database migrations. Follow this guide to mana
 ## Available Commands
 
 ### Generate Migrations
-After making changes to the schema in `src/modules/database/schema.ts`:
+After making changes to the schema in `src/drizzle/schema.ts`:
 
 ```bash
 npm run db:generate
@@ -24,7 +24,7 @@ npm run db:generate
 
 This will:
 - Analyze your schema changes
-- Generate migration files in the `drizzle` folder
+- Generate migration files in the `drizzle/migrations` folder
 - Create SQL migration files that can be reviewed before applying
 
 ### Run Migrations
@@ -72,13 +72,13 @@ npm run db:drop
 ## Migration Workflow
 
 ### Initial Setup
-1. Create your database schema in `src/modules/database/schema.ts`
+1. Create your database schema in `src/drizzle/schema.ts`
 2. Run `npm run db:generate` to create the initial migration
 3. Review the generated SQL files in the `drizzle` folder
 4. Run `npm run db:migrate` to apply migrations
 
 ### Making Schema Changes
-1. Update the schema in `src/modules/database/schema.ts`
+1. Update the schema in `src/drizzle/schema.ts`
 2. Run `npm run db:generate` to create a new migration
 3. Review the generated migration files
 4. Run `npm run db:migrate` to apply the changes
@@ -86,11 +86,11 @@ npm run db:drop
 ### Example Workflow
 
 ```bash
-# 1. Make changes to schema.ts
+# 1. Make changes to src/drizzle/schema.ts
 # 2. Generate migration
 npm run db:generate
 
-# 3. Review generated files in drizzle/ folder
+# 3. Review generated files in drizzle/migrations folder
 # 4. Apply migrations
 npm run db:migrate
 
@@ -100,7 +100,7 @@ npm run db:seed
 
 ## Migration Files Location
 
-All migration files are stored in the `drizzle/` folder at the root of the server directory. This folder contains:
+All migration files are stored in the `drizzle/migrations/` folder at the root of the server directory. This folder contains:
 - SQL migration files (`.sql`)
 - Migration metadata (`.json`)
 

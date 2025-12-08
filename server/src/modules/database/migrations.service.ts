@@ -18,7 +18,10 @@ export class MigrationsService implements OnModuleInit {
     try {
       this.logger.log('Running database migrations...');
 
-      const migrationsFolder = path.resolve(process.cwd(), 'drizzle');
+      const migrationsFolder = path.resolve(
+        process.cwd(),
+        'drizzle/migrations'
+      );
 
       await migrate(this.databaseService.db, {
         migrationsFolder,

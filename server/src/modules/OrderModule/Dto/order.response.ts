@@ -31,6 +31,7 @@ export class OrderResponseDto {
     name: string;
     description: string | null;
     price: number;
+    quantity: number;
   }[];
 
   @Expose()
@@ -39,6 +40,7 @@ export class OrderResponseDto {
     name: string;
     partNumber: string;
     price: number;
+    quantity: number;
     category: {
       id: number;
       name: string;

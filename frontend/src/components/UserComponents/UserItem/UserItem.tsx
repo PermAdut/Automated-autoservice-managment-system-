@@ -1,20 +1,19 @@
 import { FC, useState } from "react";
 import { Link } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
 import { ModalWarning } from "../../../widgets/ModalWarning/ModalWarning";
 import { EditUserModal } from "../../../widgets/EditUserModal/EditUserModal";
-import { UserDetailed, fetchUsersById } from "../../../store/slices/userSlice";
-import { RootState, AppDispatch } from "../../../store/index";
-import updateIcon from '../../../assets/icons/updateIcon.png';
-import deleteIcon from '../../../assets/icons/deleteIcon.png';
-import './UserItem.css';
+import { useLazyGetUserByIdQuery } from "../../../api/usersApi";
+import { UserDetailed } from "../../../api/usersApi";
+import updateIcon from "../../../assets/icons/updateIcon.png";
+import deleteIcon from "../../../assets/icons/deleteIcon.png";
+import "./UserItem.css";
 
 interface UserItemProps {
   id: number;
   name: string;
   secondName: string;
-  onDelete: (id: number) => void;
-  onUpdate: (userData: UserDetailed) => void;
+  onDelete: () => void;
+  onUpdate: (userData: Partial<UserDetailed>) => void;
 }
 
 export const UserItem: FC<UserItemProps> = ({
@@ -24,29 +23,27 @@ export const UserItem: FC<UserItemProps> = ({
   onDelete,
   onUpdate,
 }) => {
-  const dispatch = useDispatch<AppDispatch>();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const userData = useSelector((state: RootState) => state.user.detailedUser);
+  const [fetchUser, { data: userData }] = useLazyGetUserByIdQuery();
 
   const handleDeleteClick = () => {
     setIsDeleteModalOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
-    console.log(`Deleting user with id: ${id}`);
     setIsDeleteModalOpen(false);
-    onDelete(id);
+    onDelete();
   };
 
   const handleUpdateClick = async () => {
-    await dispatch(fetchUsersById(id));
-    console.log(isEditModalOpen);
+    await fetchUser(id);
     setIsEditModalOpen(true);
   };
 
-  const handleEditSave = (userData: UserDetailed) => {
-    console.log('Saving user data:', userData);
+  const handleEditSave = (
+    userData: Partial<UserDetailed> & { roleId?: number }
+  ) => {
     onUpdate(userData);
     setIsEditModalOpen(false);
   };
@@ -71,16 +68,16 @@ export const UserItem: FC<UserItemProps> = ({
           <p className="useritem-info">Информация пользователя</p>
         </div>
         <div className="useritem-actions">
-          <img 
-            src={updateIcon} 
-            alt="Update" 
-            className="useritem-icon" 
+          <img
+            src={updateIcon}
+            alt="Update"
+            className="useritem-icon"
             onClick={handleUpdateClick}
           />
-          <img 
-            src={deleteIcon} 
-            alt="Delete" 
-            className="useritem-icon" 
+          <img
+            src={deleteIcon}
+            alt="Delete"
+            className="useritem-icon"
             onClick={handleDeleteClick}
           />
         </div>

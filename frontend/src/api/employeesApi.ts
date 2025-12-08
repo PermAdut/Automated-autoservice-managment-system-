@@ -1,8 +1,11 @@
-import { baseApi } from './baseApi';
-import { apiTags } from './tags';
+import { baseApi } from "./baseApi";
+import { apiTags } from "./tags";
 
 export interface Employee {
   id: number;
+  name: string;
+  surName: string;
+  lastName?: string | null;
   positionId: number;
   hireDate: string;
   salary: string;
@@ -23,44 +26,61 @@ export interface Employee {
   };
 }
 
+export interface PositionOption {
+  id: number;
+  name: string;
+  description?: string;
+}
+
 export const employeesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getEmployees: builder.query<Employee[], { search?: string; sortBy?: string; sortOrder?: 'asc' | 'desc' }>({
+    getEmployees: builder.query<
+      Employee[],
+      { search?: string; sortBy?: string; sortOrder?: "asc" | "desc" }
+    >({
       query: (params) => ({
-        url: '/employee',
+        url: "/employee",
         params,
       }),
       providesTags: [apiTags.EMPLOYEES],
     }),
     getEmployeeById: builder.query<Employee, number>({
       query: (id) => `/employee/${id}`,
-      providesTags: (result, error, id) => [{ type: apiTags.EMPLOYEE, id }],
+      providesTags: (_result, _error, id) => [{ type: apiTags.EMPLOYEE, id }],
+    }),
+    getPositions: builder.query<PositionOption[], void>({
+      query: () => "/employee/positions",
+      providesTags: [apiTags.POSITIONS],
     }),
     createEmployee: builder.mutation<Employee, Partial<Employee>>({
       query: (body) => ({
-        url: '/employee',
-        method: 'POST',
+        url: "/employee",
+        method: "POST",
         body,
       }),
-      invalidatesTags: [apiTags.EMPLOYEES],
+      invalidatesTags: [apiTags.EMPLOYEES, apiTags.POSITIONS],
     }),
-    updateEmployee: builder.mutation<Employee, { id: number; data: Partial<Employee> }>({
+    updateEmployee: builder.mutation<
+      Employee,
+      { id: number; data: Partial<Employee> }
+    >({
       query: ({ id, data }) => ({
         url: `/employee/${id}`,
-        method: 'PUT',
+        method: "PUT",
         body: data,
       }),
-      invalidatesTags: (result, error, { id }) => [
+      invalidatesTags: (_result, _error, { id }) => [
         { type: apiTags.EMPLOYEE, id },
         apiTags.EMPLOYEES,
+        apiTags.POSITIONS,
       ],
     }),
     deleteEmployee: builder.mutation<void, number>({
       query: (id) => ({
         url: `/employee/${id}`,
-        method: 'DELETE',
+        method: "DELETE",
       }),
-      invalidatesTags: [apiTags.EMPLOYEES],
+      invalidatesTags: [apiTags.EMPLOYEES, apiTags.POSITIONS],
     }),
   }),
 });
@@ -68,8 +88,8 @@ export const employeesApi = baseApi.injectEndpoints({
 export const {
   useGetEmployeesQuery,
   useGetEmployeeByIdQuery,
+  useGetPositionsQuery,
   useCreateEmployeeMutation,
   useUpdateEmployeeMutation,
   useDeleteEmployeeMutation,
 } = employeesApi;
-

@@ -1,92 +1,150 @@
 .storage-list-container {
-    padding: 24px;
-    padding-bottom: 80px; /* Отступ снизу для пагинации */
-    max-width: 1200px;
-    margin: 0 auto;
-    position: relative; /* Для sticky пагинации */
+  padding: 24px;
+  padding-bottom: 80px; /* Отступ снизу для пагинации */
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative; /* Для sticky пагинации */
+}
+
+.storage-list-title {
+  font-size: 2rem; /* 32px */
+  font-weight: 700;
+  color: #1f2937; /* gray-800 */
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.storage-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.btn-add {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-add:hover {
+  background: #1d4ed8;
+}
+
+.storage-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.storage-list-loading {
+  margin-top: 40px;
+  text-align: center;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151; /* gray-700 */
+  animation: pulse 1.5s infinite;
+}
+
+.storage-list-error {
+  margin-top: 40px;
+  text-align: center;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #ef4444; /* red-500 */
+}
+
+.storage-list-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  position: sticky; /* Фиксируем пагинацию */
+  bottom: 20px; /* Отступ от низа */
+  background-color: #ffffff; /* Фон для видимости */
+  padding: 10px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Лёгкая тень */
+}
+
+.storage-list-button {
+  padding: 8px 16px;
+  font-size: 0.875rem; /* 14px */
+  font-weight: 500;
+  border: 1px solid #d1d5db; /* gray-300 */
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: #2563eb; /* blue-600 */
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.storage-list-button:hover:not(:disabled) {
+  background-color: #f3f4f6; /* gray-100 */
+}
+
+.storage-list-button:disabled {
+  color: #9ca3af; /* gray-400 */
+  cursor: not-allowed;
+}
+
+.storage-list-page-info {
+  font-size: 0.875rem; /* 14px */
+  font-weight: 500;
+  color: #374151; /* gray-700 */
+}
+
+.storage-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.storage-card-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.btn-edit,
+.btn-delete {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-edit {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.btn-delete {
+  background: #ef4444;
+  color: #fff;
+}
+
+/* Анимация пульсации для загрузки */
+@keyframes pulse {
+  0% {
+    opacity: 1;
   }
-  
-  .storage-list-title {
-    font-size: 2rem; /* 32px */
-    font-weight: 700;
-    color: #1f2937; /* gray-800 */
-    margin-bottom: 24px;
-    text-align: center;
+  50% {
+    opacity: 0.5;
   }
-  
-  .storage-list-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
+  100% {
+    opacity: 1;
   }
-  
-  .storage-list-loading {
-    margin-top: 40px;
-    text-align: center;
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #374151; /* gray-700 */
-    animation: pulse 1.5s infinite;
-  }
-  
-  .storage-list-error {
-    margin-top: 40px;
-    text-align: center;
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #ef4444; /* red-500 */
-  }
-  
-  .storage-list-pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 12px;
-    margin-top: 24px;
-    position: sticky; /* Фиксируем пагинацию */
-    bottom: 20px; /* Отступ от низа */
-    background-color: #ffffff; /* Фон для видимости */
-    padding: 10px;
-    border-radius: 6px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Лёгкая тень */
-  }
-  
-  .storage-list-button {
-    padding: 8px 16px;
-    font-size: 0.875rem; /* 14px */
-    font-weight: 500;
-    border: 1px solid #d1d5db; /* gray-300 */
-    border-radius: 6px;
-    background-color: #ffffff;
-    color: #2563eb; /* blue-600 */
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  
-  .storage-list-button:hover:not(:disabled) {
-    background-color: #f3f4f6; /* gray-100 */
-  }
-  
-  .storage-list-button:disabled {
-    color: #9ca3af; /* gray-400 */
-    cursor: not-allowed;
-  }
-  
-  .storage-list-page-info {
-    font-size: 0.875rem; /* 14px */
-    font-weight: 500;
-    color: #374151; /* gray-700 */
-  }
-  
-  /* Анимация пульсации для загрузки */
-  @keyframes pulse {
-    0% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.5;
-    }
-    100% {
-      opacity: 1;
-    }
-  }
+}

@@ -33,10 +33,20 @@ const initialState: SparePartStockState = {
 
 export const fetchSparePartsStock = createAsyncThunk(
   "spareParts/fetchSparePartsStock",
-  async (_, { rejectWithValue }) => {
+  async (
+    params: { search?: string; sortOrder?: "asc" | "desc" } | undefined,
+    { rejectWithValue }
+  ) => {
     try {
       const response = await axios.get(
-        `${serverConfig.url}/api/v1.0/stores`
+        `${serverConfig.url}/api/v1.0/stores`,
+        {
+          params: {
+            search: params?.search,
+            sortBy: "name",
+            sortOrder: params?.sortOrder ?? "asc",
+          },
+        }
       );
       return response.data;
     } catch (error) {

@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import { config } from 'dotenv';
-import * as schema from './schema';
+import * as schema from '../../drizzle/schema';
 
 config();
 
@@ -12,12 +12,16 @@ export class DatabaseService implements OnModuleInit {
   public db: ReturnType<typeof drizzle>;
 
   constructor() {
+    const targetSchema = 'autoservice';
+
     this.pool = new Pool({
-      user: process.env.DB_USERNAME,
-      host: process.env.DB_HOST,
+      user: 'postgres',
+      host: 'localhost',
       database: process.env.DB_NAME,
       password: process.env.DB_PASSWORD,
-      port: parseInt(process.env.DB_PORT || '5432'),
+      port: parseInt('5432'),
+      // Make sure we write and read from the autoservice schema by default
+      options: `-c search_path=${targetSchema},public`,
     });
 
     this.db = drizzle(this.pool, { schema });

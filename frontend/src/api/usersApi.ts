@@ -1,5 +1,5 @@
-import { baseApi } from './baseApi';
-import { apiTags } from './tags';
+import { baseApi } from "./baseApi";
+import { apiTags } from "./tags";
 
 export interface User {
   id: number;
@@ -27,7 +27,7 @@ export interface UserDetailed {
     identityNumber: string;
     nationality: string;
     birthDate: string;
-    gender: 'M' | 'F';
+    gender: "M" | "F";
     expiriationDate: string;
   };
   subscriptions?: {
@@ -69,7 +69,7 @@ export interface CreateUserDto {
   passportIdentityNumber: string;
   passportNationality: string;
   passportBirthDate: Date;
-  passportGender: 'M' | 'F';
+  passportGender: "M" | "F";
   passportExpirationDate: Date;
 }
 
@@ -78,41 +78,57 @@ export interface UpdateUserDto {
   surName?: string;
   email?: string;
   phone?: string;
-  password: string;
+  password?: string;
+  roleId?: number;
+}
+
+export interface RoleOption {
+  id: number;
+  name: string;
 }
 
 export const usersApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getUsers: builder.query<User[], { search?: string; sortBy?: string; sortOrder?: 'asc' | 'desc' }>({
+    getUsers: builder.query<
+      User[],
+      { search?: string; sortBy?: string; sortOrder?: "asc" | "desc" }
+    >({
       query: (params) => ({
-        url: '/users',
+        url: "/users",
         params,
       }),
       providesTags: [apiTags.USERS],
     }),
+    getRoles: builder.query<RoleOption[], void>({
+      query: () => "/users/roles",
+      providesTags: [apiTags.USERS],
+    }),
     getUserById: builder.query<UserDetailed, number>({
       query: (id) => `/users/${id}`,
-      providesTags: (result, error, id) => [{ type: apiTags.USER, id }],
+      providesTags: (_result, _error, id) => [{ type: apiTags.USER, id }],
     }),
     getRawUsers: builder.query<User[], void>({
-      query: () => '/users/rawData/users',
+      query: () => "/users/rawData/users",
       providesTags: [apiTags.USERS],
     }),
     createUser: builder.mutation<User, CreateUserDto>({
       query: (body) => ({
-        url: '/users',
-        method: 'POST',
+        url: "/users",
+        method: "POST",
         body,
       }),
       invalidatesTags: [apiTags.USERS],
     }),
-    updateUser: builder.mutation<UserDetailed, { id: number; data: UpdateUserDto }>({
+    updateUser: builder.mutation<
+      UserDetailed,
+      { id: number; data: UpdateUserDto }
+    >({
       query: ({ id, data }) => ({
         url: `/users/${id}`,
-        method: 'PUT',
+        method: "PUT",
         body: data,
       }),
-      invalidatesTags: (result, error, { id }) => [
+      invalidatesTags: (_result, _error, { id }) => [
         { type: apiTags.USER, id },
         apiTags.USERS,
       ],
@@ -120,7 +136,7 @@ export const usersApi = baseApi.injectEndpoints({
     deleteUser: builder.mutation<void, number>({
       query: (id) => ({
         url: `/users/${id}`,
-        method: 'DELETE',
+        method: "DELETE",
       }),
       invalidatesTags: [apiTags.USERS],
     }),
@@ -130,9 +146,10 @@ export const usersApi = baseApi.injectEndpoints({
 export const {
   useGetUsersQuery,
   useGetUserByIdQuery,
+  useLazyGetUserByIdQuery,
   useGetRawUsersQuery,
   useCreateUserMutation,
   useUpdateUserMutation,
   useDeleteUserMutation,
+  useGetRolesQuery,
 } = usersApi;
-

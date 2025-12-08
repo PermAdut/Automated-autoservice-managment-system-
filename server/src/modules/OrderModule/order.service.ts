@@ -6,6 +6,7 @@ import {
 import { plainToInstance } from 'class-transformer';
 import { DatabaseService } from '../database/database.service';
 import { OrderResponseDto } from './Dto/order.response';
+import { CreateOrderDto, UpdateOrderDto } from './Dto/create-order.dto';
 import {
   orders,
   servicesOrders,
@@ -14,7 +15,7 @@ import {
   spareParts,
   categories,
 } from '../database/schema';
-import { eq, like, desc, asc } from 'drizzle-orm';
+import { eq, like, desc, asc, or, sql } from 'drizzle-orm';
 
 @Injectable()
 export class OrderService {
@@ -29,7 +30,14 @@ export class OrderService {
       let query = this.databaseService.db.select().from(orders);
 
       if (search) {
-        query = query.where(like(orders.status, `%${search}%`)) as any;
+        query = query.where(
+          or(
+            like(orders.status, `%${search}%`),
+            sql`CAST(${orders.id} AS TEXT) LIKE ${`%${search}%`}`,
+            sql`CAST(${orders.userId} AS TEXT) LIKE ${`%${search}%`}`,
+            sql`CAST(${orders.employeeId} AS TEXT) LIKE ${`%${search}%`}`
+          )
+        ) as any;
       }
 
       if (sortBy) {
@@ -38,9 +46,10 @@ export class OrderService {
           query = query.orderBy(orderBy(orders.createdAt)) as any;
         } else if (sortBy === 'status') {
           query = query.orderBy(orderBy(orders.status)) as any;
+        } else if (sortBy === 'id') {
+          query = query.orderBy(orderBy(orders.id)) as any;
         }
       }
-
       const ordersList = await query;
 
       const ordersResponse: OrderResponseDto[] = await Promise.all(
@@ -51,6 +60,7 @@ export class OrderService {
               name: services.name,
               description: services.description,
               price: services.price,
+              quantity: servicesOrders.quantity,
             })
             .from(servicesOrders)
             .innerJoin(services, eq(servicesOrders.servicesId, services.id))
@@ -62,6 +72,7 @@ export class OrderService {
               name: spareParts.name,
               partNumber: spareParts.partNumber,
               price: spareParts.price,
+              quantity: sparePartOrders.quantity,
               category: {
                 id: categories.id,
                 name: categories.name,
@@ -89,10 +100,12 @@ export class OrderService {
               ...s,
               description: s.description || null,
               price: parseFloat(s.price.toString()),
+              quantity: Number(s.quantity),
             })),
             sparePart: orderSpareParts.map(sp => ({
               ...sp,
               price: parseFloat(sp.price.toString()),
+              quantity: Number(sp.quantity),
               category: {
                 ...sp.category,
                 description: sp.category.description || null,
@@ -111,11 +124,11 @@ export class OrderService {
     }
   }
 
-  async findById(id: string): Promise<OrderResponseDto> {
+  async findById(id: number): Promise<OrderResponseDto> {
     const [order] = await this.databaseService.db
       .select()
       .from(orders)
-      .where(eq(orders.id, parseInt(id)))
+      .where(eq(orders.id, id))
       .limit(1);
 
     if (!order) {
@@ -128,6 +141,7 @@ export class OrderService {
         name: services.name,
         description: services.description,
         price: services.price,
+        quantity: servicesOrders.quantity,
       })
       .from(servicesOrders)
       .innerJoin(services, eq(servicesOrders.servicesId, services.id))
@@ -139,6 +153,7 @@ export class OrderService {
         name: spareParts.name,
         partNumber: spareParts.partNumber,
         price: spareParts.price,
+        quantity: sparePartOrders.quantity,
         category: {
           id: categories.id,
           name: categories.name,
@@ -163,10 +178,12 @@ export class OrderService {
         ...s,
         description: s.description || null,
         price: parseFloat(s.price.toString()),
+        quantity: Number(s.quantity),
       })),
       sparePart: orderSpareParts.map(sp => ({
         ...sp,
         price: parseFloat(sp.price.toString()),
+        quantity: Number(sp.quantity),
         category: {
           ...sp.category,
           description: sp.category.description || null,
@@ -175,51 +192,180 @@ export class OrderService {
     };
   }
 
-  async create(orderData: any): Promise<OrderResponseDto> {
-    const [newOrder] = await this.databaseService.db
-      .insert(orders)
-      .values({
-        userId: orderData.userId,
-        carId: orderData.carId,
-        employeeId: orderData.employeeId,
-        status: orderData.status || 'pending',
-      })
-      .returning();
+  async create(orderData: CreateOrderDto): Promise<OrderResponseDto> {
+    let createdOrderId: number | null = null;
 
-    return this.findById(newOrder.id.toString());
-  }
+    await this.databaseService.db.transaction(async tx => {
+      const [newOrder] = await tx
+        .insert(orders)
+        .values({
+          userId: orderData.userId,
+          carId: orderData.carId,
+          employeeId: orderData.employeeId,
+          status: orderData.status ?? 'pending',
+          createdAt: orderData.createdAt
+            ? new Date(orderData.createdAt)
+            : undefined,
+          updatedAt: orderData.updatedAt
+            ? new Date(orderData.updatedAt)
+            : undefined,
+          completedAt:
+            orderData.completedAt !== undefined
+              ? orderData.completedAt
+                ? new Date(orderData.completedAt)
+                : null
+              : undefined,
+        })
+        .returning();
 
-  async update(id: string, orderData: any): Promise<OrderResponseDto> {
-    const [updatedOrder] = await this.databaseService.db
-      .update(orders)
-      .set({
-        status: orderData.status,
-        updatedAt: new Date(),
-        completedAt: orderData.status === 'completed' ? new Date() : undefined,
-      })
-      .where(eq(orders.id, parseInt(id)))
-      .returning();
+      createdOrderId = newOrder.id;
 
-    if (!updatedOrder) {
-      throw new NotFoundException(`Order with id ${id} not found`);
+      if (orderData.services?.length) {
+        await tx.insert(servicesOrders).values(
+          orderData.services.map(service => ({
+            orderId: newOrder.id,
+            servicesId: service.serviceId,
+            quantity: service.quantity,
+          }))
+        );
+      }
+
+      if (orderData.spareParts?.length) {
+        await tx.insert(sparePartOrders).values(
+          orderData.spareParts.map(sparePart => ({
+            ordersId: newOrder.id,
+            sparePartId: sparePart.sparePartId,
+            quantity: sparePart.quantity,
+          }))
+        );
+      }
+    });
+
+    if (!createdOrderId) {
+      throw new BadRequestException('Failed to create order');
     }
 
-    return this.findById(id);
+    return this.findById(createdOrderId);
   }
 
-  async delete(id: string): Promise<void> {
+  async update(
+    id: number,
+    orderData: UpdateOrderDto
+  ): Promise<OrderResponseDto> {
+    let targetOrderId = id;
+
+    await this.databaseService.db.transaction(async tx => {
+      const updatePayload: Partial<typeof orders.$inferInsert> = {};
+
+      if (orderData.userId !== undefined) {
+        updatePayload.userId = orderData.userId;
+      }
+
+      if (orderData.carId !== undefined) {
+        updatePayload.carId = orderData.carId;
+      }
+
+      if (orderData.employeeId !== undefined) {
+        updatePayload.employeeId = orderData.employeeId;
+      }
+
+      if (orderData.status !== undefined) {
+        updatePayload.status = orderData.status;
+        updatePayload.updatedAt = new Date();
+        if (orderData.completedAt !== undefined) {
+          updatePayload.completedAt = orderData.completedAt
+            ? new Date(orderData.completedAt)
+            : null;
+        } else if (orderData.status === 'completed') {
+          updatePayload.completedAt = new Date();
+        }
+      }
+
+      if (orderData.createdAt !== undefined) {
+        updatePayload.createdAt = new Date(orderData.createdAt);
+      }
+
+      if (orderData.updatedAt !== undefined) {
+        updatePayload.updatedAt = new Date(orderData.updatedAt);
+      }
+
+      if (
+        updatePayload.status !== undefined ||
+        updatePayload.userId !== undefined ||
+        updatePayload.carId !== undefined ||
+        updatePayload.employeeId !== undefined ||
+        updatePayload.createdAt !== undefined ||
+        updatePayload.updatedAt !== undefined ||
+        updatePayload.completedAt !== undefined
+      ) {
+        const [updatedOrder] = await tx
+          .update(orders)
+          .set(updatePayload)
+          .where(eq(orders.id, id))
+          .returning();
+
+        if (!updatedOrder) {
+          throw new NotFoundException(`Order with id ${id} not found`);
+        }
+
+        targetOrderId = updatedOrder.id;
+      } else {
+        const [existing] = await tx
+          .select()
+          .from(orders)
+          .where(eq(orders.id, id))
+          .limit(1);
+
+        if (!existing) {
+          throw new NotFoundException(`Order with id ${id} not found`);
+        }
+      }
+
+      if (orderData.services !== undefined) {
+        await tx.delete(servicesOrders).where(eq(servicesOrders.orderId, id));
+
+        if (orderData.services.length) {
+          await tx.insert(servicesOrders).values(
+            orderData.services.map(service => ({
+              orderId: id,
+              servicesId: service.serviceId,
+              quantity: service.quantity,
+            }))
+          );
+        }
+      }
+
+      if (orderData.spareParts !== undefined) {
+        await tx
+          .delete(sparePartOrders)
+          .where(eq(sparePartOrders.ordersId, id));
+
+        if (orderData.spareParts.length) {
+          await tx.insert(sparePartOrders).values(
+            orderData.spareParts.map(sparePart => ({
+              ordersId: id,
+              sparePartId: sparePart.sparePartId,
+              quantity: sparePart.quantity,
+            }))
+          );
+        }
+      }
+    });
+
+    return this.findById(targetOrderId);
+  }
+
+  async delete(id: number): Promise<void> {
     const order = await this.databaseService.db
       .select()
       .from(orders)
-      .where(eq(orders.id, parseInt(id)))
+      .where(eq(orders.id, id))
       .limit(1);
 
     if (order.length === 0) {
       throw new NotFoundException(`Order with id ${id} not found`);
     }
 
-    await this.databaseService.db
-      .delete(orders)
-      .where(eq(orders.id, parseInt(id)));
+    await this.databaseService.db.delete(orders).where(eq(orders.id, id));
   }
 }

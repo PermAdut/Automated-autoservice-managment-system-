@@ -12,9 +12,9 @@ This directory contains database migration scripts for Drizzle ORM.
 
 ## Migration Workflow
 
-1. Make changes to the schema in `src/modules/database/schema.ts`
+1. Make changes to the schema in `src/drizzle/schema.ts` (models under `src/drizzle/models`)
 2. Run `npm run db:generate` to generate migration files
-3. Review the generated migration files in the `drizzle` folder
+3. Review the generated migration files in the `drizzle/migrations` folder
 4. Run `npm run db:migrate` to apply migrations to the database
 
 ## Running Migrations Programmatically

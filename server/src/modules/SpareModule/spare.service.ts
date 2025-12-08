@@ -12,7 +12,11 @@ import {
   stores,
   categories,
 } from '../database/schema';
-import { eq, like, or, desc, asc } from 'drizzle-orm';
+import { eq, ilike, desc, asc, or, sql } from 'drizzle-orm';
+import {
+  CreateSpareStockDto,
+  UpdateSpareStockDto,
+} from './Dto/create-spare-stock.dto';
 
 @Injectable()
 export class SpareService {
@@ -20,8 +24,8 @@ export class SpareService {
 
   async findAll(
     search?: string,
-    sortBy?: string,
-    sortOrder?: 'asc' | 'desc'
+    sortBy: 'name' | 'quantity' | 'price' | 'id' | undefined = 'name',
+    sortOrder: 'asc' | 'desc' = 'asc'
   ): Promise<SparePartStockResponseDto[]> {
     try {
       let query = this.databaseService.db
@@ -45,20 +49,27 @@ export class SpareService {
       if (search) {
         query = query.where(
           or(
-            like(spareParts.name, `%${search}%`),
-            like(spareParts.partNumber, `%${search}%`),
-            like(categories.name, `%${search}%`)
+            ilike(spareParts.name, `%${search}%`),
+            ilike(spareParts.partNumber, `%${search}%`),
+            ilike(stores.location, `%${search}%`),
+            sql`CAST(${spareParts.id} AS TEXT) LIKE ${`%${search}%`}`,
+            sql`CAST(${sparePartStore.quantity} AS TEXT) LIKE ${`%${search}%`}`
           )
         ) as any;
       }
 
-      if (sortBy) {
+      if (sortBy === 'name') {
         const orderBy = sortOrder === 'desc' ? desc : asc;
-        if (sortBy === 'name') {
-          query = query.orderBy(orderBy(spareParts.name)) as any;
-        } else if (sortBy === 'price') {
-          query = query.orderBy(orderBy(spareParts.price)) as any;
-        }
+        query = query.orderBy(orderBy(spareParts.name)) as any;
+      } else if (sortBy === 'quantity') {
+        const orderBy = sortOrder === 'desc' ? desc : asc;
+        query = query.orderBy(orderBy(sparePartStore.quantity)) as any;
+      } else if (sortBy === 'price') {
+        const orderBy = sortOrder === 'desc' ? desc : asc;
+        query = query.orderBy(orderBy(spareParts.price)) as any;
+      } else if (sortBy === 'id') {
+        const orderBy = sortOrder === 'desc' ? desc : asc;
+        query = query.orderBy(orderBy(spareParts.id)) as any;
       }
 
       const result = await query;
@@ -90,7 +101,7 @@ export class SpareService {
     }
   }
 
-  async findById(id: string): Promise<SparePartStockResponseDto> {
+  async findById(id: number): Promise<SparePartStockResponseDto> {
     const [result] = await this.databaseService.db
       .select({
         store_id: stores.id,
@@ -108,7 +119,7 @@ export class SpareService {
       .innerJoin(spareParts, eq(sparePartStore.sparePartId, spareParts.id))
       .innerJoin(categories, eq(spareParts.categoryId, categories.id))
       .innerJoin(stores, eq(sparePartStore.storeId, stores.id))
-      .where(eq(sparePartStore.sparePartId, parseInt(id)))
+      .where(eq(sparePartStore.sparePartId, id))
       .limit(1);
 
     if (!result) {
@@ -139,18 +150,81 @@ export class SpareService {
   }
 
   async create(): Promise<SparePartStockResponseDto> {
-    // Implementation for creating spare part stock
-    throw new BadRequestException('Create not implemented yet');
+    throw new BadRequestException('Use createWithPayload');
   }
 
-  async update(): Promise<SparePartStockResponseDto> {
-    // Implementation for updating spare part stock
-    throw new BadRequestException('Update not implemented yet');
+  async createWithPayload(
+    payload: CreateSpareStockDto
+  ): Promise<SparePartStockResponseDto> {
+    const [created] = await this.databaseService.db
+      .insert(sparePartStore)
+      .values({
+        sparePartId: payload.sparePartId,
+        storeId: payload.storeId,
+        quantity: payload.quantity,
+      })
+      .returning();
+
+    return this.findById(created.sparePartId);
   }
 
-  async delete(id: string): Promise<void> {
+  async updateWithPayload(
+    id: number,
+    payload: UpdateSpareStockDto
+  ): Promise<SparePartStockResponseDto> {
+    const updatePayload: Partial<typeof sparePartStore.$inferInsert> = {};
+
+    if (payload.sparePartId !== undefined) {
+      updatePayload.sparePartId = payload.sparePartId;
+    }
+
+    if (payload.storeId !== undefined) {
+      updatePayload.storeId = payload.storeId;
+    }
+
+    if (payload.quantity !== undefined) {
+      updatePayload.quantity = payload.quantity;
+    }
+
+    if (Object.keys(updatePayload).length === 0) {
+      throw new BadRequestException('No spare part stock fields to update');
+    }
+
+    const [updated] = await this.databaseService.db
+      .update(sparePartStore)
+      .set(updatePayload)
+      .where(eq(sparePartStore.sparePartId, id))
+      .returning();
+
+    if (!updated) {
+      throw new NotFoundException(`Spare part with id ${id} not found`);
+    }
+
+    return this.findById(id);
+  }
+
+  async delete(id: number): Promise<void> {
     await this.databaseService.db
       .delete(sparePartStore)
-      .where(eq(sparePartStore.sparePartId, parseInt(id)));
+      .where(eq(sparePartStore.sparePartId, id));
+  }
+
+  async getStoresList() {
+    return this.databaseService.db
+      .select({
+        id: stores.id,
+        location: stores.location,
+      })
+      .from(stores);
+  }
+
+  async getCategoriesList() {
+    return this.databaseService.db
+      .select({
+        id: categories.id,
+        name: categories.name,
+        description: categories.description,
+      })
+      .from(categories);
   }
 }

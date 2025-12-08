@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
   HttpCode,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ServiceService } from './service.service';
 import { ServiceResponseDto } from './Dto/service.response';
@@ -17,6 +18,8 @@ import { JwtAuthGuard } from '../AuthModule/guards/jwt-auth.guard';
 import { RolesGuard } from '../AuthModule/guards/roles.guard';
 import { Roles } from '../AuthModule/decorators/roles.decorator';
 import { Public } from '../AuthModule/decorators/public.decorator';
+import { CreateServiceDto } from './Dto/create-service.dto';
+import { UpdateServiceDto } from './Dto/update-service.dto';
 
 @Controller('api/v1.0/services')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -33,8 +36,8 @@ export class ServiceController {
   @ApiResponse({ status: 404, description: 'No services found.' })
   async findAll(
     @Query('search') search?: string,
-    @Query('sortBy') sortBy?: string,
-    @Query('sortOrder') sortOrder?: 'asc' | 'desc'
+    @Query('sortBy') sortBy: 'name' | 'price' | 'id' | undefined = 'name',
+    @Query('sortOrder') sortOrder: 'asc' | 'desc' = 'asc'
   ): Promise<ServiceResponseDto[]> {
     return await this.serviceService.findAll(search, sortBy, sortOrder);
   }
@@ -42,7 +45,9 @@ export class ServiceController {
   @Get(':id')
   @Public()
   @ApiOperation({ summary: 'Get service by id' })
-  async findById(@Param('id') id: string): Promise<ServiceResponseDto> {
+  async findById(
+    @Param('id', ParseIntPipe) id: number
+  ): Promise<ServiceResponseDto> {
     return await this.serviceService.findById(id);
   }
 
@@ -50,7 +55,9 @@ export class ServiceController {
   @HttpCode(201)
   @Roles('admin', 'manager')
   @ApiOperation({ summary: 'Create new service' })
-  async create(@Body() serviceData: any): Promise<ServiceResponseDto> {
+  async create(
+    @Body() serviceData: CreateServiceDto
+  ): Promise<ServiceResponseDto> {
     return await this.serviceService.create(serviceData);
   }
 
@@ -59,8 +66,8 @@ export class ServiceController {
   @Roles('admin', 'manager')
   @ApiOperation({ summary: 'Update service' })
   async update(
-    @Param('id') id: string,
-    @Body() serviceData: any
+    @Param('id', ParseIntPipe) id: number,
+    @Body() serviceData: UpdateServiceDto
   ): Promise<ServiceResponseDto> {
     return await this.serviceService.update(id, serviceData);
   }
@@ -69,7 +76,7 @@ export class ServiceController {
   @HttpCode(204)
   @Roles('admin')
   @ApiOperation({ summary: 'Delete service' })
-  async delete(@Param('id') id: string): Promise<void> {
+  async delete(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return await this.serviceService.delete(id);
   }
 }

@@ -9,6 +9,9 @@ import {
   Put,
   Query,
   UseGuards,
+  ParseIntPipe,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './Dto/create-user.dto';
@@ -20,20 +23,38 @@ import { Public } from '../AuthModule/decorators/public.decorator';
 
 @Controller('api/v1.0/users')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@UsePipes(
+  new ValidationPipe({
+    whitelist: true,
+    transform: true,
+    forbidNonWhitelisted: true,
+  })
+)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @HttpCode(200)
   @Get('')
   @Public()
-  async getUsers(@Query('search') search?: string) {
-    return await this.userService.findAll(search);
+  async getUsers(
+    @Query('search') search?: string,
+    @Query('sortBy') sortBy: 'name' | undefined = 'name',
+    @Query('sortOrder') sortOrder: 'asc' | 'desc' = 'asc'
+  ) {
+    return await this.userService.findAll(search, sortBy, sortOrder);
+  }
+
+  @HttpCode(200)
+  @Get('roles')
+  @Roles('admin', 'manager')
+  async getRoles() {
+    return await this.userService.getRoles();
   }
 
   @HttpCode(200)
   @Get(':id')
   @Public()
-  async getUser(@Param('id') id: string) {
+  async getUser(@Param('id', ParseIntPipe) id: number) {
     return await this.userService.findById(id);
   }
 
@@ -47,7 +68,7 @@ export class UserController {
   @HttpCode(200)
   @Get('/rawData/users/:id')
   @Roles('admin', 'manager')
-  async getRawUser(@Param('id') id: string) {
+  async getRawUser(@Param('id', ParseIntPipe) id: number) {
     return await this.userService.findByIdRaw(id);
   }
 
@@ -61,14 +82,17 @@ export class UserController {
   @HttpCode(204)
   @Delete(':id')
   @Roles('admin')
-  async deleteUser(@Param('id') id: string) {
+  async deleteUser(@Param('id', ParseIntPipe) id: number) {
     return await this.userService.deleteUser(id);
   }
 
   @HttpCode(200)
   @Put(':id')
   @Roles('admin', 'manager')
-  async updateUser(@Param('id') id: string, @Body() user: UpdateUserDto) {
+  async updateUser(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() user: UpdateUserDto
+  ) {
     return await this.userService.updateUser(id, user);
   }
 }

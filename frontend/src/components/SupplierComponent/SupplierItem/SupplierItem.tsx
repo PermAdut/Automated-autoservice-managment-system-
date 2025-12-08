@@ -11,7 +11,7 @@ interface SupplierItemProps {
     quantity: number;
     deliverDate: string;
     status: string;
-    sparePart: {
+    sparePart?: {
       id: number;
       name: string;
       price: number;
@@ -71,7 +71,10 @@ export const SupplierItem: React.FC<SupplierItemProps> = ({
                 <div className="supplier-item-sparepart">
                   <h4>Запчасти:</h4>
                   {position.sparePart.map((part) => (
-                    <div key={part.id} className="supplier-item-sparepart-details">
+                    <div
+                      key={part.id}
+                      className="supplier-item-sparepart-details"
+                    >
                       <p>
                         <strong>Название:</strong> {part.name}
                       </p>

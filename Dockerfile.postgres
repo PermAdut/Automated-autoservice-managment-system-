@@ -1,0 +1,14 @@
+# Используем официальный образ PostgreSQL
+FROM postgres:16-alpine
+
+# Устанавливаем переменные окружения для PostgreSQL
+ENV POSTGRES_DB=autoservice
+ENV POSTGRES_USER=postgres
+ENV POSTGRES_PASSWORD=postgres
+
+# PostgreSQL слушает на порту 5432
+EXPOSE 5432
+
+# Используем стандартную команду запуска PostgreSQL
+CMD ["postgres"]
+

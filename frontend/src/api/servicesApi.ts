@@ -1,5 +1,5 @@
-import { baseApi } from './baseApi';
-import { apiTags } from './tags';
+import { baseApi } from "./baseApi";
+import { apiTags } from "./tags";
 
 export interface Service {
   id: number;
@@ -10,32 +10,38 @@ export interface Service {
 
 export const servicesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getServices: builder.query<Service[], { search?: string; sortBy?: string; sortOrder?: 'asc' | 'desc' }>({
+    getServices: builder.query<
+      Service[],
+      { search?: string; sortBy?: string; sortOrder?: "asc" | "desc" }
+    >({
       query: (params) => ({
-        url: '/services',
+        url: "/services",
         params,
       }),
       providesTags: [apiTags.SERVICES],
     }),
     getServiceById: builder.query<Service, number>({
       query: (id) => `/services/${id}`,
-      providesTags: (result, error, id) => [{ type: apiTags.SERVICE, id }],
+      providesTags: (_result, _error, id) => [{ type: apiTags.SERVICE, id }],
     }),
     createService: builder.mutation<Service, Partial<Service>>({
       query: (body) => ({
-        url: '/services',
-        method: 'POST',
+        url: "/services",
+        method: "POST",
         body,
       }),
       invalidatesTags: [apiTags.SERVICES],
     }),
-    updateService: builder.mutation<Service, { id: number; data: Partial<Service> }>({
+    updateService: builder.mutation<
+      Service,
+      { id: number; data: Partial<Service> }
+    >({
       query: ({ id, data }) => ({
         url: `/services/${id}`,
-        method: 'PUT',
+        method: "PUT",
         body: data,
       }),
-      invalidatesTags: (result, error, { id }) => [
+      invalidatesTags: (_result, _error, { id }) => [
         { type: apiTags.SERVICE, id },
         apiTags.SERVICES,
       ],
@@ -43,7 +49,7 @@ export const servicesApi = baseApi.injectEndpoints({
     deleteService: builder.mutation<void, number>({
       query: (id) => ({
         url: `/services/${id}`,
-        method: 'DELETE',
+        method: "DELETE",
       }),
       invalidatesTags: [apiTags.SERVICES],
     }),
@@ -57,4 +63,3 @@ export const {
   useUpdateServiceMutation,
   useDeleteServiceMutation,
 } = servicesApi;
-

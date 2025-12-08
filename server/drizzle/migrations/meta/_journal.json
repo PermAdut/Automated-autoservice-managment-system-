@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1765110915898,
+      "tag": "0000_foamy_union_jack",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1765141725231,
+      "tag": "0001_add_name_surname_empl",
+      "breakpoints": true
+    }
+  ]
+}

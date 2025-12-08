@@ -10,9 +10,7 @@ export const createUserSchema = z.object({
   passportIdentityNumber: z.string().min(5, "Identity number is required"),
   passportNationality: z.string().min(2, "Nationality is required"),
   passportBirthDate: z.string().min(1, "Birth date is required"),
-  passportGender: z.enum(["M", "F"] as const, {
-    required_error: "Gender is required",
-  }),
+  passportGender: z.enum(["M", "F"] as const),
   passportExpirationDate: z.string().min(1, "Expiration date is required"),
 });
 

@@ -5,7 +5,7 @@ interface ServiceItemProps {
   id: number;
   name: string;
   description: string;
-  price: number;
+  price: number | string;
 }
 
 export const ServiceItem: React.FC<ServiceItemProps> = ({

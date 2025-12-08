@@ -1,35 +1,38 @@
-import React, { useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../../../hooks/redux";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { fetchUsersById } from "../../../store/slices/userSlice";
-import { RootState } from "../../../store";
+import { useGetUserByIdQuery } from "../../../api/usersApi";
 import "./UserDetailed.css";
 
 const ITEMS_PER_PAGE = 1;
 
 export const DetailedUserComponent: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
-  const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { detailedUser, loading, error } = useAppSelector((state: RootState) => state.user);
+  const {
+    data: detailedUser,
+    isLoading: loading,
+    error,
+  } = useGetUserByIdQuery(Number(userId || 0), { skip: !userId });
 
   const [subscriptionsPage, setSubscriptionsPage] = useState(1);
   const [reviewsPage, setReviewsPage] = useState(1);
   const [carsPage, setCarsPage] = useState(1);
   const [ordersPage, setOrdersPage] = useState(1);
 
-  useEffect(() => {
-    if (userId) {
-      dispatch(fetchUsersById(Number(userId)));
-    }
-  }, [dispatch, userId]);
-
   const handleClose = () => {
     navigate(-1);
   };
 
   if (loading) return <div className="detailed-user-loading">Загрузка...</div>;
-  if (error) return <div className="detailed-user-error">Ошибка: {error}</div>;
+  if (error)
+    return (
+      <div className="detailed-user-error">
+        Ошибка:{" "}
+        {error && "status" in error
+          ? String(error.status)
+          : "Неизвестная ошибка"}
+      </div>
+    );
   if (!detailedUser) return null;
 
   const paginate = <T,>(items: T[] | undefined, page: number): T[] => {
@@ -54,11 +57,21 @@ export const DetailedUserComponent: React.FC = () => {
 
         <div className="detailed-user-section">
           <h3>Общая информация</h3>
-          <p><strong>ID:</strong> {detailedUser.id}</p>
-          <p><strong>Роль:</strong> {detailedUser.role.name}</p>
-          <p><strong>Логин:</strong> {detailedUser.login}</p>
-          <p><strong>Email:</strong> {detailedUser.email}</p>
-          <p><strong>Телефон:</strong> {detailedUser.phone}</p>
+          <p>
+            <strong>ID:</strong> {detailedUser.id}
+          </p>
+          <p>
+            <strong>Роль:</strong> {detailedUser.role.name}
+          </p>
+          <p>
+            <strong>Логин:</strong> {detailedUser.login}
+          </p>
+          <p>
+            <strong>Email:</strong> {detailedUser.email}
+          </p>
+          <p>
+            <strong>Телефон:</strong> {detailedUser.phone}
+          </p>
           <p>
             <strong>Дата создания:</strong>{" "}
             {new Date(detailedUser.createdAt).toLocaleString()}
@@ -74,8 +87,13 @@ export const DetailedUserComponent: React.FC = () => {
         {detailedUser.passport && (
           <div className="detailed-user-section">
             <h3>Паспортные данные</h3>
-            <p><strong>Номер:</strong> {detailedUser.passport.identityNumber}</p>
-            <p><strong>Национальность:</strong> {detailedUser.passport.nationality}</p>
+            <p>
+              <strong>Номер:</strong> {detailedUser.passport.identityNumber}
+            </p>
+            <p>
+              <strong>Национальность:</strong>{" "}
+              {detailedUser.passport.nationality}
+            </p>
             <p>
               <strong>Дата рождения:</strong>{" "}
               {new Date(detailedUser.passport.birthDate).toLocaleDateString()}
@@ -86,86 +104,110 @@ export const DetailedUserComponent: React.FC = () => {
             </p>
             <p>
               <strong>Срок действия:</strong>{" "}
-              {new Date(detailedUser.passport.expiriationDate).toLocaleDateString()}
+              {new Date(
+                detailedUser.passport.expiriationDate
+              ).toLocaleDateString()}
             </p>
           </div>
         )}
 
-        {detailedUser.subscriptions && detailedUser.subscriptions.length > 0 && (
-          <div className="detailed-user-section">
-            <h3>Подписки</h3>
-            {paginate(detailedUser.subscriptions, subscriptionsPage).map((sub, index) => (
-              <div key={index} className="detailed-user-item">
-                <p><strong>Название:</strong> {sub.subscriptionName}</p>
-                <p>
-                  <strong>Описание:</strong>{" "}
-                  {sub.subscriptionDescription || "Нет"}
-                </p>
-                <p>
-                  <strong>Дата начала:</strong>{" "}
-                  {new Date(sub.dateStart).toLocaleDateString()}
-                </p>
-                <p>
-                  <strong>Дата окончания:</strong>{" "}
-                  {new Date(sub.dateEnd).toLocaleDateString()}
-                </p>
-              </div>
-            ))}
-            {getTotalPages(detailedUser.subscriptions) > 1 && (
-              <div className="pagination">
-                <button
-                  onClick={() => setSubscriptionsPage((prev) => Math.max(prev - 1, 1))}
-                  disabled={subscriptionsPage === 1}
-                >
-                  Назад
-                </button>
-                <span>
-                  {subscriptionsPage} / {getTotalPages(detailedUser.subscriptions)}
-                </span>
-                <button
-                  onClick={() =>
-                    setSubscriptionsPage((prev) =>
-                      Math.min(prev + 1, getTotalPages(detailedUser.subscriptions))
-                    )
-                  }
-                  disabled={subscriptionsPage === getTotalPages(detailedUser.subscriptions)}
-                >
-                  Вперед
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+        {detailedUser.subscriptions &&
+          detailedUser.subscriptions.length > 0 && (
+            <div className="detailed-user-section">
+              <h3>Подписки</h3>
+              {paginate(detailedUser.subscriptions, subscriptionsPage).map(
+                (sub, index) => (
+                  <div key={index} className="detailed-user-item">
+                    <p>
+                      <strong>Название:</strong> {sub.subscriptionName}
+                    </p>
+                    <p>
+                      <strong>Описание:</strong>{" "}
+                      {sub.subscriptionDescription || "Нет"}
+                    </p>
+                    <p>
+                      <strong>Дата начала:</strong>{" "}
+                      {new Date(sub.dateStart).toLocaleDateString()}
+                    </p>
+                    <p>
+                      <strong>Дата окончания:</strong>{" "}
+                      {new Date(sub.dateEnd).toLocaleDateString()}
+                    </p>
+                  </div>
+                )
+              )}
+              {getTotalPages(detailedUser.subscriptions) > 1 && (
+                <div className="pagination">
+                  <button
+                    onClick={() =>
+                      setSubscriptionsPage((prev) => Math.max(prev - 1, 1))
+                    }
+                    disabled={subscriptionsPage === 1}
+                  >
+                    Назад
+                  </button>
+                  <span>
+                    {subscriptionsPage} /{" "}
+                    {getTotalPages(detailedUser.subscriptions)}
+                  </span>
+                  <button
+                    onClick={() =>
+                      setSubscriptionsPage((prev) =>
+                        Math.min(
+                          prev + 1,
+                          getTotalPages(detailedUser.subscriptions)
+                        )
+                      )
+                    }
+                    disabled={
+                      subscriptionsPage ===
+                      getTotalPages(detailedUser.subscriptions)
+                    }
+                  >
+                    Вперед
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
         {detailedUser.reviews && detailedUser.reviews.length > 0 && (
           <div className="detailed-user-section">
             <h3>Отзывы</h3>
-            {paginate(detailedUser.reviews, reviewsPage).map((review, index) => (
-              <div key={index} className="detailed-user-item">
-                <p><strong>Описание:</strong> {review.description || "Нет"}</p>
-                <p><strong>Оценка:</strong> {review.rate}/5</p>
-                <p>
-                  <strong>Создан:</strong>{" "}
-                  {new Date(review.createdAt).toLocaleString()}
-                </p>
-                <p>
-                  <strong>Обновлён:</strong>{" "}
-                  {review.updatedAt
-                    ? new Date(review.updatedAt).toLocaleString()
-                    : "Нет"}
-                </p>
-                <p>
-                  <strong>Удалён:</strong>{" "}
-                  {review.deletedAt
-                    ? new Date(review.deletedAt).toLocaleString()
-                    : "Нет"}
-                </p>
-              </div>
-            ))}
+            {paginate(detailedUser.reviews, reviewsPage).map(
+              (review, index) => (
+                <div key={index} className="detailed-user-item">
+                  <p>
+                    <strong>Описание:</strong> {review.description || "Нет"}
+                  </p>
+                  <p>
+                    <strong>Оценка:</strong> {review.rate}/5
+                  </p>
+                  <p>
+                    <strong>Создан:</strong>{" "}
+                    {new Date(review.createdAt).toLocaleString()}
+                  </p>
+                  <p>
+                    <strong>Обновлён:</strong>{" "}
+                    {review.updatedAt
+                      ? new Date(review.updatedAt).toLocaleString()
+                      : "Нет"}
+                  </p>
+                  <p>
+                    <strong>Удалён:</strong>{" "}
+                    {review.deletedAt
+                      ? new Date(review.deletedAt).toLocaleString()
+                      : "Нет"}
+                  </p>
+                </div>
+              )
+            )}
             {getTotalPages(detailedUser.reviews) > 1 && (
               <div className="pagination">
                 <button
-                  onClick={() => setReviewsPage((prev) => Math.max(prev - 1, 1))}
+                  onClick={() =>
+                    setReviewsPage((prev) => Math.max(prev - 1, 1))
+                  }
                   disabled={reviewsPage === 1}
                 >
                   Назад
@@ -193,11 +235,21 @@ export const DetailedUserComponent: React.FC = () => {
             <h3>Автомобили</h3>
             {paginate(detailedUser.cars, carsPage).map((car, index) => (
               <div key={index} className="detailed-user-item">
-                <p><strong>Название:</strong> {car.name}</p>
-                <p><strong>VIN:</strong> {car.vin}</p>
-                <p><strong>Номерной знак:</strong> {car.licensePlate}</p>
-                <p><strong>Год:</strong> {car.year}</p>
-                <p><strong>Информация:</strong> {car.information || "Нет"}</p>
+                <p>
+                  <strong>Название:</strong> {car.name}
+                </p>
+                <p>
+                  <strong>VIN:</strong> {car.vin}
+                </p>
+                <p>
+                  <strong>Номерной знак:</strong> {car.licensePlate}
+                </p>
+                <p>
+                  <strong>Год:</strong> {car.year}
+                </p>
+                <p>
+                  <strong>Информация:</strong> {car.information || "Нет"}
+                </p>
               </div>
             ))}
             {getTotalPages(detailedUser.cars) > 1 && (
@@ -231,8 +283,12 @@ export const DetailedUserComponent: React.FC = () => {
             <h3>Заказы</h3>
             {paginate(detailedUser.orders, ordersPage).map((order, index) => (
               <div key={index} className="detailed-user-item">
-                <p><strong>ID:</strong> {order.id}</p>
-                <p><strong>Статус:</strong> {order.status}</p>
+                <p>
+                  <strong>ID:</strong> {order.id}
+                </p>
+                <p>
+                  <strong>Статус:</strong> {order.status}
+                </p>
                 <p>
                   <strong>Создан:</strong>{" "}
                   {new Date(order.createdAt).toLocaleString()}

@@ -7,12 +7,12 @@ interface StorageItemProps {
   sparePart: {
     id: number;
     name: string;
-    price: number;
+    price: number | string;
     partNumber: string;
-    category: {
+    category?: {
       id: number;
       name: string;
-      description: string;
+      description?: string;
     };
   };
   location: string;
@@ -28,7 +28,6 @@ export const StorageItem: React.FC<StorageItemProps> = ({
     <div className="storage-item-card">
       <div className="storage-item-header">
         <h2 className="storage-item-title">{sparePart.name}</h2>
-        <p className="storage-item-info">ID склада: {id}</p>
       </div>
 
       <div className="storage-item-details">
@@ -42,8 +41,8 @@ export const StorageItem: React.FC<StorageItemProps> = ({
           <strong>Цена:</strong> {sparePart.price} руб.
         </p>
         <p>
-          <strong>Категория:</strong> {sparePart.category.name} (
-          {sparePart.category.description})
+          <strong>Категория:</strong> {sparePart.category?.name ?? "Не указано"}{" "}
+          ({sparePart.category?.description ?? "—"})
         </p>
         <p>
           <strong>Местоположение:</strong> {location}

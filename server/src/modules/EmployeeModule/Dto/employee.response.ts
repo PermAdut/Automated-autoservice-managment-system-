@@ -12,6 +12,25 @@ export class EmployeeResponse {
   @Expose()
   id: number;
 
+  @ApiProperty({ description: 'First name', example: 'Иван' })
+  @IsString()
+  @Expose()
+  name: string;
+
+  @ApiProperty({ description: 'Surname', example: 'Иванов' })
+  @IsString()
+  @Expose()
+  surName: string;
+
+  @ApiProperty({
+    description: 'Last name (optional)',
+    example: 'Петрович',
+    nullable: true,
+  })
+  @IsString()
+  @Expose()
+  lastName?: string | null;
+
   @ApiProperty({
     description: 'The position of the employee',
     example: {

@@ -7,7 +7,9 @@ import { DatabaseService } from '../database/database.service';
 import { ServiceResponseDto } from './Dto/service.response';
 import { plainToInstance } from 'class-transformer';
 import { services } from '../database/schema';
-import { eq, like, or, desc, asc } from 'drizzle-orm';
+import { eq, ilike, desc, asc, or, sql } from 'drizzle-orm';
+import { CreateServiceDto } from './Dto/create-service.dto';
+import { UpdateServiceDto } from './Dto/update-service.dto';
 
 @Injectable()
 export class ServiceService {
@@ -15,8 +17,8 @@ export class ServiceService {
 
   async findAll(
     search?: string,
-    sortBy?: string,
-    sortOrder?: 'asc' | 'desc'
+    sortBy: 'name' | 'price' | 'id' | undefined = 'name',
+    sortOrder: 'asc' | 'desc' = 'asc'
   ): Promise<ServiceResponseDto[]> {
     try {
       let query = this.databaseService.db.select().from(services);
@@ -24,23 +26,33 @@ export class ServiceService {
       if (search) {
         query = query.where(
           or(
-            like(services.name, `%${search}%`),
-            like(services.description, `%${search}%`)
+            ilike(services.name, `%${search}%`),
+            sql`CAST(${services.id} AS TEXT) LIKE ${`%${search}%`}`,
+            sql`CAST(${services.price} AS TEXT) LIKE ${`%${search}%`}`,
+            services.description
+              ? ilike(services.description, `%${search}%`)
+              : sql`FALSE`
           )
-        ) as any;
+        ) as typeof query;
       }
 
-      if (sortBy) {
+      if (sortBy === 'name') {
         const orderBy = sortOrder === 'desc' ? desc : asc;
-        if (sortBy === 'name') {
-          query = query.orderBy(orderBy(services.name)) as any;
-        } else if (sortBy === 'price') {
-          query = query.orderBy(orderBy(services.price)) as any;
-        }
+        query = query.orderBy(orderBy(services.name)) as typeof query;
+      } else if (sortBy === 'price') {
+        const orderBy = sortOrder === 'desc' ? desc : asc;
+        query = query.orderBy(orderBy(services.price)) as typeof query;
+      } else if (sortBy === 'id') {
+        const orderBy = sortOrder === 'desc' ? desc : asc;
+        query = query.orderBy(orderBy(services.id)) as typeof query;
       }
 
       const servicesList = await query;
-      return plainToInstance(ServiceResponseDto, servicesList);
+      const normalized = servicesList.map(service => ({
+        ...service,
+        price: Number(service.price),
+      }));
+      return plainToInstance(ServiceResponseDto, normalized);
     } catch (error: unknown) {
       throw new BadRequestException('Failed to fetch services', {
         cause: error as Error,
@@ -48,64 +60,88 @@ export class ServiceService {
     }
   }
 
-  async findById(id: string): Promise<ServiceResponseDto> {
+  async findById(id: number): Promise<ServiceResponseDto> {
     const [service] = await this.databaseService.db
       .select()
       .from(services)
-      .where(eq(services.id, parseInt(id)))
+      .where(eq(services.id, id))
       .limit(1);
 
     if (!service) {
       throw new NotFoundException(`Service with id ${id} not found`);
     }
 
-    return plainToInstance(ServiceResponseDto, service);
+    return plainToInstance(ServiceResponseDto, {
+      ...service,
+      price: Number(service.price),
+    });
   }
 
-  async create(serviceData: any): Promise<ServiceResponseDto> {
+  async create(serviceData: CreateServiceDto): Promise<ServiceResponseDto> {
     const [newService] = await this.databaseService.db
       .insert(services)
       .values({
         name: serviceData.name,
-        description: serviceData.description,
+        description: serviceData.description ?? null,
         price: serviceData.price,
       })
       .returning();
 
-    return plainToInstance(ServiceResponseDto, newService);
+    return plainToInstance(ServiceResponseDto, {
+      ...newService,
+      price: Number(newService.price),
+    });
   }
 
-  async update(id: string, serviceData: any): Promise<ServiceResponseDto> {
+  async update(
+    id: number,
+    serviceData: UpdateServiceDto
+  ): Promise<ServiceResponseDto> {
+    const updatePayload: Partial<typeof services.$inferInsert> = {};
+
+    if (serviceData.name !== undefined) {
+      updatePayload.name = serviceData.name;
+    }
+
+    if (serviceData.description !== undefined) {
+      updatePayload.description = serviceData.description;
+    }
+
+    if (serviceData.price !== undefined) {
+      updatePayload.price = serviceData.price;
+    }
+
+    if (Object.keys(updatePayload).length === 0) {
+      throw new BadRequestException('No service fields provided for update');
+    }
+
     const [updatedService] = await this.databaseService.db
       .update(services)
-      .set({
-        name: serviceData.name,
-        description: serviceData.description,
-        price: serviceData.price,
-      })
-      .where(eq(services.id, parseInt(id)))
+      .set(updatePayload)
+      .where(eq(services.id, id))
       .returning();
 
     if (!updatedService) {
       throw new NotFoundException(`Service with id ${id} not found`);
     }
 
-    return plainToInstance(ServiceResponseDto, updatedService);
+    return plainToInstance(ServiceResponseDto, {
+      ...updatedService,
+      price: Number(updatedService.price),
+    });
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: number): Promise<void> {
     const service = await this.databaseService.db
       .select()
       .from(services)
-      .where(eq(services.id, parseInt(id)))
+      .where(eq(services.id, id))
       .limit(1);
 
     if (service.length === 0) {
       throw new NotFoundException(`Service with id ${id} not found`);
     }
 
-    await this.databaseService.db
-      .delete(services)
-      .where(eq(services.id, parseInt(id)));
+    await this.databaseService.db.delete(services).where(eq(services.id, id));
   }
 }

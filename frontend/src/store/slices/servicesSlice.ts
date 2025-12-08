@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import axios from "axios";
 
 interface Services {
   id: number;
@@ -15,16 +16,25 @@ interface ServicesState {
 
 export const fetchServices = createAsyncThunk(
   "services/fetchServices",
-  async (_, { rejectWithValue }) => {
+  async (
+    params: { search?: string; sortOrder?: "asc" | "desc" } | undefined,
+    { rejectWithValue }
+  ) => {
     try {
-      const response = await fetch(
+      const response = await axios.get(
         `${import.meta.env.VITE_SERVER_URL}/api/v1.0/services`,
+        {
+          params: {
+            search: params?.search,
+            sortBy: "name",
+            sortOrder: params?.sortOrder ?? "asc",
+          },
+        }
       );
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      return await response.json();
+      return response.data;
     } catch (error: unknown) {
       console.log(error);
-      return rejectWithValue('Failed to fetch services');
+      return rejectWithValue("Failed to fetch services");
     }
   }
 );
@@ -45,7 +55,10 @@ const serviceSlice = createSlice({
       })
       .addCase(fetchServices.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.services = action.payload;
+        const payload = Array.isArray(action.payload)
+          ? action.payload
+          : (action.payload as { data?: Services[] })?.data ?? [];
+        state.services = Array.isArray(payload) ? payload : [];
       })
       .addCase(fetchServices.rejected, (state, action) => {
         state.isLoading = false;
