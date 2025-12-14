@@ -151,8 +151,8 @@ export class ReportService {
             'name', s.name,
             'price', s.price
           ))
-          FROM public."Services_Orders" so
-          JOIN public."Services" s ON so."servicesId" = s.id
+          FROM autoservice."Services_Orders" so
+          JOIN autoservice."Services" s ON so."servicesId" = s.id
           WHERE so."orderId" = o.id),
           '[]'
         ) AS services,
@@ -161,22 +161,22 @@ export class ReportService {
             'name', sp.name,
             'price', sp.price
           ))
-          FROM public."SparePart_Orders" spo
-          JOIN public."SparePart" sp ON spo."sparePartId" = sp.id
+          FROM autoservice."SparePart_Orders" spo
+          JOIN autoservice."SparePart" sp ON spo."sparePartId" = sp.id
           WHERE spo."ordersId" = o.id),
           '[]'
         ) AS spare_parts,
         pmt.amount AS payment_amount,
         pmt.status AS payment_status
-      FROM public."Orders" o
-      JOIN public."Users" u ON o."userId" = u.id
-      JOIN public."Cars" c ON o."carId" = c.id
-      LEFT JOIN public."Employees" e ON o."employeeId" = e.id
-      LEFT JOIN public."Position" p ON e."positionId" = p.id
-      LEFT JOIN public."Payment" pmt ON pmt."orderId" = o.id
+      FROM autoservice."Orders" o
+      JOIN autoservice."Users" u ON o."userId" = u.id
+      JOIN autoservice."Cars" c ON o."carId" = c.id
+      LEFT JOIN autoservice."Employees" e ON o."employeeId" = e.id
+      LEFT JOIN autoservice."Position" p ON e."positionId" = p.id
+      LEFT JOIN autoservice."Payment" pmt ON pmt."orderId" = o.id
     `);
-
-    if (!result.length) {
+    const rows = result.rows || [];
+    if (!rows.length) {
       return '<p class="no-data">Нет данных для отчёта</p>';
     }
 
@@ -199,9 +199,28 @@ export class ReportService {
           </tr>
         </thead>
         <tbody>
-          ${result
-            .map(
-              (row: any) => `
+          ${rows
+            .map((row: any) => {
+              const servicesList =
+                Array.isArray(row.services) && row.services.length > 0
+                  ? row.services
+                      .map((s: any) => `${s.name} (${s.price} руб.)`)
+                      .join(', ')
+                  : '-';
+              const sparePartsList =
+                Array.isArray(row.spare_parts) && row.spare_parts.length > 0
+                  ? row.spare_parts
+                      .map((sp: any) => `${sp.name} (${sp.price} руб.)`)
+                      .join(', ')
+                  : '-';
+              const paymentStatus =
+                row.payment_status === null || row.payment_status === undefined
+                  ? 'Нет платежа'
+                  : row.payment_status
+                    ? 'Оплачено'
+                    : 'Не оплачено';
+
+              return `
                 <tr>
                   <td>${row.order_id}</td>
                   <td>${row.client_name}</td>
@@ -211,21 +230,13 @@ export class ReportService {
                   <td>${row.employee_position || '-'}</td>
                   <td>${row.status}</td>
                   <td>${new Date(row.createdAt).toLocaleDateString()}</td>
-                  <td>${
-                    row.services
-                      .map((s: any) => `${s.name} (${s.price} руб.)`)
-                      .join(', ') || '-'
-                  }</td>
-                  <td>${
-                    row.spare_parts
-                      .map((sp: any) => `${sp.name} (${sp.price} руб.)`)
-                      .join(', ') || '-'
-                  }</td>
+                  <td>${servicesList}</td>
+                  <td>${sparePartsList}</td>
                   <td>${row.payment_amount || '-'}</td>
-                  <td>${row.payment_status ? 'Оплачено' : 'Не оплачено'}</td>
+                  <td>${paymentStatus}</td>
                 </tr>
-              `
-            )
+              `;
+            })
             .join('')}
         </tbody>
       </table>
@@ -258,22 +269,22 @@ export class ReportService {
             'supplier_name', sup.name,
             'delivery_date', pfb."deliveryDate"
           ))
-          FROM public."PositionsForBuying" pfb
-          JOIN public."Suppliers" sup ON pfb."supplierId" = sup.id
+          FROM autoservice."PositionsForBuying" pfb
+          JOIN autoservice."Suppliers" sup ON pfb."supplierId" = sup.id
           WHERE pfb.id IN (
             SELECT i."positionForBuyingId"
-            FROM public."Invoices" i
+            FROM autoservice."Invoices" i
             WHERE i.status = 'paid'
           )),
           '[]'
         ) AS suppliers
-      FROM public."SparePart_Store" sps
-      JOIN public."Store" s ON sps."storeId" = s.id
-      JOIN public."SparePart" sp ON sps."sparePartId" = sp.id
-      JOIN public."Categories" c ON sp."categoryId" = c.id
+      FROM autoservice."SparePart_Store" sps
+      JOIN autoservice."Store" s ON sps."storeId" = s.id
+      JOIN autoservice."SparePart" sp ON sps."sparePartId" = sp.id
+      JOIN autoservice."Categories" c ON sp."categoryId" = c.id
     `);
-
-    if (!result.length) {
+    const rows = result.rows || [];
+    if (!rows.length) {
       return '<p class="no-data">Нет данных для отчёта</p>';
     }
 
@@ -292,9 +303,18 @@ export class ReportService {
           </tr>
         </thead>
         <tbody>
-          ${result
-            .map(
-              (row: any) => `
+          ${rows
+            .map((row: any) => {
+              const suppliersList =
+                Array.isArray(row.suppliers) && row.suppliers.length > 0
+                  ? row.suppliers
+                      .map(
+                        (sup: any) =>
+                          `${sup.supplier_name} (${new Date(sup.delivery_date).toLocaleDateString()})`
+                      )
+                      .join(', ')
+                  : '-';
+              return `
                 <tr>
                   <td>${row.store_id}</td>
                   <td>${row.location}</td>
@@ -303,17 +323,10 @@ export class ReportService {
                   <td>${row.category_name}</td>
                   <td>${row.quantity}</td>
                   <td>${row.price}</td>
-                  <td>${
-                    row.suppliers
-                      .map(
-                        (sup: any) =>
-                          `${sup.supplier_name} (${new Date(sup.delivery_date).toLocaleDateString()})`
-                      )
-                      .join(', ') || '-'
-                  }</td>
+                  <td>${suppliersList}</td>
                 </tr>
-              `
-            )
+              `;
+            })
             .join('')}
         </tbody>
       </table>
@@ -329,15 +342,15 @@ export class ReportService {
         COUNT(so."orderId") AS order_count,
         SUM(s.price * so.quantity) AS total_revenue,
         AVG(s.price) AS avg_price
-      FROM public."Services" s
-      JOIN public."Services_Orders" so ON s.id = so."servicesId"
-      JOIN public."Orders" o ON so."orderId" = o.id
-      JOIN public."Payment" pmt ON pmt."orderId" = o.id
+      FROM autoservice."Services" s
+      JOIN autoservice."Services_Orders" so ON s.id = so."servicesId"
+      JOIN autoservice."Orders" o ON so."orderId" = o.id
+      JOIN autoservice."Payment" pmt ON pmt."orderId" = o.id
       WHERE pmt.status = TRUE
       GROUP BY s.id, s.name, s.description
     `);
-
-    if (!result.length) {
+    const rows = result.rows || [];
+    if (!rows.length) {
       return '<p class="no-data">Нет данных для отчёта</p>';
     }
 
@@ -354,16 +367,16 @@ export class ReportService {
           </tr>
         </thead>
         <tbody>
-          ${result
+          ${rows
             .map(
               (row: any) => `
                 <tr>
                   <td>${row.service_id}</td>
                   <td>${row.service_name}</td>
-                  <td>${row.description}</td>
+                  <td>${row.description || '-'}</td>
                   <td>${row.order_count}</td>
-                  <td>${row.total_revenue}</td>
-                  <td>${Math.round(row.avg_price)}</td>
+                  <td>${row.total_revenue || '0'}</td>
+                  <td>${Math.round(row.avg_price || 0)}</td>
                 </tr>
               `
             )
@@ -387,17 +400,17 @@ export class ReportService {
             'end_time', ws."endTime",
             'is_available', ws."isAvailable"
           ))
-          FROM public."WorkSchedule" ws
+          FROM autoservice."WorkSchedule" ws
           WHERE ws."employeeId" = e.id),
           '[]'
         ) AS schedule
-      FROM public."Employees" e
-      JOIN public."Position" p ON e."positionId" = p.id
-      LEFT JOIN public."Orders" o ON o."employeeId" = e.id
+      FROM autoservice."Employees" e
+      JOIN autoservice."Position" p ON e."positionId" = p.id
+      LEFT JOIN autoservice."Orders" o ON o."employeeId" = e.id
       GROUP BY e.id, p.name, e."hireDate", e.salary
     `);
-
-    if (!result.length) {
+    const rows = result.rows || [];
+    if (!rows.length) {
       return '<p class="no-data">Нет данных для отчёта</p>';
     }
 
@@ -414,28 +427,30 @@ export class ReportService {
           </tr>
         </thead>
         <tbody>
-          ${result
-            .map(
-              (row: any) => `
-                <tr>
-                  <td>${row.employee_id}</td>
-                  <td>${row.position_name}</td>
-                  <td>${new Date(row.hireDate).toLocaleDateString()}</td>
-                  <td>${row.salary}</td>
-                  <td>${row.order_count}</td>
-                  <td>${
-                    row.schedule
+          ${rows
+            .map((row: any) => {
+              const scheduleList =
+                Array.isArray(row.schedule) && row.schedule.length > 0
+                  ? row.schedule
                       .map(
                         (ws: any) =>
                           `${new Date(ws.start_time).toLocaleString()} - ${new Date(ws.end_time).toLocaleString()} (${
                             ws.is_available ? 'Доступен' : 'Недоступен'
                           })`
                       )
-                      .join(', ') || '-'
-                  }</td>
+                      .join(', ')
+                  : '-';
+              return `
+                <tr>
+                  <td>${row.employee_id}</td>
+                  <td>${row.position_name}</td>
+                  <td>${new Date(row.hireDate).toLocaleDateString()}</td>
+                  <td>${row.salary}</td>
+                  <td>${row.order_count}</td>
+                  <td>${scheduleList}</td>
                 </tr>
-              `
-            )
+              `;
+            })
             .join('')}
         </tbody>
       </table>
@@ -452,22 +467,37 @@ export class ReportService {
         s."subscriptionDescription",
         s."dateStart",
         s."dateEnd",
+        s."employeeId",
+        CASE 
+          WHEN s."employeeId" IS NOT NULL THEN e.name || ' ' || e."surName"
+          ELSE NULL
+        END AS employee_name,
         COALESCE(
           (SELECT json_agg(json_build_object(
             'description', r.description,
             'rate', r.rate,
-            'createdAt', r."createdAt"
+            'createdAt', r."createdAt",
+            'employeeId', r."employeeId"
           ))
-          FROM public."Reviews" r
-          WHERE r."userId" = u.id AND r."deletedAt" IS NULL),
+          FROM autoservice."Reviews" r
+          WHERE r."userId" = u.id 
+            AND r."deletedAt" IS NULL
+            AND (
+              -- Если подписка на конкретного рабочего, показываем только отзывы для этого рабочего
+              (s."employeeId" IS NOT NULL AND r."employeeId" = s."employeeId")
+              OR
+              -- Если общая подписка, показываем все отзывы пользователя
+              (s."employeeId" IS NULL)
+            )),
           '[]'
         ) AS reviews
-      FROM public."Users" u
-      JOIN public."Subscriptions" s ON s."userId" = u.id
+      FROM autoservice."Users" u
+      JOIN autoservice."Subscriptions" s ON s."userId" = u.id
+      LEFT JOIN autoservice."Employees" e ON s."employeeId" = e.id
       WHERE s."dateEnd" > CURRENT_TIMESTAMP
     `);
-
-    if (!result.length) {
+    const rows = result.rows || [];
+    if (!rows.length) {
       return '<p class="no-data">Нет данных для отчёта</p>';
     }
 
@@ -480,34 +510,46 @@ export class ReportService {
             <th>ID подписки</th>
             <th>Название подписки</th>
             <th>Описание</th>
+            <th>Рабочий</th>
             <th>Начало</th>
             <th>Окончание</th>
             <th>Отзывы</th>
           </tr>
         </thead>
         <tbody>
-          ${result
-            .map(
-              (row: any) => `
+          ${rows
+            .map((row: any) => {
+              const reviewsList =
+                Array.isArray(row.reviews) && row.reviews.length > 0
+                  ? row.reviews
+                      .map((r: any) => {
+                        const dateStr = new Date(
+                          r.createdAt
+                        ).toLocaleDateString();
+                        const employeeNote =
+                          r.employeeId && r.employeeId === row.employee_id
+                            ? `, для рабочего ${row.employee_name || `ID ${r.employeeId}`}`
+                            : r.employeeId
+                              ? `, для рабочего ID ${r.employeeId}`
+                              : '';
+                        return `${r.description || 'Без описания'} (Рейтинг: ${r.rate}, ${dateStr}${employeeNote})`;
+                      })
+                      .join('; ')
+                  : '-';
+              return `
                 <tr>
                   <td>${row.user_id}</td>
                   <td>${row.client_name}</td>
                   <td>${row.subscription_id}</td>
                   <td>${row.subscription_name}</td>
-                  <td>${row.subscriptionDescription}</td>
+                  <td>${row.subscriptionDescription || '-'}</td>
+                  <td>${row.employee_name || 'Общая подписка'}</td>
                   <td>${new Date(row.dateStart).toLocaleDateString()}</td>
                   <td>${new Date(row.dateEnd).toLocaleDateString()}</td>
-                  <td>${
-                    row.reviews
-                      .map(
-                        (r: any) =>
-                          `${r.description} (Рейтинг: ${r.rate}, ${new Date(r.createdAt).toLocaleDateString()})`
-                      )
-                      .join(', ') || '-'
-                  }</td>
+                  <td>${reviewsList}</td>
                 </tr>
-              `
-            )
+              `;
+            })
             .join('')}
         </tbody>
       </table>

@@ -8,7 +8,7 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core';
 import { schema } from '../pgSchema';
-import { orders } from '../schema';
+import { orders, reviews, subscriptions } from '../schema';
 
 export const positions = schema.table('Position', {
   id: serial('id').primaryKey(),
@@ -49,6 +49,8 @@ export const employeesRelations = relations(employees, ({ one, many }) => ({
   }),
   workSchedules: many(workSchedules),
   orders: many(orders),
+  subscriptions: many(subscriptions),
+  reviews: many(reviews),
 }));
 
 export const workSchedulesRelations = relations(workSchedules, ({ one }) => ({

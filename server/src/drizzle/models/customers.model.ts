@@ -1,7 +1,7 @@
 import { relations } from 'drizzle-orm';
 import { bigint, serial, text, timestamp, varchar } from 'drizzle-orm/pg-core';
 import { schema } from '../pgSchema';
-import { orders, users } from '../schema';
+import { employees, orders, users } from '../schema';
 
 export const cars = schema.table('Cars', {
   id: serial('id').primaryKey(),
@@ -20,6 +20,8 @@ export const subscriptions = schema.table('Subscriptions', {
   userId: bigint('userId', { mode: 'number' })
     .notNull()
     .references(() => users.id),
+  employeeId: bigint('employeeId', { mode: 'number' })
+    .references(() => employees.id),
   subscriptionDescription: text('subscriptionDescription'),
   subscriptionName: varchar('subscriptonName').notNull(),
   dateStart: timestamp('dateStart', { mode: 'date' }).defaultNow().notNull(),
@@ -31,6 +33,8 @@ export const reviews = schema.table('Reviews', {
   userId: bigint('userId', { mode: 'number' })
     .notNull()
     .references(() => users.id),
+  employeeId: bigint('employeeId', { mode: 'number' })
+    .references(() => employees.id),
   description: text('description'),
   rate: bigint('rate', { mode: 'number' }).notNull(),
   createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
@@ -51,11 +55,19 @@ export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
     fields: [subscriptions.userId],
     references: [users.id],
   }),
+  employee: one(employees, {
+    fields: [subscriptions.employeeId],
+    references: [employees.id],
+  }),
 }));
 
 export const reviewsRelations = relations(reviews, ({ one }) => ({
   user: one(users, {
     fields: [reviews.userId],
     references: [users.id],
+  }),
+  employee: one(employees, {
+    fields: [reviews.employeeId],
+    references: [employees.id],
   }),
 }));

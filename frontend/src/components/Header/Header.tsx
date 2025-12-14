@@ -51,13 +51,13 @@ const Header = () => {
               <Link to="/orders" className="header-link">
                 Заказы
               </Link>
+              <Link to="/employees" className="header-link">
+                Рабочие
+              </Link>
               {canAccess(["admin", "manager"]) && (
                 <>
                   <Link to="/clients" className="header-link">
                     Клиенты
-                  </Link>
-                  <Link to="/employees" className="header-link">
-                    Рабочие
                   </Link>
                   <Link to="/suppliers" className="header-link">
                     Поставки
@@ -77,10 +77,12 @@ const Header = () => {
           {isAuthenticated && user ? (
             <>
               <div className="header-user-info">
-                <span className="header-user-name">
-                  {user.name} {user.surName}
-                </span>
-                <span className="header-user-role">{user.roleName}</span>
+                <Link to="/profile" className="header-user-name-link">
+                  <span className="header-user-name">
+                    {user.name} {user.surName}
+                  </span>
+                  <span className="header-user-role">{user.roleName}</span>
+                </Link>
               </div>
               <button onClick={handleLogout} className="header-logout">
                 Выйти

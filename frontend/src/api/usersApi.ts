@@ -44,6 +44,7 @@ export interface UserDetailed {
     deletedAt: string;
   }[];
   cars?: {
+    id?: number;
     name: string;
     information: string;
     year: string;
@@ -80,6 +81,23 @@ export interface UpdateUserDto {
   phone?: string;
   password?: string;
   roleId?: number;
+}
+
+export interface UpdateCarDto {
+  id?: number;
+  name?: string;
+  information?: string;
+  year?: number;
+  vin?: string;
+  licensePlate?: string;
+}
+
+export interface UpdateProfileDto {
+  name?: string;
+  surName?: string;
+  email?: string;
+  phone?: string;
+  cars?: UpdateCarDto[];
 }
 
 export interface RoleOption {
@@ -140,6 +158,18 @@ export const usersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [apiTags.USERS],
     }),
+    getMyProfile: builder.query<UserDetailed, void>({
+      query: () => "/users/profile/me",
+      providesTags: [apiTags.USER],
+    }),
+    updateMyProfile: builder.mutation<UserDetailed, UpdateProfileDto>({
+      query: (data) => ({
+        url: "/users/profile/me",
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: [apiTags.USER, apiTags.USERS],
+    }),
   }),
 });
 
@@ -152,4 +182,6 @@ export const {
   useUpdateUserMutation,
   useDeleteUserMutation,
   useGetRolesQuery,
+  useGetMyProfileQuery,
+  useUpdateMyProfileMutation,
 } = usersApi;

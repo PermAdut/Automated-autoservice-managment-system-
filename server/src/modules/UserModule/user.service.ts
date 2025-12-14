@@ -10,6 +10,7 @@ import { CreateUserDto } from './Dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { UserResponseDto } from './Dto/UserResponseDto';
 import { UpdateUserDto } from './Dto/update-user.dto';
+import { UpdateProfileDto } from './Dto/update-profile.dto';
 import {
   users,
   roles,
@@ -19,7 +20,7 @@ import {
   reviews,
   subscriptions,
 } from '../database/schema';
-import { asc, desc, eq, like, or } from 'drizzle-orm';
+import { asc, desc, eq, like, or, inArray } from 'drizzle-orm';
 
 @Injectable()
 export class UserService {
@@ -452,5 +453,94 @@ export class UserService {
       .where(eq(users.id, id));
 
     return this.findById(id);
+  }
+
+  async updateProfile(
+    userId: number,
+    profileData: UpdateProfileDto
+  ): Promise<UserResponseDto> {
+    const userCheck = await this.databaseService.db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (userCheck.length === 0) {
+      throw new NotFoundException(`User with id ${userId} not found`);
+    }
+
+    // Update user basic info
+    if (
+      profileData.name ||
+      profileData.surName ||
+      profileData.email ||
+      profileData.phone
+    ) {
+      await this.databaseService.db
+        .update(users)
+        .set({
+          name: profileData.name ?? userCheck[0].name,
+          surName: profileData.surName ?? userCheck[0].surName,
+          email: profileData.email ?? userCheck[0].email,
+          phone: profileData.phone ?? userCheck[0].phone,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId));
+    }
+
+    // Update cars if provided
+    if (profileData.cars && Array.isArray(profileData.cars)) {
+      // Get existing cars
+      const existingCars = await this.databaseService.db
+        .select()
+        .from(cars)
+        .where(eq(cars.userId, userId));
+
+      const existingCarIds = existingCars.map(c => c.id);
+      const providedCarIds = profileData.cars
+        .map(c => c.id)
+        .filter((id): id is number => id !== undefined);
+
+      // Delete cars that are not in the provided list
+      const carsToDelete = existingCarIds.filter(
+        id => !providedCarIds.includes(id)
+      );
+      if (carsToDelete.length > 0) {
+        await this.databaseService.db
+          .delete(cars)
+          .where(inArray(cars.id, carsToDelete));
+      }
+
+      // Update or create cars
+      for (const carData of profileData.cars) {
+        if (carData.id && existingCarIds.includes(carData.id)) {
+          // Update existing car
+          await this.databaseService.db
+            .update(cars)
+            .set({
+              name: carData.name,
+              information: carData.information ?? null,
+              year: carData.year,
+              vin: carData.vin,
+              licensePlate: carData.licensePlate ?? null,
+            })
+            .where(eq(cars.id, carData.id));
+        } else {
+          // Create new car
+          if (carData.name && carData.year && carData.vin) {
+            await this.databaseService.db.insert(cars).values({
+              userId,
+              name: carData.name,
+              information: carData.information ?? null,
+              year: carData.year,
+              vin: carData.vin,
+              licensePlate: carData.licensePlate ?? null,
+            });
+          }
+        }
+      }
+    }
+
+    return this.findById(userId);
   }
 }

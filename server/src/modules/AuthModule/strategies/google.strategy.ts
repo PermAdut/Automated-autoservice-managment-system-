@@ -9,7 +9,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
     const callbackURL =
       process.env.GOOGLE_CALLBACK_URL ||
-      'http://localhost:3333/auth/google/callback';
+      'http://localhost:3000/auth/google/callback';
 
     if (!clientID || !clientSecret) {
       throw new Error(

@@ -10,10 +10,15 @@ import {
   positions,
   workSchedules,
   orders,
+  subscriptions,
+  reviews,
+  users,
 } from '../database/schema';
 import { eq, and, asc, desc, ilike, or, sql } from 'drizzle-orm';
 import { CreateEmployeeDto } from './Dto/create-employee.dto';
 import { UpdateEmployeeDto } from './Dto/update-employee.dto';
+import { SubscribeEmployeeDto } from './Dto/subscribe-employee.dto';
+import { CreateReviewDto } from './Dto/create-review.dto';
 
 @Injectable()
 export class EmployeeService {
@@ -297,5 +302,168 @@ export class EmployeeService {
       name: position.name,
       description: position.description || '',
     }));
+  }
+
+  async subscribeToEmployee(
+    userId: number,
+    subscribeDto: SubscribeEmployeeDto
+  ) {
+    // Проверяем, существует ли сотрудник
+    const [employee] = await this.databaseService.db
+      .select()
+      .from(employees)
+      .where(eq(employees.id, subscribeDto.employeeId))
+      .limit(1);
+
+    if (!employee) {
+      throw new NotFoundException(
+        `Employee with id ${subscribeDto.employeeId} not found`
+      );
+    }
+
+    // Проверяем, не подписан ли уже пользователь
+    const existingSubscription = await this.databaseService.db
+      .select()
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.userId, userId),
+          eq(subscriptions.employeeId, subscribeDto.employeeId),
+          sql`${subscriptions.dateEnd} > CURRENT_TIMESTAMP`
+        )
+      )
+      .limit(1);
+
+    if (existingSubscription.length > 0) {
+      throw new BadRequestException(
+        'You are already subscribed to this employee'
+      );
+    }
+
+    // Создаем подписку на 6 месяцев
+    const dateStart = new Date();
+    const dateEnd = new Date();
+    dateEnd.setMonth(dateEnd.getMonth() + 6);
+
+    const [newSubscription] = await this.databaseService.db
+      .insert(subscriptions)
+      .values({
+        userId,
+        employeeId: subscribeDto.employeeId,
+        subscriptionName: `Подписка на рабочего`,
+        subscriptionDescription: `Подписка на рабочего ${employee.name} ${employee.surName}`,
+        dateStart,
+        dateEnd,
+      })
+      .returning();
+
+    return {
+      id: newSubscription.id,
+      userId: newSubscription.userId,
+      employeeId: newSubscription.employeeId,
+      subscriptionName: newSubscription.subscriptionName,
+      dateStart: newSubscription.dateStart,
+      dateEnd: newSubscription.dateEnd,
+    };
+  }
+
+  async unsubscribeFromEmployee(userId: number, employeeId: number) {
+    const result = await this.databaseService.db
+      .update(subscriptions)
+      .set({ dateEnd: new Date() }) // Завершаем подписку сейчас
+      .where(
+        and(
+          eq(subscriptions.userId, userId),
+          eq(subscriptions.employeeId, employeeId),
+          sql`${subscriptions.dateEnd} > CURRENT_TIMESTAMP`
+        )
+      )
+      .returning();
+
+    if (result.length === 0) {
+      throw new NotFoundException('Subscription not found or already expired');
+    }
+
+    return { message: 'Successfully unsubscribed' };
+  }
+
+  async createReview(userId: number, createReviewDto: CreateReviewDto) {
+    // Проверяем, существует ли сотрудник
+    const [employee] = await this.databaseService.db
+      .select()
+      .from(employees)
+      .where(eq(employees.id, createReviewDto.employeeId))
+      .limit(1);
+
+    if (!employee) {
+      throw new NotFoundException(
+        `Employee with id ${createReviewDto.employeeId} not found`
+      );
+    }
+
+    // Проверяем валидность рейтинга
+    if (createReviewDto.rate < 1 || createReviewDto.rate > 5) {
+      throw new BadRequestException('Rate must be between 1 and 5');
+    }
+
+    const [newReview] = await this.databaseService.db
+      .insert(reviews)
+      .values({
+        userId,
+        employeeId: createReviewDto.employeeId,
+        description: createReviewDto.description || null,
+        rate: createReviewDto.rate,
+      })
+      .returning();
+
+    return {
+      id: newReview.id,
+      userId: newReview.userId,
+      employeeId: newReview.employeeId,
+      description: newReview.description,
+      rate: newReview.rate,
+      createdAt: newReview.createdAt,
+    };
+  }
+
+  async getEmployeeReviews(employeeId: number) {
+    const reviewsList = await this.databaseService.db
+      .select({
+        id: reviews.id,
+        userId: reviews.userId,
+        employeeId: reviews.employeeId,
+        description: reviews.description,
+        rate: reviews.rate,
+        createdAt: reviews.createdAt,
+        userName: users.name,
+        userSurName: users.surName,
+      })
+      .from(reviews)
+      .leftJoin(users, eq(reviews.userId, users.id))
+      .where(
+        and(
+          eq(reviews.employeeId, employeeId),
+          sql`${reviews.deletedAt} IS NULL`
+        )
+      )
+      .orderBy(desc(reviews.createdAt));
+
+    return reviewsList;
+  }
+
+  async getUserSubscription(userId: number, employeeId: number) {
+    const [subscription] = await this.databaseService.db
+      .select()
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.userId, userId),
+          eq(subscriptions.employeeId, employeeId),
+          sql`${subscriptions.dateEnd} > CURRENT_TIMESTAMP`
+        )
+      )
+      .limit(1);
+
+    return subscription || null;
   }
 }

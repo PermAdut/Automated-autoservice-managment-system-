@@ -15,6 +15,12 @@ import {
   servicesOrders,
   sparePartOrders,
   payments,
+  workSchedules,
+  subscriptions,
+  reviews,
+  positionsForBuying,
+  invoices,
+  passports,
 } from '../drizzle/schema';
 import * as bcrypt from 'bcrypt';
 
@@ -23,12 +29,18 @@ async function seed() {
 
   try {
     // Clear tables (order respects FK)
+    await dbService.db.delete(invoices);
+    await dbService.db.delete(positionsForBuying);
+    await dbService.db.delete(reviews);
+    await dbService.db.delete(subscriptions);
+    await dbService.db.delete(workSchedules);
     await dbService.db.delete(sparePartStore);
     await dbService.db.delete(servicesOrders);
     await dbService.db.delete(sparePartOrders);
     await dbService.db.delete(payments);
     await dbService.db.delete(orders);
     await dbService.db.delete(cars);
+    await dbService.db.delete(passports);
     await dbService.db.delete(spareParts);
     await dbService.db.delete(categories);
     await dbService.db.delete(stores);
@@ -322,11 +334,279 @@ async function seed() {
         licensePlate: `ABC-${i.toString().padStart(3, '0')}`,
       });
     }
-    await dbService.db.insert(cars).values(carsData);
+    const createdCars = await dbService.db
+      .insert(cars)
+      .values(carsData)
+      .returning();
+
+    // Create orders (10+)
+    const ordersData: Array<{
+      userId: number;
+      carId: number;
+      employeeId: number;
+      status: string;
+      createdAt: Date;
+    }> = [];
+    for (let i = 0; i < 12; i++) {
+      const userId = createdUsers[i % createdUsers.length].id;
+      const carId = createdCars[i % createdCars.length].id;
+      const employeeId = createdEmployees[i % createdEmployees.length].id;
+      const statuses = ['pending', 'in_progress', 'completed', 'cancelled'];
+      ordersData.push({
+        userId,
+        carId,
+        employeeId,
+        status: statuses[i % statuses.length],
+        createdAt: new Date(2024, 0, 1 + i * 3),
+      });
+    }
+    const createdOrders = await dbService.db
+      .insert(orders)
+      .values(ordersData)
+      .returning();
+
+    // Create services_orders relationships
+    const servicesOrdersData: Array<{
+      orderId: number;
+      servicesId: number;
+      quantity: number;
+    }> = [];
+    for (let i = 0; i < createdOrders.length; i++) {
+      const order = createdOrders[i];
+      // Каждый заказ имеет 1-3 услуги
+      const numServices = 1 + (i % 3);
+      for (let j = 0; j < numServices; j++) {
+        servicesOrdersData.push({
+          orderId: order.id,
+          servicesId: createdServices[j % createdServices.length].id,
+          quantity: 1 + (j % 2),
+        });
+      }
+    }
+    await dbService.db.insert(servicesOrders).values(servicesOrdersData);
+
+    // Create spare_part_orders relationships
+    const sparePartOrdersData: Array<{
+      ordersId: number;
+      sparePartId: number;
+      quantity: number;
+    }> = [];
+    for (let i = 0; i < createdOrders.length; i++) {
+      const order = createdOrders[i];
+      // Каждый второй заказ имеет запчасти
+      if (i % 2 === 0) {
+        const numParts = 1 + (i % 2);
+        for (let j = 0; j < numParts; j++) {
+          sparePartOrdersData.push({
+            ordersId: order.id,
+            sparePartId: createdSpareParts[j % createdSpareParts.length].id,
+            quantity: 1 + (j % 3),
+          });
+        }
+      }
+    }
+    if (sparePartOrdersData.length > 0) {
+      await dbService.db.insert(sparePartOrders).values(sparePartOrdersData);
+    }
+
+    // Create payments (для оплаченных заказов)
+    const paymentsData: Array<{
+      orderId: number;
+      amount: string;
+      status: boolean;
+      paymentMethod: string;
+      paymentDate: Date;
+    }> = [];
+    for (let i = 0; i < createdOrders.length; i++) {
+      const order = createdOrders[i];
+      // Примерно 70% заказов оплачены
+      if (i % 10 < 7) {
+        const orderServices = servicesOrdersData.filter(
+          so => so.orderId === order.id
+        );
+        const orderParts = sparePartOrdersData.filter(
+          spo => spo.ordersId === order.id
+        );
+        let totalAmount = 0;
+
+        orderServices.forEach(so => {
+          const service = createdServices.find(s => s.id === so.servicesId);
+          if (service) {
+            totalAmount += service.price * so.quantity;
+          }
+        });
+
+        orderParts.forEach(spo => {
+          const part = createdSpareParts.find(sp => sp.id === spo.sparePartId);
+          if (part) {
+            totalAmount += parseFloat(part.price.toString()) * spo.quantity;
+          }
+        });
+
+        paymentsData.push({
+          orderId: order.id,
+          amount: totalAmount.toString(),
+          status: i % 3 === 0 ? false : true, // Большинство оплачено
+          paymentMethod: ['cash', 'card', 'online'][i % 3],
+          paymentDate: new Date(
+            order.createdAt.getTime() + 24 * 60 * 60 * 1000
+          ), // На следующий день
+        });
+      }
+    }
+    if (paymentsData.length > 0) {
+      await dbService.db.insert(payments).values(paymentsData);
+    }
+
+    // Create work schedules for employees
+    const workSchedulesData: Array<{
+      employeeId: number;
+      startTime: Date;
+      endTime: Date;
+      isAvailable: boolean;
+    }> = [];
+    for (let i = 0; i < createdEmployees.length; i++) {
+      const employee = createdEmployees[i];
+      // Каждый сотрудник имеет 2-3 записи расписания
+      const numSchedules = 2 + (i % 2);
+      for (let j = 0; j < numSchedules; j++) {
+        const startDate = new Date(2024, 0, 1 + j * 7);
+        startDate.setHours(9 + (j % 2) * 4, 0, 0, 0);
+        const endDate = new Date(startDate);
+        endDate.setHours(startDate.getHours() + 8);
+
+        workSchedulesData.push({
+          employeeId: employee.id,
+          startTime: startDate,
+          endTime: endDate,
+          isAvailable: j % 3 !== 0, // Большинство доступны
+        });
+      }
+    }
+    await dbService.db.insert(workSchedules).values(workSchedulesData);
+
+    // Create subscriptions for customers
+    const subscriptionsData: Array<{
+      userId: number;
+      employeeId?: number;
+      subscriptionName: string;
+      subscriptionDescription: string;
+      dateStart: Date;
+      dateEnd: Date;
+    }> = [];
+    const customerUsers = createdUsers.filter(
+      u => u.roleId === customerRole.id
+    );
+    for (let i = 0; i < customerUsers.length; i++) {
+      const user = customerUsers[i];
+      const startDate = new Date(2024, 0, 1 + i * 10);
+      const endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + 6); // Подписка на 6 месяцев
+
+      // Первые подписки - на рабочих, остальные - общие
+      const employeeId = i < createdEmployees.length ? createdEmployees[i % createdEmployees.length].id : undefined;
+
+      subscriptionsData.push({
+        userId: user.id,
+        employeeId,
+        subscriptionName: employeeId ? `Подписка на рабочего` : ['Базовый', 'Стандарт', 'Премиум'][i % 3],
+        subscriptionDescription: employeeId 
+          ? `Подписка на рабочего ${createdEmployees[i % createdEmployees.length].name} ${createdEmployees[i % createdEmployees.length].surName}`
+          : `Подписка ${['Базовый', 'Стандарт', 'Премиум'][i % 3]} для ${user.name}`,
+        dateStart: startDate,
+        dateEnd: endDate,
+      });
+    }
+    await dbService.db.insert(subscriptions).values(subscriptionsData);
+
+    // Create reviews for customers
+    const reviewsData: Array<{
+      userId: number;
+      employeeId?: number;
+      description: string;
+      rate: number;
+      createdAt: Date;
+    }> = [];
+    for (let i = 0; i < customerUsers.length; i++) {
+      const user = customerUsers[i];
+      // Каждый клиент может иметь 0-2 отзыва
+      const numReviews = i % 3;
+      for (let j = 0; j < numReviews; j++) {
+        // Часть отзывов на рабочих, часть общие
+        const employeeId = j === 0 && i < createdEmployees.length 
+          ? createdEmployees[i % createdEmployees.length].id 
+          : undefined;
+        
+        reviewsData.push({
+          userId: user.id,
+          employeeId,
+          description: employeeId
+            ? `Отличный рабочий! ${['Очень доволен работой', 'Рекомендую', 'Профессионал'][j]}`
+            : `Отличный сервис! ${['Очень доволен', 'Рекомендую', 'Все понравилось'][j]}`,
+          rate: 4 + (j % 2), // Рейтинг 4-5
+          createdAt: new Date(2024, 0, 15 + i * 5 + j),
+        });
+      }
+    }
+    if (reviewsData.length > 0) {
+      await dbService.db.insert(reviews).values(reviewsData);
+    }
+
+    // Create positions for buying (для отчёта по складам)
+    const positionsForBuyingData: Array<{
+      supplierId: number;
+      quantity: number;
+      deliveryDate: Date;
+      status: string;
+    }> = [];
+    for (let i = 0; i < createdSpareParts.length; i++) {
+      const supplier = createdSuppliers[i % createdSuppliers.length];
+
+      positionsForBuyingData.push({
+        supplierId: supplier.id,
+        quantity: 50 + i * 10,
+        deliveryDate: new Date(2024, 0, 10 + i * 5),
+        status:
+          i % 3 === 0 ? 'pending' : i % 3 === 1 ? 'delivered' : 'in_transit',
+      });
+    }
+    const createdPositionsForBuying = await dbService.db
+      .insert(positionsForBuying)
+      .values(positionsForBuyingData)
+      .returning();
+
+    // Create invoices (для оплаченных позиций)
+    const invoicesData: Array<{
+      positionForBuyingId: number;
+      amount: string;
+      status: string;
+      invoiceDate: Date;
+    }> = [];
+    for (let i = 0; i < createdPositionsForBuying.length; i++) {
+      const position = createdPositionsForBuying[i];
+      // Примерно 60% позиций оплачены
+      if (i % 5 < 3) {
+        const sparePart = createdSpareParts[i % createdSpareParts.length];
+        const amount =
+          parseFloat(sparePart.price.toString()) * position.quantity;
+
+        invoicesData.push({
+          positionForBuyingId: position.id,
+          amount: amount.toString(),
+          status: 'paid',
+          invoiceDate: new Date(
+            position.deliveryDate.getTime() - 7 * 24 * 60 * 60 * 1000
+          ), // За неделю до доставки
+        });
+      }
+    }
+    if (invoicesData.length > 0) {
+      await dbService.db.insert(invoices).values(invoicesData);
+    }
 
     console.log('Database seeded successfully!');
     console.log(
-      `Created: ${createdUsers.length} users, ${createdEmployees.length} employees, ${createdServices.length} services, ${createdSuppliers.length} suppliers, ${createdSpareParts.length} spare parts`
+      `Created: ${createdUsers.length} users, ${createdEmployees.length} employees, ${createdServices.length} services, ${createdSuppliers.length} suppliers, ${createdSpareParts.length} spare parts, ${createdOrders.length} orders, ${paymentsData.length} payments, ${workSchedulesData.length} work schedules, ${subscriptionsData.length} subscriptions, ${reviewsData.length} reviews`
     );
   } catch (error: unknown) {
     console.error('Error seeding database:', error);

@@ -33,11 +33,14 @@ export const ordersApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getOrders: builder.query<
       Order[],
-      { search?: string; sortBy?: string; sortOrder?: "asc" | "desc" }
+      { search?: string; sortBy?: string; sortOrder?: "asc" | "desc"; isAdmin?: boolean }
     >({
       query: (params) => ({
         url: "/orders",
-        params,
+        params: {
+          ...params,
+          isAdmin: params.isAdmin ? "true" : undefined,
+        },
       }),
       providesTags: [apiTags.ORDERS],
     }),

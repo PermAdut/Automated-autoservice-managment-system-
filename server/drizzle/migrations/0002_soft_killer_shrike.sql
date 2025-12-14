@@ -1,0 +1,4 @@
+ALTER TABLE "autoservice"."Reviews" ADD COLUMN "employeeId" bigint;--> statement-breakpoint
+ALTER TABLE "autoservice"."Subscriptions" ADD COLUMN "employeeId" bigint;--> statement-breakpoint
+ALTER TABLE "autoservice"."Reviews" ADD CONSTRAINT "Reviews_employeeId_Employees_id_fk" FOREIGN KEY ("employeeId") REFERENCES "autoservice"."Employees"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "autoservice"."Subscriptions" ADD CONSTRAINT "Subscriptions_employeeId_Employees_id_fk" FOREIGN KEY ("employeeId") REFERENCES "autoservice"."Employees"("id") ON DELETE no action ON UPDATE no action;

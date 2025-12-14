@@ -3,10 +3,12 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Order } from "../../../api/ordersApi";
-import { useGetUsersQuery, useGetUserByIdQuery } from "../../../api/usersApi";
+import { useGetUserByIdQuery } from "../../../api/usersApi";
 import { useGetEmployeesQuery } from "../../../api/employeesApi";
 import { useGetServicesQuery } from "../../../api/servicesApi";
 import { useGetSparePartsQuery } from "../../../api/sparePartsApi";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../store";
 import "./OrderForm.css";
 
 const serviceItemSchema = z.object({
@@ -19,12 +21,29 @@ const sparePartItemSchema = z.object({
   quantity: z.number().int().positive(),
 });
 
+const toNumberOrNaN = (value: unknown) =>
+  typeof value === "number" ? value : Number(value);
+
 const orderSchema = z.object({
-  userId: z.number().int().positive(),
-  carId: z.number().int().positive(),
-  employeeId: z.number().int().positive(),
-  status: z.string().trim().optional(),
-  services: z.array(serviceItemSchema).optional(),
+  carId: z.preprocess(
+    toNumberOrNaN,
+    z
+      .number({ error: "Выберите автомобиль" })
+      .refine((val) => Number.isFinite(val), { message: "Выберите автомобиль" })
+      .int()
+      .positive({ message: "Выберите автомобиль" })
+  ),
+  employeeId: z.preprocess(
+    toNumberOrNaN,
+    z
+      .number({ error: "Выберите сотрудника" })
+      .refine((val) => Number.isFinite(val), { message: "Выберите сотрудника" })
+      .int()
+      .positive({ message: "Выберите сотрудника" })
+  ),
+  services: z
+    .array(serviceItemSchema)
+    .min(1, { message: "Добавьте хотя бы одну услугу" }),
   spareParts: z.array(sparePartItemSchema).optional(),
 });
 
@@ -33,10 +52,16 @@ type OrderFormValues = z.infer<typeof orderSchema>;
 interface OrderFormProps {
   order: Order | null;
   onClose: () => void;
-  onSubmit: (payload: OrderFormValues, id?: number) => Promise<void>;
+  onSubmit: (
+    payload: OrderFormValues & { userId: number },
+    id?: number
+  ) => Promise<void>;
 }
 
 const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
+  const { user } = useSelector((state: RootState) => state.auth);
+  const currentUserId = user?.id;
+
   const {
     register,
     control,
@@ -48,10 +73,8 @@ const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
   } = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
     defaultValues: {
-      userId: order?.userId ?? undefined,
       carId: order?.carId ?? undefined,
       employeeId: order?.employeeId ?? undefined,
-      status: order?.status ?? "",
       services:
         order?.services?.map((s) => ({
           serviceId: s.id,
@@ -84,19 +107,20 @@ const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
     sortBy: "name",
     sortOrder: "asc",
   });
-  const { data: users = [] } = useGetUsersQuery({
-    sortBy: "name",
-    sortOrder: "asc",
-  });
-  const filteredUsers = users.filter(
-    (u: any) =>
-      (u as any).role === "customer" || (u as any).role?.name === "customer"
-  );
 
-  const selectedUserId = watch("userId");
+  // Для создания заказа используем текущего пользователя из токена
+  // Для редактирования используем userId из существующего заказа
+  const selectedUserId = order?.userId ?? currentUserId;
   const { data: selectedUser } = useGetUserByIdQuery(selectedUserId!, {
-    skip: !selectedUserId,
+    skip: !selectedUserId || !currentUserId,
   });
+
+  // При создании нового заказа автоматически выбираем первую машину пользователя
+  useEffect(() => {
+    if (!order && selectedUser?.cars?.length && !watch("carId")) {
+      setValue("carId", selectedUser.cars[0].id);
+    }
+  }, [selectedUser, order, setValue, watch]);
   const { data: employees = [] } = useGetEmployeesQuery({
     sortBy: "name",
     sortOrder: "asc",
@@ -104,10 +128,8 @@ const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
 
   useEffect(() => {
     reset({
-      userId: order?.userId ?? undefined,
       carId: order?.carId ?? undefined,
       employeeId: order?.employeeId ?? undefined,
-      status: order?.status ?? "",
       services:
         order?.services?.map((s) => ({
           serviceId: s.id,
@@ -121,16 +143,30 @@ const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
     });
   }, [order, reset]);
 
+  // Автоматически выбираем первую машину только для новых заказов
   useEffect(() => {
-    if (selectedUser?.cars?.length) {
+    if (!order && selectedUser?.cars?.length && !watch("carId")) {
       setValue("carId", selectedUser.cars[0].id);
-    } else {
-      setValue("carId", undefined as unknown as number);
     }
-  }, [selectedUser, setValue]);
+  }, [selectedUser, order, setValue, watch]);
+
+  // Если при создании нет ни одной услуги в форме, добавляем первую доступную
+  useEffect(() => {
+    if (!order && serviceFields.length === 0 && services.length > 0) {
+      appendService({
+        serviceId: services[0].id,
+        quantity: 1,
+      });
+    }
+  }, [order, serviceFields.length, services, appendService]);
 
   const onSubmitForm = async (values: OrderFormValues) => {
-    await onSubmit(values, order?.id);
+    // Добавляем userId из токена для новых заказов
+    const payload = {
+      ...values,
+      userId: currentUserId!,
+    } as OrderFormValues & { userId: number };
+    await onSubmit(payload, order?.id);
   };
 
   return (
@@ -140,21 +176,22 @@ const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
           {order ? "Редактировать заказ" : "Добавить заказ"}
         </h3>
         <form className="order-form" onSubmit={handleSubmit(onSubmitForm)}>
+          {order && (
+            <div className="form-row">
+              <label>
+                Пользователь
+                <input
+                  type="text"
+                  value={`${selectedUser?.name || ""} ${
+                    selectedUser?.surName || ""
+                  } (ID: ${selectedUserId})`}
+                  disabled
+                  className="disabled-input"
+                />
+              </label>
+            </div>
+          )}
           <div className="form-row">
-            <label>
-              Пользователь *
-              <select {...register("userId", { valueAsNumber: true })}>
-                <option value="">Выберите пользователя</option>
-                {filteredUsers.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} {u.surName} (id: {u.id})
-                  </option>
-                ))}
-              </select>
-              {errors.userId && (
-                <span className="error-message">{errors.userId.message}</span>
-              )}
-            </label>
             <label>
               Авто *
               <select {...register("carId", { valueAsNumber: true })}>
@@ -176,7 +213,7 @@ const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
                 {Array.isArray(employees)
                   ? employees.map((e: any) => (
                       <option key={e.id} value={e.id}>
-                        {e.name} (id: {e.id})
+                        {e.name}
                       </option>
                     ))
                   : null}
@@ -188,16 +225,6 @@ const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
               )}
             </label>
           </div>
-
-          <label>
-            Статус
-            <select {...register("status")}>
-              <option value="">Не задан</option>
-              <option value="pending">pending</option>
-              <option value="in_progress">in_progress</option>
-              <option value="completed">completed</option>
-            </select>
-          </label>
 
           <div className="section">
             <div className="section-header">

@@ -6,6 +6,8 @@ import {
 import { EmployeeItem } from "../EmployeeItem/EmployeeItem";
 import { EmployeeForm } from "../EmployeeForm/EmployeeForm";
 import { useDebounce } from "../../../hooks/useDebounce";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../store";
 import "./EmployeeList.css";
 
 const EMPLOYEE_PER_PAGE = 6;
@@ -20,6 +22,8 @@ const EmployeeList: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | undefined>();
   const debouncedSearch = useDebounce(search, 300);
+  const { user } = useSelector((state: RootState) => state.auth);
+  const isAdmin = user?.roleName === 'admin' || user?.roleName === 'manager';
 
   const {
     data: employees = [],
@@ -88,9 +92,11 @@ const EmployeeList: React.FC = () => {
     <div className="employee-list-container">
       <div className="employee-list-header">
         <h1 className="employee-list-title">Список сотрудников</h1>
-        <button className="btn-add" onClick={handleAdd}>
-          + Добавить сотрудника
-        </button>
+        {isAdmin && (
+          <button className="btn-add" onClick={handleAdd}>
+            + Добавить сотрудника
+          </button>
+        )}
       </div>
       <div className="employee-list-filters filter-bar">
         <input
@@ -135,21 +141,24 @@ const EmployeeList: React.FC = () => {
               schedule={employee.schedule}
               hireDate={employee.hireDate}
               salary={employee.salary}
+              showAdminInfo={isAdmin}
             />
-            <div className="employee-item-actions">
-              <button
-                className="btn-edit"
-                onClick={() => handleEdit(employee.id)}
-              >
-                Редактировать
-              </button>
-              <button
-                className="btn-delete"
-                onClick={() => handleDelete(employee.id)}
-              >
-                Удалить
-              </button>
-            </div>
+            {isAdmin && (
+              <div className="employee-item-actions">
+                <button
+                  className="btn-edit"
+                  onClick={() => handleEdit(employee.id)}
+                >
+                  Редактировать
+                </button>
+                <button
+                  className="btn-delete"
+                  onClick={() => handleDelete(employee.id)}
+                >
+                  Удалить
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>

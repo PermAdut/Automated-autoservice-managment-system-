@@ -32,6 +32,32 @@ export interface PositionOption {
   description?: string;
 }
 
+export interface Subscription {
+  id: number;
+  userId: number;
+  employeeId?: number;
+  subscriptionName: string;
+  dateStart: string;
+  dateEnd: string;
+}
+
+export interface Review {
+  id: number;
+  userId: number;
+  employeeId?: number;
+  description?: string;
+  rate: number;
+  createdAt: string;
+  userName?: string;
+  userSurName?: string;
+}
+
+export interface CreateReviewDto {
+  employeeId: number;
+  description?: string;
+  rate: number;
+}
+
 export const employeesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getEmployees: builder.query<
@@ -82,6 +108,49 @@ export const employeesApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [apiTags.EMPLOYEES, apiTags.POSITIONS],
     }),
+    subscribeToEmployee: builder.mutation<Subscription, number>({
+      query: (employeeId) => ({
+        url: `/employee/${employeeId}/subscribe`,
+        method: "POST",
+      }),
+      invalidatesTags: (_result, _error, employeeId) => [
+        { type: apiTags.EMPLOYEE, id: `subscription-${employeeId}` },
+      ],
+    }),
+    unsubscribeFromEmployee: builder.mutation<{ message: string }, number>({
+      query: (employeeId) => ({
+        url: `/employee/${employeeId}/subscribe`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_result, _error, employeeId) => [
+        { type: apiTags.EMPLOYEE, id: `subscription-${employeeId}` },
+      ],
+    }),
+    getUserSubscription: builder.query<
+      { subscribed: boolean; subscription?: Subscription },
+      number
+    >({
+      query: (employeeId) => `/employee/${employeeId}/subscription`,
+      providesTags: (_result, _error, employeeId) => [
+        { type: apiTags.EMPLOYEE, id: `subscription-${employeeId}` },
+      ],
+    }),
+    createReview: builder.mutation<Review, CreateReviewDto>({
+      query: (body) => ({
+        url: `/employee/${body.employeeId}/reviews`,
+        method: "POST",
+        body: { description: body.description, rate: body.rate },
+      }),
+      invalidatesTags: (_result, _error, { employeeId }) => [
+        { type: apiTags.EMPLOYEE, id: employeeId },
+      ],
+    }),
+    getEmployeeReviews: builder.query<Review[], number>({
+      query: (employeeId) => `/employee/${employeeId}/reviews`,
+      providesTags: (_result, _error, employeeId) => [
+        { type: apiTags.EMPLOYEE, id: employeeId },
+      ],
+    }),
   }),
 });
 
@@ -92,4 +161,9 @@ export const {
   useCreateEmployeeMutation,
   useUpdateEmployeeMutation,
   useDeleteEmployeeMutation,
+  useSubscribeToEmployeeMutation,
+  useUnsubscribeFromEmployeeMutation,
+  useGetUserSubscriptionQuery,
+  useCreateReviewMutation,
+  useGetEmployeeReviewsQuery,
 } = employeesApi;

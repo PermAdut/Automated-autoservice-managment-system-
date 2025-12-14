@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useGetUserByIdQuery } from "../../../api/usersApi";
+import { getOrderStatusLabel } from "../../../utils/orderStatus";
 import "./UserDetailed.css";
 
 const ITEMS_PER_PAGE = 1;
@@ -287,7 +288,7 @@ export const DetailedUserComponent: React.FC = () => {
                   <strong>ID:</strong> {order.id}
                 </p>
                 <p>
-                  <strong>Статус:</strong> {order.status}
+                  <strong>Статус:</strong> {getOrderStatusLabel(order.status)}
                 </p>
                 <p>
                   <strong>Создан:</strong>{" "}

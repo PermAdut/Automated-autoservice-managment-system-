@@ -15,7 +15,7 @@ import {
   spareParts,
   categories,
 } from '../database/schema';
-import { eq, like, desc, asc, or, sql } from 'drizzle-orm';
+import { eq, like, desc, asc, or, and, sql } from 'drizzle-orm';
 
 @Injectable()
 export class OrderService {
@@ -24,20 +24,35 @@ export class OrderService {
   async findAll(
     search?: string,
     sortBy?: string,
-    sortOrder?: 'asc' | 'desc'
+    sortOrder?: 'asc' | 'desc',
+    userId?: number
   ): Promise<OrderResponseDto[]> {
     try {
       let query = this.databaseService.db.select().from(orders);
 
+      // Фильтруем по userId, если указан (для обычных пользователей)
+      const conditions: any[] = [];
+      if (userId) {
+        conditions.push(eq(orders.userId, userId));
+      }
+
       if (search) {
-        query = query.where(
-          or(
-            like(orders.status, `%${search}%`),
-            sql`CAST(${orders.id} AS TEXT) LIKE ${`%${search}%`}`,
-            sql`CAST(${orders.userId} AS TEXT) LIKE ${`%${search}%`}`,
-            sql`CAST(${orders.employeeId} AS TEXT) LIKE ${`%${search}%`}`
-          )
-        ) as any;
+        const searchConditions = [
+          like(orders.status, `%${search}%`),
+          sql`CAST(${orders.id} AS TEXT) LIKE ${`%${search}%`}`,
+          sql`CAST(${orders.userId} AS TEXT) LIKE ${`%${search}%`}`,
+          sql`CAST(${orders.employeeId} AS TEXT) LIKE ${`%${search}%`}`,
+        ];
+
+        if (conditions.length > 0) {
+          query = query.where(
+            and(...conditions, or(...searchConditions))
+          ) as any;
+        } else {
+          query = query.where(or(...searchConditions)) as any;
+        }
+      } else if (conditions.length > 0) {
+        query = query.where(and(...conditions)) as any;
       }
 
       if (sortBy) {
@@ -192,8 +207,14 @@ export class OrderService {
     };
   }
 
-  async create(orderData: CreateOrderDto): Promise<OrderResponseDto> {
+  async create(
+    orderData: CreateOrderDto & { userId: number }
+  ): Promise<OrderResponseDto> {
     let createdOrderId: number | null = null;
+
+    if (!orderData.userId) {
+      throw new BadRequestException('User ID is required');
+    }
 
     await this.databaseService.db.transaction(async tx => {
       const [newOrder] = await tx
@@ -202,7 +223,7 @@ export class OrderService {
           userId: orderData.userId,
           carId: orderData.carId,
           employeeId: orderData.employeeId,
-          status: orderData.status ?? 'pending',
+          status: 'pending',
           createdAt: orderData.createdAt
             ? new Date(orderData.createdAt)
             : undefined,

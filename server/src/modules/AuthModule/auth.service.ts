@@ -92,7 +92,7 @@ export class AuthService {
       .limit(1);
 
     if (user.length === 0) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Неверный email или пароль');
     }
 
     const userData = user[0];
@@ -109,7 +109,7 @@ export class AuthService {
       userData.passwordHash
     );
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Неверный email или пароль');
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

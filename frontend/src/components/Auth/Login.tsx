@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLoginMutation } from "../../api/baseApi";
 import { Link } from "react-router-dom";
+import { serverConfig } from "../../configs/serverConfig";
 import "./Login.css";
 
 const Login = () => {
@@ -25,9 +26,10 @@ const Login = () => {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${
-      import.meta.env.VITE_SERVER_URL || "http://localhost:3333"
-    }/auth/google`;
+    const googleAuthUrl = `${serverConfig.url}/auth/google`;
+    console.log("Google Auth URL:", googleAuthUrl);
+    console.log("serverConfig.url:", serverConfig.url);
+    window.location.href = googleAuthUrl;
   };
 
   return (

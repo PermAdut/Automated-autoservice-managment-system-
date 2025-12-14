@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../../store";
 import {
   useGetSparePartsQuery,
   useCreateSparePartMutation,
@@ -15,6 +17,13 @@ import "./StorageList.css";
 const STORES_PER_PAGE = 6;
 
 const StorageList: React.FC = () => {
+  const { isAuthenticated, user } = useSelector(
+    (state: RootState) => state.auth
+  );
+  const canManage =
+    isAuthenticated &&
+    (user?.roleName === "admin" || user?.roleName === "manager");
+
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
@@ -68,15 +77,17 @@ const StorageList: React.FC = () => {
     <div className="storage-list-container">
       <div className="storage-list-header">
         <h1 className="storage-list-title">Список запчастей на складах</h1>
-        <button
-          className="btn-add"
-          onClick={() => {
-            setEditing(null);
-            setShowForm(true);
-          }}
-        >
-          + Добавить
-        </button>
+        {canManage && (
+          <button
+            className="btn-add"
+            onClick={() => {
+              setEditing(null);
+              setShowForm(true);
+            }}
+          >
+            + Добавить
+          </button>
+        )}
       </div>
       <div className="storage-list-filters">
         <input
@@ -105,31 +116,33 @@ const StorageList: React.FC = () => {
               sparePart={sparePart.sparePart}
               location={sparePart.location}
             />
-            <div className="storage-card-actions">
-              <button
-                className="btn-edit"
-                onClick={() => {
-                  setEditing(sparePart);
-                  setShowForm(true);
-                }}
-              >
-                Редактировать
-              </button>
-              <button
-                className="btn-delete"
-                onClick={async () => {
-                  if (!window.confirm("Удалить запись склада?")) return;
-                  try {
-                    await deleteStock(sparePart.sparePart.id).unwrap();
-                  } catch (err) {
-                    console.error("Failed to delete stock", err);
-                    alert("Не удалось удалить");
-                  }
-                }}
-              >
-                Удалить
-              </button>
-            </div>
+            {canManage && (
+              <div className="storage-card-actions">
+                <button
+                  className="btn-edit"
+                  onClick={() => {
+                    setEditing(sparePart);
+                    setShowForm(true);
+                  }}
+                >
+                  Редактировать
+                </button>
+                <button
+                  className="btn-delete"
+                  onClick={async () => {
+                    if (!window.confirm("Удалить запись склада?")) return;
+                    try {
+                      await deleteStock(sparePart.sparePart.id).unwrap();
+                    } catch (err) {
+                      console.error("Failed to delete stock", err);
+                      alert("Не удалось удалить");
+                    }
+                  }}
+                >
+                  Удалить
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -157,7 +170,7 @@ const StorageList: React.FC = () => {
           </button>
         </div>
       )}
-      {showForm && (
+      {canManage && showForm && (
         <StorageForm
           stock={editing}
           onClose={() => {

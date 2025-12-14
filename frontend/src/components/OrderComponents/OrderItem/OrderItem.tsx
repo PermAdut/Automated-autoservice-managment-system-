@@ -1,4 +1,5 @@
 import React from "react";
+import { getOrderStatusLabel } from "../../../utils/orderStatus";
 import "./OrderItem.css";
 
 interface OrderItemProps {
@@ -32,22 +33,27 @@ export const OrderItem: React.FC<OrderItemProps> = ({
   services,
   sparePart,
 }) => {
+  const carLabel = carId ? `Автомобиль назначен` : "Авто не указано";
+  const employeeLabel = employeeId
+    ? `Сотрудник назначен`
+    : "Сотрудник не назначен";
+
   return (
     <div className="order-item-card">
       <div className="order-item-header">
         <h2 className="order-item-title">Заказ #{id}</h2>
-        <p className="order-item-info">Статус: {status}</p>
+        <p className="order-item-info">Статус: {getOrderStatusLabel(status)}</p>
       </div>
 
       <div className="order-item-details">
         <p>
-          <strong>ID клиента:</strong> {userId}
+          <strong>Клиент:</strong> Клиент назначен
         </p>
         <p>
-          <strong>ID автомобиля:</strong> {carId || "Не указан"}
+          <strong>Автомобиль:</strong> {carLabel}
         </p>
         <p>
-          <strong>ID сотрудника:</strong> {employeeId || "Не назначен"}
+          <strong>Сотрудник:</strong> {employeeLabel}
         </p>
         <p>
           <strong>Создан:</strong> {new Date(createdAt).toLocaleString()}

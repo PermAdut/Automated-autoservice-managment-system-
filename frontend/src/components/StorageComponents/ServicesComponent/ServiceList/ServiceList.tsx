@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../../store";
 import {
   useGetServicesQuery,
   useCreateServiceMutation,
@@ -13,6 +15,13 @@ import "./ServiceList.css";
 const SERVICES_PER_PAGE = 6;
 
 const ServiceList: React.FC = () => {
+  const { isAuthenticated, user } = useSelector(
+    (state: RootState) => state.auth
+  );
+  const canManage =
+    isAuthenticated &&
+    (user?.roleName === "admin" || user?.roleName === "manager");
+
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
@@ -63,15 +72,17 @@ const ServiceList: React.FC = () => {
     <div className="service-list-container">
       <div className="service-list-header">
         <h1 className="service-list-title">Список услуг</h1>
-        <button
-          className="btn-add"
-          onClick={() => {
-            setEditingId(null);
-            setShowForm(true);
-          }}
-        >
-          + Добавить услугу
-        </button>
+        {canManage && (
+          <button
+            className="btn-add"
+            onClick={() => {
+              setEditingId(null);
+              setShowForm(true);
+            }}
+          >
+            + Добавить услугу
+          </button>
+        )}
       </div>
       <div className="service-list-filters filter-bar">
         <input
@@ -103,31 +114,33 @@ const ServiceList: React.FC = () => {
                 description={service.description}
                 price={service.price}
               />
-              <div className="service-card-actions">
-                <button
-                  className="btn-edit"
-                  onClick={() => {
-                    setEditingId(service.id);
-                    setShowForm(true);
-                  }}
-                >
-                  Редактировать
-                </button>
-                <button
-                  className="btn-delete"
-                  onClick={async () => {
-                    if (!window.confirm("Удалить услугу?")) return;
-                    try {
-                      await deleteService(service.id).unwrap();
-                    } catch (err) {
-                      console.error("Failed to delete service", err);
-                      alert("Не удалось удалить услугу");
-                    }
-                  }}
-                >
-                  Удалить
-                </button>
-              </div>
+              {canManage && (
+                <div className="service-card-actions">
+                  <button
+                    className="btn-edit"
+                    onClick={() => {
+                      setEditingId(service.id);
+                      setShowForm(true);
+                    }}
+                  >
+                    Редактировать
+                  </button>
+                  <button
+                    className="btn-delete"
+                    onClick={async () => {
+                      if (!window.confirm("Удалить услугу?")) return;
+                      try {
+                        await deleteService(service.id).unwrap();
+                      } catch (err) {
+                        console.error("Failed to delete service", err);
+                        alert("Не удалось удалить услугу");
+                      }
+                    }}
+                  >
+                    Удалить
+                  </button>
+                </div>
+              )}
             </div>
           ))
         ) : (
@@ -168,7 +181,7 @@ const ServiceList: React.FC = () => {
           </button>
         </div>
       )}
-      {showForm && (
+      {canManage && showForm && (
         <ServiceForm
           serviceId={editingId ?? undefined}
           onClose={() => {

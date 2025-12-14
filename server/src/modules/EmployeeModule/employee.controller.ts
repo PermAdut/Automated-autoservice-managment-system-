@@ -10,6 +10,7 @@ import {
   HttpCode,
   Query,
   ParseIntPipe,
+  NotFoundException,
 } from '@nestjs/common';
 import { EmployeeResponse } from './Dto/employee.response';
 import { ApiResponse, ApiOperation } from '@nestjs/swagger';
@@ -20,11 +21,22 @@ import { Roles } from '../AuthModule/decorators/roles.decorator';
 import { Public } from '../AuthModule/decorators/public.decorator';
 import { CreateEmployeeDto } from './Dto/create-employee.dto';
 import { UpdateEmployeeDto } from './Dto/update-employee.dto';
+import { SubscribeEmployeeDto } from './Dto/subscribe-employee.dto';
+import { CreateReviewDto } from './Dto/create-review.dto';
+import { Req } from '@nestjs/common';
+import { Request } from 'express';
 
 @Controller('api/v1.0/employee')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class EmployeeController {
   constructor(private readonly employeeService: EmployeeService) {}
+
+  private getAuth(req?: Request) {
+    const authUser = (req as any)?.user as
+      | { userId?: number; roleName?: string }
+      | undefined;
+    return { userId: authUser?.userId, role: authUser?.roleName };
+  }
 
   @Get()
   @Public()
@@ -86,5 +98,77 @@ export class EmployeeController {
   @ApiOperation({ summary: 'Delete employee' })
   async deleteEmployee(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return await this.employeeService.deleteEmployee(id);
+  }
+
+  @Post(':id/subscribe')
+  @HttpCode(201)
+  @ApiOperation({ summary: 'Subscribe to employee schedule' })
+  async subscribeToEmployee(
+    @Param('id', ParseIntPipe) employeeId: number,
+    @Req() req: Request
+  ) {
+    const { userId } = this.getAuth(req);
+    if (!userId) {
+      throw new NotFoundException('User not authorized');
+    }
+    return await this.employeeService.subscribeToEmployee(userId, {
+      employeeId,
+    });
+  }
+
+  @Delete(':id/subscribe')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Unsubscribe from employee schedule' })
+  async unsubscribeFromEmployee(
+    @Param('id', ParseIntPipe) employeeId: number,
+    @Req() req: Request
+  ) {
+    const { userId } = this.getAuth(req);
+    if (!userId) {
+      throw new NotFoundException('User not authorized');
+    }
+    return await this.employeeService.unsubscribeFromEmployee(
+      userId,
+      employeeId
+    );
+  }
+
+  @Get(':id/subscription')
+  @ApiOperation({ summary: 'Get user subscription status for employee' })
+  async getUserSubscription(
+    @Param('id', ParseIntPipe) employeeId: number,
+    @Req() req: Request
+  ) {
+    const { userId } = this.getAuth(req);
+    if (!userId) {
+      return { subscribed: false };
+    }
+    const subscription = await this.employeeService.getUserSubscription(
+      userId,
+      employeeId
+    );
+    return { subscribed: !!subscription, subscription };
+  }
+
+  @Post(':id/reviews')
+  @HttpCode(201)
+  @ApiOperation({ summary: 'Create review for employee' })
+  async createReview(
+    @Param('id', ParseIntPipe) employeeId: number,
+    @Body() createReviewDto: Omit<CreateReviewDto, 'employeeId'>,
+    @Req() req: any
+  ) {
+    const userId = req.user.userId;
+    return await this.employeeService.createReview(userId, {
+      ...createReviewDto,
+      employeeId,
+    });
+  }
+
+  @Get(':id/reviews')
+  @Public()
+  @ApiOperation({ summary: 'Get employee reviews' })
+  async getEmployeeReviews(@Param('id', ParseIntPipe) employeeId: number) {
+    return await this.employeeService.getEmployeeReviews(employeeId);
   }
 }

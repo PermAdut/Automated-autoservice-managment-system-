@@ -33,8 +33,8 @@ export class OrderSparePartItemDto {
 
 export class CreateOrderDto {
   @IsNumber()
-  @IsNotEmpty()
-  userId: number;
+  @IsOptional()
+  userId?: number;
 
   @IsNumber()
   @IsNotEmpty()
@@ -43,10 +43,6 @@ export class CreateOrderDto {
   @IsNumber()
   @IsNotEmpty()
   employeeId: number;
-
-  @IsString()
-  @IsOptional()
-  status?: string | null;
 
   @IsDateString()
   @IsOptional()
@@ -73,4 +69,8 @@ export class CreateOrderDto {
   spareParts?: OrderSparePartItemDto[];
 }
 
-export class UpdateOrderDto extends PartialType(CreateOrderDto) {}
+export class UpdateOrderDto extends PartialType(CreateOrderDto) {
+  @IsString()
+  @IsOptional()
+  status?: string | null;
+}

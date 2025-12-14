@@ -15,6 +15,13 @@
       "when": 1765141725231,
       "tag": "0001_add_name_surname_empl",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1765616098790,
+      "tag": "0002_soft_killer_shrike",
+      "breakpoints": true
     }
   ]
 }

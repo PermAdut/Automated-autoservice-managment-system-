@@ -102,6 +102,18 @@
   gap: 0.25rem;
 }
 
+.header-user-name-link {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+.header-user-name-link:hover {
+  opacity: 0.8;
+}
+
 .header-user-name {
   font-size: 0.875rem;
   font-weight: 600;

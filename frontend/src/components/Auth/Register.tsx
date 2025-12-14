@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRegisterMutation } from "../../api/baseApi";
+import { serverConfig } from "../../configs/serverConfig";
 import "./Login.css";
 
 const Register = () => {
   const navigate = useNavigate();
   const [register, { isLoading }] = useRegisterMutation();
   const [error, setError] = useState("");
+
+  // Получаем сегодняшнюю дату в формате YYYY-MM-DD для ограничения выбора даты рождения
+  const today = new Date().toISOString().split('T')[0];
 
   const [form, setForm] = useState({
     login: "",
@@ -41,9 +45,7 @@ const Register = () => {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${
-      import.meta.env.VITE_SERVER_URL || "http://localhost:3333"
-    }/auth/google`;
+    window.location.href = `${serverConfig.url}/auth/google`;
   };
 
   return (
@@ -141,6 +143,7 @@ const Register = () => {
               type="date"
               value={form.passportBirthDate}
               onChange={handleChange}
+              max={today}
               required
             />
           </div>

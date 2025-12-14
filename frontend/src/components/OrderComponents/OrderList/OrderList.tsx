@@ -8,6 +8,9 @@ import {
 } from "../../../api/ordersApi";
 import { OrderItem } from "../OrderItem/OrderItem";
 import OrderForm from "../OrderForm/OrderForm";
+import { getOrderStatusLabel } from "../../../utils/orderStatus";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../store";
 import "./OrderList.css";
 
 const ORDERS_PER_PAGE = 3;
@@ -21,6 +24,8 @@ const OrderList: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [showForm, setShowForm] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const { user } = useSelector((state: RootState) => state.auth);
+  const isAdminOrManager = user?.roleName === 'admin' || user?.roleName === 'manager';
 
   const {
     data: orders = [],
@@ -30,6 +35,7 @@ const OrderList: React.FC = () => {
     search,
     sortBy,
     sortOrder,
+    isAdmin: user?.roleName === 'admin',
   });
 
   const [createOrder] = useCreateOrderMutation();
@@ -39,9 +45,11 @@ const OrderList: React.FC = () => {
   const filteredSorted = useMemo(() => {
     const filtered = orders.filter((order) => {
       const term = search.toLowerCase();
+      const statusLabel = getOrderStatusLabel(order.status).toLowerCase();
       return (
         String(order.id).includes(term) ||
-        order.status?.toLowerCase().includes(term)
+        order.status?.toLowerCase().includes(term) ||
+        statusLabel.includes(term)
       );
     });
     const sorted = [...filtered].sort((a, b) => {
@@ -132,31 +140,33 @@ const OrderList: React.FC = () => {
               services={order.services}
               sparePart={order.sparePart}
             />
-            <div className="order-card-actions">
-              <button
-                className="btn-edit"
-                onClick={() => {
-                  setEditingOrder(order);
-                  setShowForm(true);
-                }}
-              >
-                Редактировать
-              </button>
-              <button
-                className="btn-delete"
-                onClick={async () => {
-                  if (!window.confirm("Удалить заказ?")) return;
-                  try {
-                    await deleteOrder(order.id).unwrap();
-                  } catch (err) {
-                    console.error("Failed to delete order", err);
-                    alert("Не удалось удалить заказ");
-                  }
-                }}
-              >
-                Удалить
-              </button>
-            </div>
+            {isAdminOrManager && (
+              <div className="order-card-actions">
+                <button
+                  className="btn-edit"
+                  onClick={() => {
+                    setEditingOrder(order);
+                    setShowForm(true);
+                  }}
+                >
+                  Редактировать
+                </button>
+                <button
+                  className="btn-delete"
+                  onClick={async () => {
+                    if (!window.confirm("Удалить заказ?")) return;
+                    try {
+                      await deleteOrder(order.id).unwrap();
+                    } catch (err) {
+                      console.error("Failed to delete order", err);
+                      alert("Не удалось удалить заказ");
+                    }
+                  }}
+                >
+                  Удалить
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>

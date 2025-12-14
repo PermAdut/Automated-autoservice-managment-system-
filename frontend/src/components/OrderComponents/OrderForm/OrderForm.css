@@ -59,6 +59,12 @@ select:focus {
   box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
 }
 
+.disabled-input {
+  background-color: #f5f5f5;
+  color: #666;
+  cursor: not-allowed;
+}
+
 .error-message {
   color: #e74c3c;
   font-size: 12px;

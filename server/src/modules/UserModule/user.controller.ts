@@ -12,14 +12,17 @@ import {
   ParseIntPipe,
   UsePipes,
   ValidationPipe,
+  BadRequestException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './Dto/create-user.dto';
 import { UpdateUserDto } from './Dto/update-user.dto';
+import { UpdateProfileDto } from './Dto/update-profile.dto';
 import { JwtAuthGuard } from '../AuthModule/guards/jwt-auth.guard';
 import { RolesGuard } from '../AuthModule/guards/roles.guard';
 import { Roles } from '../AuthModule/decorators/roles.decorator';
 import { Public } from '../AuthModule/decorators/public.decorator';
+import { Req } from '@nestjs/common';
 
 @Controller('api/v1.0/users')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -94,5 +97,25 @@ export class UserController {
     @Body() user: UpdateUserDto
   ) {
     return await this.userService.updateUser(id, user);
+  }
+
+  @HttpCode(200)
+  @Get('profile/me')
+  async getMyProfile(@Req() req: any) {
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new BadRequestException('User not authenticated');
+    }
+    return await this.userService.findById(userId);
+  }
+
+  @HttpCode(200)
+  @Put('profile/me')
+  async updateMyProfile(@Req() req: any, @Body() profile: UpdateProfileDto) {
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new BadRequestException('User not authenticated');
+    }
+    return await this.userService.updateProfile(userId, profile);
   }
 }
