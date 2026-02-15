@@ -2,55 +2,65 @@ import { relations } from 'drizzle-orm';
 import {
   bigint,
   numeric,
-  serial,
+  primaryKey,
   text,
   timestamp,
+  uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
 import { schema } from '../pgSchema';
 import { sparePartOrders } from '../schema';
 
 export const suppliers = schema.table('Suppliers', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').defaultRandom().primaryKey(),
   name: varchar('name', { length: 100 }).notNull(),
   contact: varchar('contact', { length: 100 }),
   address: text('address'),
 });
 
 export const stores = schema.table('Store', {
-  id: serial('id').primaryKey(),
-  location: varchar('location', { length: 50 }).notNull(),
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  location: varchar('location', { length: 200 }).notNull(),
+  phone: varchar('phone', { length: 20 }),
+  workingHours: varchar('workingHours', { length: 100 }),
 });
 
 export const categories = schema.table('Categories', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').defaultRandom().primaryKey(),
   name: varchar('name', { length: 50 }).notNull(),
   description: text('description'),
 });
 
 export const spareParts = schema.table('SparePart', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').defaultRandom().primaryKey(),
   name: varchar('name').notNull(),
   partNumber: varchar('partNumber').notNull(),
   price: numeric('price').notNull(),
-  categoryId: bigint('categoryId', { mode: 'number' })
+  categoryId: uuid('categoryId')
     .notNull()
     .references(() => categories.id),
 });
 
-export const sparePartStore = schema.table('SparePart_Store', {
-  sparePartId: bigint('sparePartId', { mode: 'number' })
-    .notNull()
-    .references(() => spareParts.id),
-  storeId: bigint('storeId', { mode: 'number' })
-    .notNull()
-    .references(() => stores.id),
-  quantity: bigint('quantity', { mode: 'number' }).default(1),
-});
+export const sparePartStore = schema.table(
+  'SparePart_Store',
+  {
+    sparePartId: uuid('sparePartId')
+      .notNull()
+      .references(() => spareParts.id),
+    storeId: uuid('storeId')
+      .notNull()
+      .references(() => stores.id),
+    quantity: bigint('quantity', { mode: 'number' }).default(1),
+  },
+  table => ({
+    pk: primaryKey({ columns: [table.sparePartId, table.storeId] }),
+  })
+);
 
 export const positionsForBuying = schema.table('PositionsForBuying', {
-  id: serial('id').primaryKey(),
-  supplierId: bigint('supplierId', { mode: 'number' })
+  id: uuid('id').defaultRandom().primaryKey(),
+  supplierId: uuid('supplierId')
     .notNull()
     .references(() => suppliers.id),
   quantity: bigint('quantity', { mode: 'number' }).notNull(),
@@ -61,8 +71,8 @@ export const positionsForBuying = schema.table('PositionsForBuying', {
 });
 
 export const invoices = schema.table('Invoices', {
-  id: serial('id').primaryKey(),
-  positionForBuyingId: bigint('positionForBuyingId', { mode: 'number' })
+  id: uuid('id').defaultRandom().primaryKey(),
+  positionForBuyingId: uuid('positionForBuyingId')
     .notNull()
     .references(() => positionsForBuying.id),
   amount: numeric('amount').notNull(),

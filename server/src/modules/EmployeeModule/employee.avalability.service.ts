@@ -17,78 +17,86 @@ export class EmployeeAvailabilityService {
   @Cron(CronExpression.EVERY_5_MINUTES)
   async updateEmployeeAvailability() {
     try {
-      const allEmployees = await this.databaseService.db
-        .select()
-        .from(employees);
-
       const now = new Date();
 
-      for (const employee of allEmployees) {
-        // Get employee's schedule
-        const schedules = await this.databaseService.db
-          .select()
-          .from(workSchedules)
-          .where(eq(workSchedules.employeeId, employee.id));
+      // Один запрос: получаем все расписания с данными сотрудников и наличием pending-заказов
+      const schedulesWithData = await this.databaseService.db
+        .select({
+          scheduleId: workSchedules.id,
+          startTime: workSchedules.startTime,
+          endTime: workSchedules.endTime,
+          isAvailable: workSchedules.isAvailable,
+          employeeId: employees.id,
+          employeeName: employees.name,
+          employeeSurName: employees.surName,
+          hasPendingOrder: sql<boolean>`EXISTS (
+            SELECT 1 FROM autoservice."Orders" o
+            WHERE o."employeeId" = ${employees.id}
+            AND o.status = 'pending'
+          )`.as('has_pending_order'),
+        })
+        .from(workSchedules)
+        .innerJoin(employees, eq(employees.id, workSchedules.employeeId));
 
-        if (schedules.length === 0) {
-          // No schedule, skip
-          continue;
-        }
+      // Группируем обновления для batch-обработки
+      const updates: Array<{
+        scheduleId: string;
+        isAvailable: boolean;
+        employeeId: string;
+        employeeName: string;
+        employeeSurName: string;
+        wasAvailable: boolean | null;
+      }> = [];
 
-        for (const schedule of schedules) {
-          // Check if current time is within schedule
-          const startTime = new Date(schedule.startTime);
-          const endTime = new Date(schedule.endTime);
-          const isWithinSchedule = now >= startTime && now <= endTime;
+      for (const row of schedulesWithData) {
+        const startTime = new Date(row.startTime);
+        const endTime = new Date(row.endTime);
+        const isWithinSchedule = now >= startTime && now <= endTime;
+        const isAvailable = isWithinSchedule && !row.hasPendingOrder;
 
-          // Check if employee has pending orders
-          const pendingOrders = await this.databaseService.db
-            .select()
-            .from(orders)
-            .where(
-              and(
-                eq(orders.employeeId, employee.id),
-                eq(orders.status, 'pending')
-              )
-            )
-            .limit(1);
-
-          const hasPendingOrder = pendingOrders.length > 0;
-
-          // Update availability: available if within schedule and no pending orders
-          const isAvailable = isWithinSchedule && !hasPendingOrder;
-
-          const previousAvailability = schedule.isAvailable;
-
-          await this.databaseService.db
-            .update(workSchedules)
-            .set({ isAvailable })
-            .where(eq(workSchedules.id, schedule.id));
-
-          // Если сотрудник стал доступен и был недоступен ранее, отправляем уведомления подписчикам
-          if (isAvailable && !previousAvailability) {
-            await this.notifySubscribers(
-              employee.id,
-              employee.name,
-              employee.surName
-            );
-          }
+        if (row.isAvailable !== isAvailable) {
+          updates.push({
+            scheduleId: row.scheduleId,
+            isAvailable,
+            employeeId: row.employeeId,
+            employeeName: row.employeeName,
+            employeeSurName: row.employeeSurName,
+            wasAvailable: row.isAvailable,
+          });
         }
       }
 
-      console.log('Employee availability updated manually');
+      // Обновляем только изменившиеся записи
+      for (const update of updates) {
+        await this.databaseService.db
+          .update(workSchedules)
+          .set({ isAvailable: update.isAvailable })
+          .where(eq(workSchedules.id, update.scheduleId));
+
+        // Уведомляем подписчиков если сотрудник стал доступен
+        if (update.isAvailable && !update.wasAvailable) {
+          await this.notifySubscribers(
+            update.employeeId,
+            update.employeeName,
+            update.employeeSurName,
+          );
+        }
+      }
+
+      console.log(
+        `Employee availability updated: ${updates.length} changes out of ${schedulesWithData.length} schedules`,
+      );
     } catch (error) {
       console.error('Error updating employee availability:', error);
     }
   }
 
   private async notifySubscribers(
-    employeeId: number,
+    employeeId: string,
     employeeName: string,
-    employeeSurName: string
+    employeeSurName: string,
   ) {
     try {
-      // Находим всех активных подписчиков на этого сотрудника
       const activeSubscriptions = await this.databaseService.db
         .select({
           userId: subscriptions.userId,
@@ -101,30 +109,20 @@ export class EmployeeAvailabilityService {
         .where(
           and(
             eq(subscriptions.employeeId, employeeId),
-            sql`${subscriptions.dateEnd} > CURRENT_TIMESTAMP`
-          )
+            sql`${subscriptions.dateEnd} > CURRENT_TIMESTAMP`,
+          ),
         );
 
-      // Отправляем уведомления каждому подписчику
       for (const subscription of activeSubscriptions) {
-        // Здесь можно интегрировать с системой уведомлений (email, push, и т.д.)
-        // Пока просто логируем
         console.log(
           `Notification sent to ${subscription.userName} ${subscription.userSurName} (${subscription.userEmail}): ` +
-            `Рабочий ${employeeName} ${employeeSurName} теперь доступен!`
+            `Рабочий ${employeeName} ${employeeSurName} теперь доступен!`,
         );
-
-        // TODO: Интеграция с системой уведомлений
-        // await this.notificationService.send({
-        //   to: subscription.userEmail,
-        //   subject: 'Рабочий доступен',
-        //   message: `Рабочий ${employeeName} ${employeeSurName} теперь доступен для записи!`
-        // });
       }
 
       if (activeSubscriptions.length > 0) {
         console.log(
-          `Sent availability notifications to ${activeSubscriptions.length} subscribers for employee ${employeeId}`
+          `Sent availability notifications to ${activeSubscriptions.length} subscribers for employee ${employeeId}`,
         );
       }
     } catch (error) {

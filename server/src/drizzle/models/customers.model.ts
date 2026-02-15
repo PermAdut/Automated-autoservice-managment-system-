@@ -1,14 +1,15 @@
 import { relations } from 'drizzle-orm';
-import { bigint, serial, text, timestamp, varchar } from 'drizzle-orm/pg-core';
+import { bigint, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { schema } from '../pgSchema';
 import { employees, orders, users } from '../schema';
 
 export const cars = schema.table('Cars', {
-  id: serial('id').primaryKey(),
-  userId: bigint('userId', { mode: 'number' })
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('userId')
     .notNull()
     .references(() => users.id),
-  name: varchar('name').notNull(),
+  brand: varchar('brand').notNull(),
+  model: varchar('model').notNull(),
   information: text('information'),
   year: bigint('year', { mode: 'number' }).notNull(),
   vin: varchar('vin').notNull(),
@@ -16,24 +17,24 @@ export const cars = schema.table('Cars', {
 });
 
 export const subscriptions = schema.table('Subscriptions', {
-  id: serial('id').primaryKey(),
-  userId: bigint('userId', { mode: 'number' })
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('userId')
     .notNull()
     .references(() => users.id),
-  employeeId: bigint('employeeId', { mode: 'number' })
+  employeeId: uuid('employeeId')
     .references(() => employees.id),
   subscriptionDescription: text('subscriptionDescription'),
-  subscriptionName: varchar('subscriptonName').notNull(),
+  subscriptionName: varchar('subscriptionName').notNull(),
   dateStart: timestamp('dateStart', { mode: 'date' }).defaultNow().notNull(),
   dateEnd: timestamp('dateEnd', { mode: 'date' }).notNull(),
 });
 
 export const reviews = schema.table('Reviews', {
-  id: serial('id').primaryKey(),
-  userId: bigint('userId', { mode: 'number' })
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('userId')
     .notNull()
     .references(() => users.id),
-  employeeId: bigint('employeeId', { mode: 'number' })
+  employeeId: uuid('employeeId')
     .references(() => employees.id),
   description: text('description'),
   rate: bigint('rate', { mode: 'number' }).notNull(),

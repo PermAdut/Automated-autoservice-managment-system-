@@ -9,7 +9,7 @@ import {
   UseGuards,
   HttpCode,
   Query,
-  ParseIntPipe,
+  ParseUUIDPipe,
   NotFoundException,
 } from '@nestjs/common';
 import { EmployeeResponse } from './Dto/employee.response';
@@ -33,7 +33,7 @@ export class EmployeeController {
 
   private getAuth(req?: Request) {
     const authUser = (req as any)?.user as
-      | { userId?: number; roleName?: string }
+      | { userId?: string; roleName?: string }
       | undefined;
     return { userId: authUser?.userId, role: authUser?.roleName };
   }
@@ -66,7 +66,7 @@ export class EmployeeController {
   @Public()
   @ApiOperation({ summary: 'Get employee by id' })
   async getEmployeeById(
-    @Param('id', ParseIntPipe) id: number
+    @Param('id', ParseUUIDPipe) id: string
   ): Promise<EmployeeResponse> {
     return await this.employeeService.getEmployeeById(id);
   }
@@ -86,7 +86,7 @@ export class EmployeeController {
   @Roles('admin', 'manager')
   @ApiOperation({ summary: 'Update employee' })
   async updateEmployee(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() employeeData: UpdateEmployeeDto
   ): Promise<EmployeeResponse> {
     return await this.employeeService.updateEmployee(id, employeeData);
@@ -96,7 +96,7 @@ export class EmployeeController {
   @HttpCode(204)
   @Roles('admin')
   @ApiOperation({ summary: 'Delete employee' })
-  async deleteEmployee(@Param('id', ParseIntPipe) id: number): Promise<void> {
+  async deleteEmployee(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return await this.employeeService.deleteEmployee(id);
   }
 
@@ -104,7 +104,7 @@ export class EmployeeController {
   @HttpCode(201)
   @ApiOperation({ summary: 'Subscribe to employee schedule' })
   async subscribeToEmployee(
-    @Param('id', ParseIntPipe) employeeId: number,
+    @Param('id', ParseUUIDPipe) employeeId: string,
     @Req() req: Request
   ) {
     const { userId } = this.getAuth(req);
@@ -120,7 +120,7 @@ export class EmployeeController {
   @HttpCode(200)
   @ApiOperation({ summary: 'Unsubscribe from employee schedule' })
   async unsubscribeFromEmployee(
-    @Param('id', ParseIntPipe) employeeId: number,
+    @Param('id', ParseUUIDPipe) employeeId: string,
     @Req() req: Request
   ) {
     const { userId } = this.getAuth(req);
@@ -136,7 +136,7 @@ export class EmployeeController {
   @Get(':id/subscription')
   @ApiOperation({ summary: 'Get user subscription status for employee' })
   async getUserSubscription(
-    @Param('id', ParseIntPipe) employeeId: number,
+    @Param('id', ParseUUIDPipe) employeeId: string,
     @Req() req: Request
   ) {
     const { userId } = this.getAuth(req);
@@ -154,7 +154,7 @@ export class EmployeeController {
   @HttpCode(201)
   @ApiOperation({ summary: 'Create review for employee' })
   async createReview(
-    @Param('id', ParseIntPipe) employeeId: number,
+    @Param('id', ParseUUIDPipe) employeeId: string,
     @Body() createReviewDto: Omit<CreateReviewDto, 'employeeId'>,
     @Req() req: any
   ) {
@@ -168,7 +168,7 @@ export class EmployeeController {
   @Get(':id/reviews')
   @Public()
   @ApiOperation({ summary: 'Get employee reviews' })
-  async getEmployeeReviews(@Param('id', ParseIntPipe) employeeId: number) {
+  async getEmployeeReviews(@Param('id', ParseUUIDPipe) employeeId: string) {
     return await this.employeeService.getEmployeeReviews(employeeId);
   }
 }

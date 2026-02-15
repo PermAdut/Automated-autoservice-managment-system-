@@ -101,7 +101,7 @@ export class SpareService {
     }
   }
 
-  async findById(id: number): Promise<SparePartStockResponseDto> {
+  async findById(id: string): Promise<SparePartStockResponseDto> {
     const [result] = await this.databaseService.db
       .select({
         store_id: stores.id,
@@ -169,7 +169,7 @@ export class SpareService {
   }
 
   async updateWithPayload(
-    id: number,
+    id: string,
     payload: UpdateSpareStockDto
   ): Promise<SparePartStockResponseDto> {
     const updatePayload: Partial<typeof sparePartStore.$inferInsert> = {};
@@ -203,7 +203,7 @@ export class SpareService {
     return this.findById(id);
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     await this.databaseService.db
       .delete(sparePartStore)
       .where(eq(sparePartStore.sparePartId, id));

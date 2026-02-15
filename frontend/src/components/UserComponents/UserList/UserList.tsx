@@ -6,7 +6,6 @@ import {
 } from "../../../api/usersApi";
 import { UserItem } from "../UserItem/UserItem.tsx";
 import { useDebounce } from "../../../hooks/useDebounce";
-import "./UserList.css";
 
 const USERS_PER_PAGE = 5;
 
@@ -29,10 +28,10 @@ const UserList = () => {
   const [deleteUserMutation] = useDeleteUserMutation();
   const [updateUserMutation] = useUpdateUserMutation();
 
-  if (loading) return <div className="userlist-loading">Загрузка...</div>;
+  if (loading) return <div className="mt-10 text-center text-lg font-semibold text-gray-700 animate-pulse">Загрузка...</div>;
   if (error)
     return (
-      <div className="userlist-error">
+      <div className="mt-10 text-center text-lg font-semibold text-red-500">
         Ошибка:{" "}
         {error && "status" in error
           ? String(error.status)
@@ -47,11 +46,11 @@ const UserList = () => {
   );
 
   return (
-    <div className="userlist-container">
-      <h1 className="user userlist-title">Список пользователей</h1>
-      <div className="userlist-filters filter-bar">
+    <div className="p-6 pb-20 max-w-7xl mx-auto relative">
+      <h1 className="text-3xl font-bold text-gray-800 text-center mb-6">Список пользователей</h1>
+      <div className="flex flex-wrap gap-3 mb-4 items-center">
         <input
-          className="filter-input"
+          className="px-3 py-2.5 border-2 border-gray-200 rounded-lg min-w-[200px] text-sm transition-all focus:border-primary focus:ring-3 focus:ring-primary/15 focus:outline-none"
           type="text"
           placeholder="Поиск по имени/фамилии/ID"
           value={search}
@@ -61,7 +60,7 @@ const UserList = () => {
           }}
         />
         <select
-          className="filter-select"
+          className="px-3 py-2.5 border-2 border-gray-200 rounded-lg min-w-[140px] text-sm transition-all focus:border-primary focus:ring-3 focus:ring-primary/15 focus:outline-none"
           value={sortOrder}
           onChange={(e) => setSortOrder(e.target.value as typeof sortOrder)}
         >
@@ -69,10 +68,10 @@ const UserList = () => {
           <option value="desc">Убыв.</option>
         </select>
       </div>
-      <div className="userlist-grid">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {paginatedUsers.length > 0 ? (
           paginatedUsers.map((user) => (
-            <div className="userlist-item-wrapper" key={user.id}>
+            <div className="transition-transform hover:scale-105" key={user.id}>
               <UserItem
                 id={user.id}
                 name={user.name}
@@ -102,24 +101,24 @@ const UserList = () => {
             </div>
           ))
         ) : (
-          <div className="userlist-empty">Пользователей нет</div>
+          <div className="col-span-full text-center p-8 text-lg text-gray-500">Пользователей нет</div>
         )}
       </div>
 
       {totalPages > 1 && (
-        <div className="userlist-pagination">
+        <div className="flex justify-center items-center gap-3 mt-6 sticky bottom-5 bg-white p-2.5 rounded-md shadow-sm">
           <button
-            className="userlist-button"
+            className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-md bg-white text-primary cursor-pointer transition-all hover:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
           >
             Назад
           </button>
-          <span className="userlist-page-info">
+          <span className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-full">
             {currentPage} / {totalPages}
           </span>
           <button
-            className="userlist-button"
+            className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-md bg-white text-primary cursor-pointer transition-all hover:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
             onClick={() =>
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }

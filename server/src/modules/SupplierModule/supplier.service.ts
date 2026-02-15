@@ -82,7 +82,7 @@ export class SupplierService {
     }
   }
 
-  async findById(id: number): Promise<SupplierResponseDto> {
+  async findById(id: string): Promise<SupplierResponseDto> {
     const [supplier] = await this.databaseService.db
       .select()
       .from(suppliers)
@@ -126,7 +126,7 @@ export class SupplierService {
   }
 
   async update(
-    id: number,
+    id: string,
     supplierData: UpdateSupplierDto
   ): Promise<SupplierResponseDto> {
     const updatePayload: Partial<typeof suppliers.$inferInsert> = {};
@@ -160,7 +160,7 @@ export class SupplierService {
     return this.findById(id);
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     const supplier = await this.databaseService.db
       .select()
       .from(suppliers)

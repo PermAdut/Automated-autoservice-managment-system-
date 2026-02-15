@@ -1,146 +1,44 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 
+export interface ReportColumn {
+  key: string;
+  label: string;
+}
+
+export interface ReportData {
+  title: string;
+  columns: ReportColumn[];
+  rows: Record<string, unknown>[];
+}
+
 @Injectable()
 export class ReportService {
   constructor(private readonly databaseService: DatabaseService) {}
 
-  private generateHtmlReport(title: string, content: string): string {
-    return `
-      <!DOCTYPE html>
-      <html lang="ru">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${title}</title>
-        <style>
-          html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
-            box-sizing: border-box;
-          }
-          h1 {
-            text-align: center;
-            color: #2c3e50;
-            margin: 20px 0;
-            font-size: 24px;
-          }
-          .report-container {
-            width: 100%;
-            height: 100%;
-            padding: 20px;
-            box-sizing: border-box;
-            overflow: auto;
-          }
-          table {
-            width: 100%;
-            min-width: 100%;
-            border-collapse: collapse;
-            margin: 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            table-layout: auto;
-          }
-          th, td {
-            padding: 12px;
-            text-align: left;
-            border: 1px solid #ddd;
-            font-size: 14px;
-            word-wrap: break-word;
-          }
-          th {
-            background-color: #3498db;
-            color: white;
-            font-weight: bold;
-          }
-          td {
-            background-color: #fff;
-          }
-          tr:nth-child(even) td {
-            background-color: #f9f9f9;
-          }
-          tr:hover td {
-            background-color: #e6f3ff;
-          }
-          .no-data {
-            text-align: center;
-            padding: 20px;
-            font-style: italic;
-            font-size: 16px;
-            color: #7f8c8d;
-          }
-          @media (max-width: 768px) {
-            th, td {
-              padding: 8px;
-              font-size: 12px;
-            }
-            h1 {
-              font-size: 20px;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="report-container">
-          <h1>${title}</h1>
-          ${content}
-        </div>
-      </body>
-      </html>
-    `;
-  }
-
-  async generateReport(type: string): Promise<string> {
-    try {
-      await this.databaseService.query('BEGIN');
-
-      let title: string;
-      let content: string;
-
-      switch (type) {
-        case 'orders':
-          title = 'Отчёт о заказах клиентов';
-          content = await this.generateOrdersReport();
-          break;
-        case 'stock':
-          title = 'Отчёт о запасах на складах';
-          content = await this.generateStockReport();
-          break;
-        case 'services':
-          title = 'Отчёт о доходах по услугам';
-          content = await this.generateServicesReport();
-          break;
-        case 'employees':
-          title = 'Отчёт о работе сотрудников';
-          content = await this.generateEmployeesReport();
-          break;
-        case 'subscriptions':
-          title = 'Отчёт о подписках и отзывах клиентов';
-          content = await this.generateSubscriptionsReport();
-          break;
-        default:
-          throw new BadRequestException('Invalid report type');
-      }
-
-      await this.databaseService.query('COMMIT');
-      return this.generateHtmlReport(title, content);
-    } catch (error) {
-      await this.databaseService.query('ROLLBACK');
-      console.error(`Error generating ${type} report:`, error);
-      throw new BadRequestException(`Failed to generate ${type} report`);
+  async generateReport(type: string): Promise<ReportData> {
+    switch (type) {
+      case 'orders':
+        return this.generateOrdersReport();
+      case 'stock':
+        return this.generateStockReport();
+      case 'services':
+        return this.generateServicesReport();
+      case 'employees':
+        return this.generateEmployeesReport();
+      case 'subscriptions':
+        return this.generateSubscriptionsReport();
+      default:
+        throw new BadRequestException('Invalid report type');
     }
   }
 
-  private async generateOrdersReport(): Promise<string> {
+  private async generateOrdersReport(): Promise<ReportData> {
     const result = await this.databaseService.query(`
-      SELECT 
+      SELECT
         o.id AS order_id,
         u.name || ' ' || u."surName" AS client_name,
-        c.name AS car_name,
+        c.brand || ' ' || c.model AS car_name,
         c."licensePlate",
         e.id AS employee_id,
         p.name AS employee_position,
@@ -175,87 +73,66 @@ export class ReportService {
       LEFT JOIN autoservice."Position" p ON e."positionId" = p.id
       LEFT JOIN autoservice."Payment" pmt ON pmt."orderId" = o.id
     `);
-    const rows = result.rows || [];
-    if (!rows.length) {
-      return '<p class="no-data">Нет данных для отчёта</p>';
-    }
 
-    return `
-      <table>
-        <thead>
-          <tr>
-            <th>ID заказа</th>
-            <th>Клиент</th>
-            <th>Автомобиль</th>
-            <th>Номер</th>
-            <th>Сотрудник</th>
-            <th>Должность</th>
-            <th>Статус</th>
-            <th>Дата</th>
-            <th>Услуги</th>
-            <th>Запчасти</th>
-            <th>Платёж</th>
-            <th>Статус платежа</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows
-            .map((row: any) => {
-              const servicesList =
-                Array.isArray(row.services) && row.services.length > 0
-                  ? row.services
-                      .map((s: any) => `${s.name} (${s.price} руб.)`)
-                      .join(', ')
-                  : '-';
-              const sparePartsList =
-                Array.isArray(row.spare_parts) && row.spare_parts.length > 0
-                  ? row.spare_parts
-                      .map((sp: any) => `${sp.name} (${sp.price} руб.)`)
-                      .join(', ')
-                  : '-';
-              const paymentStatus =
-                row.payment_status === null || row.payment_status === undefined
-                  ? 'Нет платежа'
-                  : row.payment_status
-                    ? 'Оплачено'
-                    : 'Не оплачено';
+    const rows = (result.rows || []).map((row: Record<string, unknown>) => {
+      const services = Array.isArray(row.services)
+        ? (row.services as Array<{ name: string; price: number }>)
+            .map((s) => `${s.name} (${s.price} руб.)`)
+            .join(', ')
+        : '-';
+      const spareParts = Array.isArray(row.spare_parts)
+        ? (row.spare_parts as Array<{ name: string; price: number }>)
+            .map((sp) => `${sp.name} (${sp.price} руб.)`)
+            .join(', ')
+        : '-';
+      const paymentStatus =
+        row.payment_status === null || row.payment_status === undefined
+          ? 'Нет платежа'
+          : row.payment_status
+            ? 'Оплачено'
+            : 'Не оплачено';
 
-              return `
-                <tr>
-                  <td>${row.order_id}</td>
-                  <td>${row.client_name}</td>
-                  <td>${row.car_name}</td>
-                  <td>${row.licensePlate}</td>
-                  <td>${row.employee_id || 'Не назначен'}</td>
-                  <td>${row.employee_position || '-'}</td>
-                  <td>${row.status}</td>
-                  <td>${new Date(row.createdAt).toLocaleDateString()}</td>
-                  <td>${servicesList}</td>
-                  <td>${sparePartsList}</td>
-                  <td>${row.payment_amount || '-'}</td>
-                  <td>${paymentStatus}</td>
-                </tr>
-              `;
-            })
-            .join('')}
-        </tbody>
-      </table>
-    `;
+      return {
+        order_id: (row.order_id as string).slice(0, 8),
+        client_name: row.client_name,
+        car_name: row.car_name,
+        licensePlate: row.licensePlate || '-',
+        employee_id: row.employee_id
+          ? (row.employee_id as string).slice(0, 8)
+          : 'Не назначен',
+        employee_position: row.employee_position || '-',
+        status: row.status,
+        createdAt: new Date(row.createdAt as string).toLocaleDateString('ru-RU'),
+        services,
+        spare_parts: spareParts,
+        payment_amount: row.payment_amount || '-',
+        payment_status: paymentStatus,
+      };
+    });
+
+    return {
+      title: 'Отчёт о заказах клиентов',
+      columns: [
+        { key: 'order_id', label: 'ID заказа' },
+        { key: 'client_name', label: 'Клиент' },
+        { key: 'car_name', label: 'Автомобиль' },
+        { key: 'licensePlate', label: 'Номер' },
+        { key: 'employee_id', label: 'Сотрудник' },
+        { key: 'employee_position', label: 'Должность' },
+        { key: 'status', label: 'Статус' },
+        { key: 'createdAt', label: 'Дата' },
+        { key: 'services', label: 'Услуги' },
+        { key: 'spare_parts', label: 'Запчасти' },
+        { key: 'payment_amount', label: 'Платёж' },
+        { key: 'payment_status', label: 'Статус платежа' },
+      ],
+      rows,
+    };
   }
 
-  private escapeHtml(unsafe: string): string {
-    if (!unsafe) return '';
-    return unsafe
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
-
-  private async generateStockReport(): Promise<string> {
+  private async generateStockReport(): Promise<ReportData> {
     const result = await this.databaseService.query(`
-      SELECT 
+      SELECT
         s.id AS store_id,
         s.location,
         sp.id AS spare_part_id,
@@ -283,59 +160,48 @@ export class ReportService {
       JOIN autoservice."SparePart" sp ON sps."sparePartId" = sp.id
       JOIN autoservice."Categories" c ON sp."categoryId" = c.id
     `);
-    const rows = result.rows || [];
-    if (!rows.length) {
-      return '<p class="no-data">Нет данных для отчёта</p>';
-    }
 
-    return `
-      <table>
-        <thead>
-          <tr>
-            <th>ID склада</th>
-            <th>Местоположение</th>
-            <th>Запчасть</th>
-            <th>Артикул</th>
-            <th>Категория</th>
-            <th>Количество</th>
-            <th>Цена (руб.)</th>
-            <th>Поставщики</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows
-            .map((row: any) => {
-              const suppliersList =
-                Array.isArray(row.suppliers) && row.suppliers.length > 0
-                  ? row.suppliers
-                      .map(
-                        (sup: any) =>
-                          `${sup.supplier_name} (${new Date(sup.delivery_date).toLocaleDateString()})`
-                      )
-                      .join(', ')
-                  : '-';
-              return `
-                <tr>
-                  <td>${row.store_id}</td>
-                  <td>${row.location}</td>
-                  <td>${row.spare_part_name}</td>
-                  <td>${row.partNumber}</td>
-                  <td>${row.category_name}</td>
-                  <td>${row.quantity}</td>
-                  <td>${row.price}</td>
-                  <td>${suppliersList}</td>
-                </tr>
-              `;
-            })
-            .join('')}
-        </tbody>
-      </table>
-    `;
+    const rows = (result.rows || []).map((row: Record<string, unknown>) => {
+      const suppliers = Array.isArray(row.suppliers)
+        ? (row.suppliers as Array<{ supplier_name: string; delivery_date: string }>)
+            .map(
+              (sup) =>
+                `${sup.supplier_name} (${new Date(sup.delivery_date).toLocaleDateString('ru-RU')})`,
+            )
+            .join(', ')
+        : '-';
+
+      return {
+        store_id: (row.store_id as string).slice(0, 8),
+        location: row.location,
+        spare_part_name: row.spare_part_name,
+        partNumber: row.partNumber,
+        category_name: row.category_name,
+        quantity: row.quantity,
+        price: row.price,
+        suppliers,
+      };
+    });
+
+    return {
+      title: 'Отчёт о запасах на складах',
+      columns: [
+        { key: 'store_id', label: 'ID склада' },
+        { key: 'location', label: 'Местоположение' },
+        { key: 'spare_part_name', label: 'Запчасть' },
+        { key: 'partNumber', label: 'Артикул' },
+        { key: 'category_name', label: 'Категория' },
+        { key: 'quantity', label: 'Количество' },
+        { key: 'price', label: 'Цена (руб.)' },
+        { key: 'suppliers', label: 'Поставщики' },
+      ],
+      rows,
+    };
   }
 
-  private async generateServicesReport(): Promise<string> {
+  private async generateServicesReport(): Promise<ReportData> {
     const result = await this.databaseService.query(`
-      SELECT 
+      SELECT
         s.id AS service_id,
         s.name AS service_name,
         s.description,
@@ -349,47 +215,35 @@ export class ReportService {
       WHERE pmt.status = TRUE
       GROUP BY s.id, s.name, s.description
     `);
-    const rows = result.rows || [];
-    if (!rows.length) {
-      return '<p class="no-data">Нет данных для отчёта</p>';
-    }
 
-    return `
-      <table>
-        <thead>
-          <tr>
-            <th>ID услуги</th>
-            <th>Название</th>
-            <th>Описание</th>
-            <th>Количество заказов</th>
-            <th>Общий доход (руб.)</th>
-            <th>Средняя цена (руб.)</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows
-            .map(
-              (row: any) => `
-                <tr>
-                  <td>${row.service_id}</td>
-                  <td>${row.service_name}</td>
-                  <td>${row.description || '-'}</td>
-                  <td>${row.order_count}</td>
-                  <td>${row.total_revenue || '0'}</td>
-                  <td>${Math.round(row.avg_price || 0)}</td>
-                </tr>
-              `
-            )
-            .join('')}
-        </tbody>
-      </table>
-    `;
+    const rows = (result.rows || []).map((row: Record<string, unknown>) => ({
+      service_id: (row.service_id as string).slice(0, 8),
+      service_name: row.service_name,
+      description: row.description || '-',
+      order_count: row.order_count,
+      total_revenue: row.total_revenue || '0',
+      avg_price: Math.round(Number(row.avg_price) || 0),
+    }));
+
+    return {
+      title: 'Отчёт о доходах по услугам',
+      columns: [
+        { key: 'service_id', label: 'ID услуги' },
+        { key: 'service_name', label: 'Название' },
+        { key: 'description', label: 'Описание' },
+        { key: 'order_count', label: 'Кол-во заказов' },
+        { key: 'total_revenue', label: 'Общий доход (руб.)' },
+        { key: 'avg_price', label: 'Средняя цена (руб.)' },
+      ],
+      rows,
+    };
   }
 
-  private async generateEmployeesReport(): Promise<string> {
+  private async generateEmployeesReport(): Promise<ReportData> {
     const result = await this.databaseService.query(`
-      SELECT 
+      SELECT
         e.id AS employee_id,
+        e.name || ' ' || e."surName" AS employee_name,
         p.name AS position_name,
         e."hireDate",
         e.salary,
@@ -407,68 +261,57 @@ export class ReportService {
       FROM autoservice."Employees" e
       JOIN autoservice."Position" p ON e."positionId" = p.id
       LEFT JOIN autoservice."Orders" o ON o."employeeId" = e.id
-      GROUP BY e.id, p.name, e."hireDate", e.salary
+      GROUP BY e.id, e.name, e."surName", p.name, e."hireDate", e.salary
     `);
-    const rows = result.rows || [];
-    if (!rows.length) {
-      return '<p class="no-data">Нет данных для отчёта</p>';
-    }
 
-    return `
-      <table>
-        <thead>
-          <tr>
-            <th>ID сотрудника</th>
-            <th>Должность</th>
-            <th>Дата найма</th>
-            <th>Зарплата (руб.)</th>
-            <th>Количество заказов</th>
-            <th>Расписание</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows
-            .map((row: any) => {
-              const scheduleList =
-                Array.isArray(row.schedule) && row.schedule.length > 0
-                  ? row.schedule
-                      .map(
-                        (ws: any) =>
-                          `${new Date(ws.start_time).toLocaleString()} - ${new Date(ws.end_time).toLocaleString()} (${
-                            ws.is_available ? 'Доступен' : 'Недоступен'
-                          })`
-                      )
-                      .join(', ')
-                  : '-';
-              return `
-                <tr>
-                  <td>${row.employee_id}</td>
-                  <td>${row.position_name}</td>
-                  <td>${new Date(row.hireDate).toLocaleDateString()}</td>
-                  <td>${row.salary}</td>
-                  <td>${row.order_count}</td>
-                  <td>${scheduleList}</td>
-                </tr>
-              `;
-            })
-            .join('')}
-        </tbody>
-      </table>
-    `;
+    const rows = (result.rows || []).map((row: Record<string, unknown>) => {
+      const schedule = Array.isArray(row.schedule)
+        ? (row.schedule as Array<{ start_time: string; end_time: string; is_available: boolean }>)
+            .map(
+              (ws) =>
+                `${new Date(ws.start_time).toLocaleString('ru-RU')} - ${new Date(ws.end_time).toLocaleString('ru-RU')} (${ws.is_available ? 'Доступен' : 'Недоступен'})`,
+            )
+            .join('; ')
+        : '-';
+
+      return {
+        employee_id: (row.employee_id as string).slice(0, 8),
+        employee_name: row.employee_name,
+        position_name: row.position_name,
+        hireDate: new Date(row.hireDate as string).toLocaleDateString('ru-RU'),
+        salary: row.salary,
+        order_count: row.order_count,
+        schedule,
+      };
+    });
+
+    return {
+      title: 'Отчёт о работе сотрудников',
+      columns: [
+        { key: 'employee_id', label: 'ID сотрудника' },
+        { key: 'employee_name', label: 'ФИО' },
+        { key: 'position_name', label: 'Должность' },
+        { key: 'hireDate', label: 'Дата найма' },
+        { key: 'salary', label: 'Зарплата (руб.)' },
+        { key: 'order_count', label: 'Кол-во заказов' },
+        { key: 'schedule', label: 'Расписание' },
+      ],
+      rows,
+    };
   }
 
-  private async generateSubscriptionsReport(): Promise<string> {
+  private async generateSubscriptionsReport(): Promise<ReportData> {
     const result = await this.databaseService.query(`
-      SELECT 
+      SELECT
         u.id AS user_id,
         u.name || ' ' || u."surName" AS client_name,
         s.id AS subscription_id,
-        s."subscriptonName" AS subscription_name,
+        s."subscriptionName" AS subscription_name,
         s."subscriptionDescription",
         s."dateStart",
         s."dateEnd",
         s."employeeId",
-        CASE 
+        CASE
           WHEN s."employeeId" IS NOT NULL THEN e.name || ' ' || e."surName"
           ELSE NULL
         END AS employee_name,
@@ -480,13 +323,11 @@ export class ReportService {
             'employeeId', r."employeeId"
           ))
           FROM autoservice."Reviews" r
-          WHERE r."userId" = u.id 
+          WHERE r."userId" = u.id
             AND r."deletedAt" IS NULL
             AND (
-              -- Если подписка на конкретного рабочего, показываем только отзывы для этого рабочего
               (s."employeeId" IS NOT NULL AND r."employeeId" = s."employeeId")
               OR
-              -- Если общая подписка, показываем все отзывы пользователя
               (s."employeeId" IS NULL)
             )),
           '[]'
@@ -496,63 +337,44 @@ export class ReportService {
       LEFT JOIN autoservice."Employees" e ON s."employeeId" = e.id
       WHERE s."dateEnd" > CURRENT_TIMESTAMP
     `);
-    const rows = result.rows || [];
-    if (!rows.length) {
-      return '<p class="no-data">Нет данных для отчёта</p>';
-    }
 
-    return `
-      <table>
-        <thead>
-          <tr>
-            <th>ID клиента</th>
-            <th>Клиент</th>
-            <th>ID подписки</th>
-            <th>Название подписки</th>
-            <th>Описание</th>
-            <th>Рабочий</th>
-            <th>Начало</th>
-            <th>Окончание</th>
-            <th>Отзывы</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows
-            .map((row: any) => {
-              const reviewsList =
-                Array.isArray(row.reviews) && row.reviews.length > 0
-                  ? row.reviews
-                      .map((r: any) => {
-                        const dateStr = new Date(
-                          r.createdAt
-                        ).toLocaleDateString();
-                        const employeeNote =
-                          r.employeeId && r.employeeId === row.employee_id
-                            ? `, для рабочего ${row.employee_name || `ID ${r.employeeId}`}`
-                            : r.employeeId
-                              ? `, для рабочего ID ${r.employeeId}`
-                              : '';
-                        return `${r.description || 'Без описания'} (Рейтинг: ${r.rate}, ${dateStr}${employeeNote})`;
-                      })
-                      .join('; ')
-                  : '-';
-              return `
-                <tr>
-                  <td>${row.user_id}</td>
-                  <td>${row.client_name}</td>
-                  <td>${row.subscription_id}</td>
-                  <td>${row.subscription_name}</td>
-                  <td>${row.subscriptionDescription || '-'}</td>
-                  <td>${row.employee_name || 'Общая подписка'}</td>
-                  <td>${new Date(row.dateStart).toLocaleDateString()}</td>
-                  <td>${new Date(row.dateEnd).toLocaleDateString()}</td>
-                  <td>${reviewsList}</td>
-                </tr>
-              `;
+    const rows = (result.rows || []).map((row: Record<string, unknown>) => {
+      const reviews = Array.isArray(row.reviews)
+        ? (row.reviews as Array<{ description: string; rate: number; createdAt: string; employeeId: string | null }>)
+            .map((r) => {
+              const dateStr = new Date(r.createdAt).toLocaleDateString('ru-RU');
+              return `${r.description || 'Без описания'} (Рейтинг: ${r.rate}, ${dateStr})`;
             })
-            .join('')}
-        </tbody>
-      </table>
-    `;
+            .join('; ')
+        : '-';
+
+      return {
+        user_id: (row.user_id as string).slice(0, 8),
+        client_name: row.client_name,
+        subscription_id: (row.subscription_id as string).slice(0, 8),
+        subscription_name: row.subscription_name,
+        subscriptionDescription: row.subscriptionDescription || '-',
+        employee_name: row.employee_name || 'Общая подписка',
+        dateStart: new Date(row.dateStart as string).toLocaleDateString('ru-RU'),
+        dateEnd: new Date(row.dateEnd as string).toLocaleDateString('ru-RU'),
+        reviews,
+      };
+    });
+
+    return {
+      title: 'Отчёт о подписках и отзывах клиентов',
+      columns: [
+        { key: 'user_id', label: 'ID клиента' },
+        { key: 'client_name', label: 'Клиент' },
+        { key: 'subscription_id', label: 'ID подписки' },
+        { key: 'subscription_name', label: 'Название' },
+        { key: 'subscriptionDescription', label: 'Описание' },
+        { key: 'employee_name', label: 'Рабочий' },
+        { key: 'dateStart', label: 'Начало' },
+        { key: 'dateEnd', label: 'Окончание' },
+        { key: 'reviews', label: 'Отзывы' },
+      ],
+      rows,
+    };
   }
 }

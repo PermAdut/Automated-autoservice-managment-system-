@@ -3,7 +3,7 @@ import {
   IsEmail,
   IsOptional,
   MinLength,
-  IsInt,
+  IsUUID,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -38,8 +38,8 @@ export class UpdateUserDto {
   @MinLength(6)
   password?: string;
 
-  @ApiProperty({ description: 'User role id', type: Number, required: false })
+  @ApiProperty({ description: 'User role id', type: String, required: false })
   @IsOptional()
-  @IsInt()
-  roleId?: number;
+  @IsUUID()
+  roleId?: string;
 }

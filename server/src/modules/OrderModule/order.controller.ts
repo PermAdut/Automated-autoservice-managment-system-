@@ -11,7 +11,7 @@ import {
   HttpCode,
   Req,
   NotFoundException,
-  ParseIntPipe,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { OrderService } from './order.service';
@@ -28,7 +28,7 @@ export class OrderController {
 
   private getAuth(req?: Request) {
     const authUser = (req as any)?.user as
-      | { userId?: number; roleName?: string }
+      | { userId?: string; roleName?: string }
       | undefined;
     return {
       userId: authUser?.userId,
@@ -60,7 +60,7 @@ export class OrderController {
 
   @Get(':id')
   async findById(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Req() req?: Request
   ): Promise<OrderResponseDto> {
     const order = await this.orderService.findById(id);
@@ -91,7 +91,7 @@ export class OrderController {
   @HttpCode(200)
   @Roles('admin', 'manager')
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() orderData: UpdateOrderDto
   ): Promise<OrderResponseDto> {
     return await this.orderService.update(id, orderData);
@@ -100,7 +100,7 @@ export class OrderController {
   @Delete(':id')
   @HttpCode(204)
   @Roles('admin')
-  async delete(@Param('id', ParseIntPipe) id: number): Promise<void> {
+  async delete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return await this.orderService.delete(id);
   }
 }

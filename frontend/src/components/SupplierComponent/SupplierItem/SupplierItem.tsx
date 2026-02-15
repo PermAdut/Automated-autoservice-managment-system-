@@ -1,24 +1,23 @@
 import React from "react";
-import "./SupplierItem.css";
 
 interface SupplierItemProps {
-  id: number;
+  id: string;
   name: string;
   address: string;
   contact: string;
   positionsForBuying: {
-    id: number;
+    id: string;
     quantity: number;
     deliverDate: string;
     status: string;
     sparePart?: {
-      id: number;
+      id: string;
       name: string;
       price: number;
       quantity: number;
       description: string;
       category: {
-        id: number;
+        id: string;
         name: string;
         description: string;
       };
@@ -34,13 +33,13 @@ export const SupplierItem: React.FC<SupplierItemProps> = ({
   positionsForBuying,
 }) => {
   return (
-    <div className="supplier-item-card">
-      <div className="supplier-item-header">
-        <h2 className="supplier-item-title">{name}</h2>
-        <p className="supplier-item-info">ID: {id}</p>
+    <div className="bg-white border-2 border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all">
+      <div className="mb-4">
+        <h2 className="text-xl font-semibold text-gray-800 m-0">{name}</h2>
+        <p className="text-sm text-gray-500 mt-1">ID: {id.slice(0, 8)}</p>
       </div>
 
-      <div className="supplier-item-details">
+      <div className="[&_p]:text-base [&_p]:text-gray-500 [&_p]:my-1 [&_strong]:text-gray-800">
         <p>
           <strong>Адрес:</strong> {address}
         </p>
@@ -50,12 +49,17 @@ export const SupplierItem: React.FC<SupplierItemProps> = ({
       </div>
 
       {positionsForBuying && positionsForBuying.length > 0 && (
-        <div className="supplier-item-section">
-          <h3>Позиции для закупки</h3>
+        <div className="mt-4">
+          <h3 className="text-lg font-medium text-gray-700 mb-2">
+            Позиции для закупки
+          </h3>
           {positionsForBuying.map((position) => (
-            <div key={position.id} className="supplier-item-subitem">
+            <div
+              key={position.id}
+              className="p-2.5 border border-gray-200 rounded-lg mb-2.5 bg-gray-50 [&_p]:text-sm [&_p]:text-gray-500 [&_p]:my-1 [&_strong]:text-gray-800"
+            >
               <p>
-                <strong>ID позиции:</strong> {position.id}
+                <strong>ID позиции:</strong> {position.id.slice(0, 8)}
               </p>
               <p>
                 <strong>Количество:</strong> {position.quantity} шт.
@@ -68,12 +72,14 @@ export const SupplierItem: React.FC<SupplierItemProps> = ({
                 <strong>Статус:</strong> {position.status}
               </p>
               {position.sparePart && position.sparePart.length > 0 && (
-                <div className="supplier-item-sparepart">
-                  <h4>Запчасти:</h4>
+                <div className="mt-2">
+                  <h4 className="text-base font-medium text-gray-700 mb-1.5">
+                    Запчасти:
+                  </h4>
                   {position.sparePart.map((part) => (
                     <div
                       key={part.id}
-                      className="supplier-item-sparepart-details"
+                      className="p-2 border border-dashed border-gray-300 rounded-md mb-2 bg-white [&_p]:text-sm [&_p]:text-gray-500 [&_p]:my-1 [&_strong]:text-gray-800"
                     >
                       <p>
                         <strong>Название:</strong> {part.name}

@@ -9,7 +9,7 @@ import {
   UseGuards,
   HttpCode,
   Body,
-  ParseIntPipe,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { SpareService } from './spare.service';
 import { SparePartStockResponseDto } from './Dto/spare.response';
@@ -41,7 +41,7 @@ export class SpareController {
   @Get(':id')
   @Public()
   async findById(
-    @Param('id', ParseIntPipe) id: number
+    @Param('id', ParseUUIDPipe) id: string
   ): Promise<SparePartStockResponseDto> {
     return this.spareService.findById(id);
   }
@@ -59,7 +59,7 @@ export class SpareController {
   @HttpCode(200)
   @Roles('admin', 'manager')
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdateSpareStockDto
   ): Promise<SparePartStockResponseDto> {
     return this.spareService.updateWithPayload(id, body);
@@ -68,7 +68,7 @@ export class SpareController {
   @Delete(':id')
   @HttpCode(204)
   @Roles('admin')
-  async delete(@Param('id', ParseIntPipe) id: number): Promise<void> {
+  async delete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.spareService.delete(id);
   }
 

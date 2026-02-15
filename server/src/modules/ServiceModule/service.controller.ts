@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
   HttpCode,
-  ParseIntPipe,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ServiceService } from './service.service';
 import { ServiceResponseDto } from './Dto/service.response';
@@ -46,7 +46,7 @@ export class ServiceController {
   @Public()
   @ApiOperation({ summary: 'Get service by id' })
   async findById(
-    @Param('id', ParseIntPipe) id: number
+    @Param('id', ParseUUIDPipe) id: string
   ): Promise<ServiceResponseDto> {
     return await this.serviceService.findById(id);
   }
@@ -66,7 +66,7 @@ export class ServiceController {
   @Roles('admin', 'manager')
   @ApiOperation({ summary: 'Update service' })
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() serviceData: UpdateServiceDto
   ): Promise<ServiceResponseDto> {
     return await this.serviceService.update(id, serviceData);
@@ -76,7 +76,7 @@ export class ServiceController {
   @HttpCode(204)
   @Roles('admin')
   @ApiOperation({ summary: 'Delete service' })
-  async delete(@Param('id', ParseIntPipe) id: number): Promise<void> {
+  async delete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return await this.serviceService.delete(id);
   }
 }

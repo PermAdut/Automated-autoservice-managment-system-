@@ -45,11 +45,6 @@ export class CreateUserDto {
   @IsNotEmpty()
   passportIdentityNumber: string;
 
-  @ApiProperty({ description: 'User passport nationality', type: String })
-  @IsString()
-  @IsNotEmpty()
-  passportNationality: string;
-
   @ApiProperty({ description: 'User passport birth date', type: Date })
   @IsDateString()
   @IsNotEmpty()
@@ -60,9 +55,4 @@ export class CreateUserDto {
   @IsIn(['M', 'F'])
   @IsNotEmpty()
   passportGender: 'M' | 'F';
-
-  @ApiProperty({ description: 'User passport expiry date', type: Date })
-  @IsDateString()
-  @IsNotEmpty()
-  passportExpirationDate: string;
 }

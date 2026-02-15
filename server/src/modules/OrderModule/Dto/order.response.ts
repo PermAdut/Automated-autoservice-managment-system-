@@ -2,16 +2,16 @@ import { Expose } from 'class-transformer';
 
 export class OrderResponseDto {
   @Expose()
-  id: number;
+  id: string;
 
   @Expose()
-  userId: number;
+  userId: string;
 
   @Expose()
-  carId: number | null;
+  carId: string | null;
 
   @Expose()
-  employeeId: number | null;
+  employeeId: string | null;
 
   @Expose()
   status: string | null;
@@ -27,7 +27,7 @@ export class OrderResponseDto {
 
   @Expose()
   services: {
-    id: number;
+    id: string;
     name: string;
     description: string | null;
     price: number;
@@ -36,13 +36,13 @@ export class OrderResponseDto {
 
   @Expose()
   sparePart: {
-    id: number;
+    id: string;
     name: string;
     partNumber: string;
     price: number;
     quantity: number;
     category: {
-      id: number;
+      id: string;
       name: string;
       description: string | null;
     };

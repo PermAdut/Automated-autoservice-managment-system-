@@ -52,7 +52,8 @@ const Profile: React.FC = () => {
         phone: profile.phone || "",
         cars: profile.cars?.map((car) => ({
           id: car.id,
-          name: car.name || "",
+          brand: car.brand || "",
+          model: car.model || "",
           information: car.information || "",
           year: car.year ? parseInt(car.year) : undefined,
           vin: car.vin || "",
@@ -71,7 +72,8 @@ const Profile: React.FC = () => {
         phone: data.phone || undefined,
         cars: data.cars.map((car) => ({
           id: car.id,
-          name: car.name,
+          brand: car.brand,
+          model: car.model,
           information: car.information || undefined,
           year: car.year,
           vin: car.vin,
@@ -183,7 +185,7 @@ const Profile: React.FC = () => {
               <button
                 type="button"
                 className="btn btn-secondary btn-sm"
-                onClick={() => appendCar({ name: "", vin: "", year: undefined, licensePlate: "", information: "" })}
+                onClick={() => appendCar({ brand: "", model: "", vin: "", year: undefined, licensePlate: "", information: "" })}
               >
                 + Добавить автомобиль
               </button>
@@ -209,14 +211,25 @@ const Profile: React.FC = () => {
                   </div>
                   <div className="car-form-grid">
                     <div className="form-group">
-                      <label>Название *</label>
+                      <label>Марка *</label>
                       <input
-                        {...register(`cars.${index}.name`, { required: "Название обязательно" })}
+                        {...register(`cars.${index}.brand`, { required: "Марка обязательна" })}
                         disabled={!isEditing}
-                        className={errors.cars?.[index]?.name ? "error" : ""}
+                        className={errors.cars?.[index]?.brand ? "error" : ""}
                       />
-                      {errors.cars?.[index]?.name && (
-                        <span className="error-message">{errors.cars[index].name?.message}</span>
+                      {errors.cars?.[index]?.brand && (
+                        <span className="error-message">{errors.cars[index].brand?.message}</span>
+                      )}
+                    </div>
+                    <div className="form-group">
+                      <label>Модель *</label>
+                      <input
+                        {...register(`cars.${index}.model`, { required: "Модель обязательна" })}
+                        disabled={!isEditing}
+                        className={errors.cars?.[index]?.model ? "error" : ""}
+                      />
+                      {errors.cars?.[index]?.model && (
+                        <span className="error-message">{errors.cars[index].model?.message}</span>
                       )}
                     </div>
                     <div className="form-group">
@@ -292,4 +305,3 @@ const Profile: React.FC = () => {
 };
 
 export default Profile;
-

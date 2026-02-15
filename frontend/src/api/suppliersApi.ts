@@ -2,12 +2,12 @@ import { baseApi } from "./baseApi";
 import { apiTags } from "./tags";
 
 export interface Supplier {
-  id: number;
+  id: string;
   name: string;
   contact: string;
   address: string;
   positionsForBuying?: {
-    id: number;
+    id: string;
     quantity: number;
     deliverDate: string;
     status: string;
@@ -26,7 +26,7 @@ export const suppliersApi = baseApi.injectEndpoints({
       }),
       providesTags: [apiTags.SUPPLIERS],
     }),
-    getSupplierById: builder.query<Supplier, number>({
+    getSupplierById: builder.query<Supplier, string>({
       query: (id) => `/supplier/${id}`,
       providesTags: (_result, _error, id) => [{ type: apiTags.SUPPLIER, id }],
     }),
@@ -40,7 +40,7 @@ export const suppliersApi = baseApi.injectEndpoints({
     }),
     updateSupplier: builder.mutation<
       Supplier,
-      { id: number; data: Partial<Supplier> }
+      { id: string; data: Partial<Supplier> }
     >({
       query: ({ id, data }) => ({
         url: `/supplier/${id}`,
@@ -52,7 +52,7 @@ export const suppliersApi = baseApi.injectEndpoints({
         apiTags.SUPPLIERS,
       ],
     }),
-    deleteSupplier: builder.mutation<void, number>({
+    deleteSupplier: builder.mutation<void, string>({
       query: (id) => ({
         url: `/supplier/${id}`,
         method: "DELETE",

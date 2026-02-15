@@ -1,4 +1,4 @@
 export class SubscribeEmployeeDto {
-  employeeId: number;
+  employeeId: string;
 }
 

@@ -12,7 +12,6 @@ import {
 import { StorageItem } from "../StorageItem/StorageItem";
 import { useDebounce } from "../../../../hooks/useDebounce";
 import StorageForm from "../StorageForm/StorageForm";
-import "./StorageList.css";
 
 const STORES_PER_PAGE = 6;
 
@@ -56,10 +55,10 @@ const StorageList: React.FC = () => {
     });
   }, [spareParts, search]);
 
-  if (isLoading) return <div className="storage-list-loading">Загрузка...</div>;
+  if (isLoading) return <div className="mt-10 text-center text-lg font-semibold text-gray-700 animate-pulse">Загрузка...</div>;
   if (error)
     return (
-      <div className="storage-list-error">
+      <div className="mt-10 text-center text-lg font-semibold text-red-500">
         Ошибка:{" "}
         {error && "status" in error
           ? String(error.status)
@@ -74,12 +73,12 @@ const StorageList: React.FC = () => {
   );
 
   return (
-    <div className="storage-list-container">
-      <div className="storage-list-header">
-        <h1 className="storage-list-title">Список запчастей на складах</h1>
+    <div className="p-6 pb-20 max-w-7xl mx-auto relative">
+      <div className="flex items-center justify-between gap-3 mb-6">
+        <h1 className="text-3xl font-bold text-gray-800 text-center">Список запчастей на складах</h1>
         {canManage && (
           <button
-            className="btn-add"
+            className="bg-primary text-white border-none px-4 py-2.5 rounded-lg cursor-pointer font-semibold transition-all hover:bg-primary-dark"
             onClick={() => {
               setEditing(null);
               setShowForm(true);
@@ -89,8 +88,9 @@ const StorageList: React.FC = () => {
           </button>
         )}
       </div>
-      <div className="storage-list-filters">
+      <div className="flex flex-wrap gap-3 mb-4 items-center">
         <input
+          className="px-3 py-2.5 border-2 border-gray-200 rounded-lg min-w-[200px] text-sm transition-all focus:border-primary focus:ring-3 focus:ring-primary/15 focus:outline-none"
           type="text"
           placeholder="Поиск по названию/складу/ID"
           value={search}
@@ -100,6 +100,7 @@ const StorageList: React.FC = () => {
           }}
         />
         <select
+          className="px-3 py-2.5 border-2 border-gray-200 rounded-lg min-w-[140px] text-sm transition-all focus:border-primary focus:ring-3 focus:ring-primary/15 focus:outline-none"
           value={sortOrder}
           onChange={(e) => setSortOrder(e.target.value as typeof sortOrder)}
         >
@@ -107,9 +108,9 @@ const StorageList: React.FC = () => {
           <option value="desc">Убыв.</option>
         </select>
       </div>
-      <div className="storage-list-grid">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {paginatedSpareParts.map((sparePart) => (
-          <div className="storage-card" key={sparePart.store_id}>
+          <div className="border border-gray-200 rounded-xl p-3 shadow-sm flex flex-col gap-2.5" key={sparePart.store_id}>
             <StorageItem
               id={sparePart.store_id}
               quantity={sparePart.quantity}
@@ -117,9 +118,9 @@ const StorageList: React.FC = () => {
               location={sparePart.location}
             />
             {canManage && (
-              <div className="storage-card-actions">
+              <div className="flex gap-2.5 justify-end">
                 <button
-                  className="btn-edit"
+                  className="px-3 py-2 border-none rounded-lg cursor-pointer font-semibold bg-gray-100 text-gray-900 hover:bg-gray-200"
                   onClick={() => {
                     setEditing(sparePart);
                     setShowForm(true);
@@ -128,7 +129,7 @@ const StorageList: React.FC = () => {
                   Редактировать
                 </button>
                 <button
-                  className="btn-delete"
+                  className="px-3 py-2 border-none rounded-lg cursor-pointer font-semibold bg-red-500 text-white hover:bg-red-600"
                   onClick={async () => {
                     if (!window.confirm("Удалить запись склада?")) return;
                     try {
@@ -148,19 +149,19 @@ const StorageList: React.FC = () => {
       </div>
 
       {totalPages > 1 && (
-        <div className="storage-list-pagination">
+        <div className="flex justify-center items-center gap-3 mt-6 sticky bottom-5 bg-white p-2.5 rounded-md shadow-sm">
           <button
-            className="storage-list-button"
+            className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-md bg-white text-primary cursor-pointer transition-all hover:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
           >
             Назад
           </button>
-          <span className="storage-list-page-info">
+          <span className="text-sm font-medium text-gray-700">
             {currentPage} / {totalPages}
           </span>
           <button
-            className="storage-list-button"
+            className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-md bg-white text-primary cursor-pointer transition-all hover:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
             onClick={() =>
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }
@@ -179,7 +180,7 @@ const StorageList: React.FC = () => {
           }}
           onSubmit={async (
             payload: SpareStockPayload,
-            sparePartId?: number
+            sparePartId?: string
           ) => {
             try {
               if (sparePartId) {

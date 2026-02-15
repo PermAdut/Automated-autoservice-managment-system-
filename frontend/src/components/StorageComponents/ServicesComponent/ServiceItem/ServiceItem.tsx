@@ -1,8 +1,7 @@
 import React from "react";
-import "./ServiceItem.css";
 
 interface ServiceItemProps {
-  id: number;
+  id: string;
   name: string;
   description: string;
   price: number | string;
@@ -15,13 +14,13 @@ export const ServiceItem: React.FC<ServiceItemProps> = ({
   price,
 }) => {
   return (
-    <div className="service-item-card">
-      <div className="service-item-header">
-        <h2 className="service-item-title">{name}</h2>
-        <p className="service-item-info">ID: {id}</p>
+    <div className="bg-white border-2 border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all">
+      <div className="mb-4">
+        <h2 className="text-xl font-semibold text-gray-800 m-0">{name}</h2>
+        <p className="text-sm text-gray-500 mt-1">ID: {id}</p>
       </div>
 
-      <div className="service-item-details">
+      <div className="[&_p]:text-base [&_p]:text-gray-500 [&_p]:my-1 [&_strong]:text-gray-800">
         <p>
           <strong>Описание:</strong> {description}
         </p>

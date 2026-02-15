@@ -33,7 +33,7 @@ export class UserService {
     });
   }
 
-  async findByIdRaw(id: number): Promise<UserRaw> {
+  async findByIdRaw(id: string): Promise<UserRaw> {
     const user = await this.databaseService.db
       .select()
       .from(users)
@@ -89,7 +89,7 @@ export class UserService {
       .where(eq(roles.name, 'customer'))
       .limit(1);
 
-    const defaultRoleId = customerRole[0]?.id || 1; // Fallback to first role if customer doesn't exist
+    const defaultRoleId = customerRole[0]?.id; // Fallback to first role if customer doesn't exist
 
     try {
       const result = await this.databaseService.db.transaction(async tx => {
@@ -109,10 +109,8 @@ export class UserService {
         await tx.insert(passports).values({
           userId: newUser.id,
           identityNumber: userBody.passportIdentityNumber,
-          nationality: userBody.passportNationality,
           birthDate: new Date(userBody.passportBirthDate),
           gender: userBody.passportGender,
-          expirationDate: new Date(userBody.passportExpirationDate),
         });
 
         return newUser;
@@ -133,7 +131,7 @@ export class UserService {
     }
   }
 
-  async deleteUser(id: number): Promise<void> {
+  async deleteUser(id: string): Promise<void> {
     const user = await this.databaseService.db
       .select()
       .from(users)
@@ -238,10 +236,8 @@ export class UserService {
           passport: passport
             ? {
                 identityNumber: passport.identityNumber,
-                nationality: passport.nationality,
                 birthDate: passport.birthDate.toISOString(),
                 gender: passport.gender,
-                expirationDate: passport.expirationDate.toISOString(),
               }
             : undefined,
           orders: userOrders.map(o => ({
@@ -253,7 +249,8 @@ export class UserService {
           })),
           cars: userCars.map(c => ({
             id: c.id,
-            name: c.name,
+            brand: c.brand,
+            model: c.model,
             information: c.information || '',
             year: c.year.toString(),
             vin: c.vin,
@@ -285,7 +282,7 @@ export class UserService {
     return userResponse;
   }
 
-  async findById(id: number): Promise<UserResponseDto> {
+  async findById(id: string): Promise<UserResponseDto> {
     const userResult = await this.databaseService.db
       .select({
         id: users.id,
@@ -394,7 +391,7 @@ export class UserService {
     );
   }
 
-  async getRoleById(id: number): Promise<{ id: number; name: string }> {
+  async getRoleById(id: string): Promise<{ id: string; name: string }> {
     const role = await this.databaseService.db
       .select()
       .from(roles)
@@ -403,12 +400,12 @@ export class UserService {
     return role[0];
   }
 
-  async getRoles(): Promise<{ id: number; name: string }[]> {
+  async getRoles(): Promise<{ id: string; name: string }[]> {
     return await this.databaseService.db.select().from(roles);
   }
 
   async updateUser(
-    id: number,
+    id: string,
     userBody: UpdateUserDto
   ): Promise<UserResponseDto> {
     const userCheck = await this.databaseService.db
@@ -456,7 +453,7 @@ export class UserService {
   }
 
   async updateProfile(
-    userId: number,
+    userId: string,
     profileData: UpdateProfileDto
   ): Promise<UserResponseDto> {
     const userCheck = await this.databaseService.db
@@ -499,7 +496,7 @@ export class UserService {
       const existingCarIds = existingCars.map(c => c.id);
       const providedCarIds = profileData.cars
         .map(c => c.id)
-        .filter((id): id is number => id !== undefined);
+        .filter((id): id is string => id !== undefined);
 
       // Delete cars that are not in the provided list
       const carsToDelete = existingCarIds.filter(
@@ -518,7 +515,8 @@ export class UserService {
           await this.databaseService.db
             .update(cars)
             .set({
-              name: carData.name,
+              brand: carData.brand,
+              model: carData.model,
               information: carData.information ?? null,
               year: carData.year,
               vin: carData.vin,
@@ -527,10 +525,11 @@ export class UserService {
             .where(eq(cars.id, carData.id));
         } else {
           // Create new car
-          if (carData.name && carData.year && carData.vin) {
+          if (carData.brand && carData.model && carData.year && carData.vin) {
             await this.databaseService.db.insert(cars).values({
               userId,
-              name: carData.name,
+              brand: carData.brand,
+              model: carData.model,
               information: carData.information ?? null,
               year: carData.year,
               vin: carData.vin,

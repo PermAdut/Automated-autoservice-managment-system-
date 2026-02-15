@@ -1,7 +1,6 @@
 import { FC, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { UserDetailed, useGetRolesQuery } from "../../api/usersApi";
-import "./EditUserModal.css";
 
 interface EditUserModalProps {
   isOpen: boolean;
@@ -48,7 +47,7 @@ export const EditUserModal: FC<EditUserModalProps> = ({
     onClose();
   };
   const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const roleId = Number(e.target.value);
+    const roleId = e.target.value;
     const roleName =
       roles.find((r) => r.id === roleId)?.name || formData.role?.name || "";
     setFormData((prev) => ({
@@ -60,12 +59,16 @@ export const EditUserModal: FC<EditUserModalProps> = ({
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="edit-modal-overlay">
-      <div className="edit-modal-content">
-        <h3 className="edit-modal-title">Редактирование пользователя</h3>
-        <form onSubmit={handleSubmit} className="edit-modal-form">
-          <div className="form-group">
-            <label htmlFor="name">Имя:</label>
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+      <div className="bg-white p-8 rounded-2xl w-[90%] max-w-[500px] shadow-xl border-2 border-gray-200">
+        <h3 className="mb-6 text-2xl font-bold text-gray-900 text-center">
+          Редактирование пользователя
+        </h3>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="name" className="text-sm font-medium text-gray-700">
+              Имя:
+            </label>
             <input
               type="text"
               id="name"
@@ -73,10 +76,13 @@ export const EditUserModal: FC<EditUserModalProps> = ({
               value={formData.name}
               onChange={handleInputChange}
               required
+              className="px-3 py-2 border border-gray-300 rounded-md text-base transition-colors focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="surName">Отчество:</label>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="surName" className="text-sm font-medium text-gray-700">
+              Отчество:
+            </label>
             <input
               type="text"
               id="surName"
@@ -84,10 +90,13 @@ export const EditUserModal: FC<EditUserModalProps> = ({
               value={formData.surName}
               onChange={handleInputChange}
               required
+              className="px-3 py-2 border border-gray-300 rounded-md text-base transition-colors focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="email">Email:</label>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="email" className="text-sm font-medium text-gray-700">
+              Email:
+            </label>
             <input
               type="email"
               id="email"
@@ -95,10 +104,13 @@ export const EditUserModal: FC<EditUserModalProps> = ({
               value={formData.email}
               onChange={handleInputChange}
               required
+              className="px-3 py-2 border border-gray-300 rounded-md text-base transition-colors focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="phone">Телефон:</label>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="phone" className="text-sm font-medium text-gray-700">
+              Телефон:
+            </label>
             <input
               type="tel"
               id="phone"
@@ -106,15 +118,19 @@ export const EditUserModal: FC<EditUserModalProps> = ({
               value={formData.phone}
               onChange={handleInputChange}
               required
+              className="px-3 py-2 border border-gray-300 rounded-md text-base transition-colors focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="role">Роль:</label>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="role" className="text-sm font-medium text-gray-700">
+              Роль:
+            </label>
             <select
               id="role"
               value={formData.role?.id ?? ""}
               onChange={handleRoleChange}
               required
+              className="px-3 py-2 border border-gray-300 rounded-md text-base transition-colors focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
             >
               <option value="" disabled>
                 Выберите роль
@@ -126,15 +142,18 @@ export const EditUserModal: FC<EditUserModalProps> = ({
               ))}
             </select>
           </div>
-          <div className="edit-modal-buttons">
+          <div className="flex justify-end gap-3 mt-6">
             <button
               type="button"
-              className="edit-modal-button cancel"
+              className="px-4 py-2 rounded-md text-sm font-medium transition-all bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 hover:border-gray-400"
               onClick={onClose}
             >
               Отмена
             </button>
-            <button type="submit" className="edit-modal-button save">
+            <button
+              type="submit"
+              className="px-4 py-2 rounded-md text-sm font-medium transition-all bg-primary text-white border border-primary hover:bg-primary-dark hover:border-primary-dark"
+            >
               Сохранить
             </button>
           </div>

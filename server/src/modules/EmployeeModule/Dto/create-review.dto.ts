@@ -1,5 +1,5 @@
 export class CreateReviewDto {
-  employeeId: number;
+  employeeId: string;
   description?: string;
   rate: number;
 }

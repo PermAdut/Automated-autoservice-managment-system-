@@ -25,7 +25,7 @@ export class OrderService {
     search?: string,
     sortBy?: string,
     sortOrder?: 'asc' | 'desc',
-    userId?: number
+    userId?: string
   ): Promise<OrderResponseDto[]> {
     try {
       let query = this.databaseService.db.select().from(orders);
@@ -139,7 +139,7 @@ export class OrderService {
     }
   }
 
-  async findById(id: number): Promise<OrderResponseDto> {
+  async findById(id: string): Promise<OrderResponseDto> {
     const [order] = await this.databaseService.db
       .select()
       .from(orders)
@@ -208,9 +208,9 @@ export class OrderService {
   }
 
   async create(
-    orderData: CreateOrderDto & { userId: number }
+    orderData: CreateOrderDto & { userId: string }
   ): Promise<OrderResponseDto> {
-    let createdOrderId: number | null = null;
+    let createdOrderId: string | null = null;
 
     if (!orderData.userId) {
       throw new BadRequestException('User ID is required');
@@ -270,7 +270,7 @@ export class OrderService {
   }
 
   async update(
-    id: number,
+    id: string,
     orderData: UpdateOrderDto
   ): Promise<OrderResponseDto> {
     let targetOrderId = id;
@@ -376,7 +376,7 @@ export class OrderService {
     return this.findById(targetOrderId);
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     const order = await this.databaseService.db
       .select()
       .from(orders)

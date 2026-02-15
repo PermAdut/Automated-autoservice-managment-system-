@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useLoginMutation } from "../../api/baseApi";
 import { Link } from "react-router-dom";
 import { serverConfig } from "../../configs/serverConfig";
-import "./Login.css";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -26,19 +25,20 @@ const Login = () => {
   };
 
   const handleGoogleLogin = () => {
-    const googleAuthUrl = `${serverConfig.url}/auth/google`;
-    console.log("Google Auth URL:", googleAuthUrl);
-    console.log("serverConfig.url:", serverConfig.url);
-    window.location.href = googleAuthUrl;
+    window.location.href = `${serverConfig.url}/auth/google`;
   };
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <h2 className="login-title">Вход в систему</h2>
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
+    <div className="flex items-center justify-center min-h-[calc(100vh-200px)] p-8 bg-gradient-to-br from-primary to-primary-dark">
+      <div className="bg-white rounded-2xl p-10 shadow-2xl w-full max-w-md animate-[slideUp_0.3s_ease-out]">
+        <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+          Вход в систему
+        </h2>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="email" className="text-sm font-semibold text-gray-600">
+              Email
+            </label>
             <input
               id="email"
               type="email"
@@ -46,10 +46,13 @@ const Login = () => {
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder="Введите email"
+              className="px-4 py-3 border-2 border-gray-200 rounded-lg text-base transition-all focus:outline-none focus:border-primary focus:ring-3 focus:ring-primary/10"
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="password">Пароль</label>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="password" className="text-sm font-semibold text-gray-600">
+              Пароль
+            </label>
             <input
               id="password"
               type="password"
@@ -58,18 +61,34 @@ const Login = () => {
               required
               placeholder="Введите пароль"
               minLength={6}
+              className="px-4 py-3 border-2 border-gray-200 rounded-lg text-base transition-all focus:outline-none focus:border-primary focus:ring-3 focus:ring-primary/10"
             />
           </div>
-          {error && <div className="error-message">{error}</div>}
-          <button type="submit" className="login-button" disabled={isLoading}>
+          {error && (
+            <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm text-center">
+              {error}
+            </div>
+          )}
+          <button
+            type="submit"
+            className="py-3.5 bg-gradient-to-br from-primary to-primary-dark text-white border-none rounded-lg text-base font-semibold cursor-pointer transition-all mt-2 hover:not-disabled:-translate-y-0.5 hover:not-disabled:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+            disabled={isLoading}
+          >
             {isLoading ? "Вход..." : "Войти"}
           </button>
         </form>
-        <div className="divider">
-          <span>или</span>
+
+        <div className="flex items-center my-6">
+          <div className="flex-1 border-b border-gray-200" />
+          <span className="px-4 text-gray-500 text-sm">или</span>
+          <div className="flex-1 border-b border-gray-200" />
         </div>
-        <button onClick={handleGoogleLogin} className="google-button">
-          <svg className="google-icon" viewBox="0 0 24 24">
+
+        <button
+          onClick={handleGoogleLogin}
+          className="w-full py-3.5 bg-white text-gray-600 border-2 border-gray-200 rounded-lg text-base font-semibold cursor-pointer transition-all flex items-center justify-center gap-3 hover:border-gray-300 hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path
               fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -89,9 +108,12 @@ const Login = () => {
           </svg>
           Войти через Google
         </button>
-        <div className="register-hint">
+
+        <div className="mt-4 text-center text-gray-600 text-sm">
           Еще не зарегистрированы?{" "}
-          <Link to="/register">Зарегистрироваться</Link>
+          <Link to="/register" className="text-blue-600 font-semibold hover:underline">
+            Зарегистрироваться
+          </Link>
         </div>
       </div>
     </div>

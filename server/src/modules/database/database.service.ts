@@ -15,11 +15,11 @@ export class DatabaseService implements OnModuleInit {
     const targetSchema = 'autoservice';
 
     this.pool = new Pool({
-      user: 'postgres',
-      host: 'localhost',
+      user: process.env.DB_USER || 'postgres',
+      host: process.env.DB_HOST || 'localhost',
       database: process.env.DB_NAME,
       password: process.env.DB_PASSWORD,
-      port: parseInt('5432'),
+      port: parseInt(process.env.DB_PORT || '5432'),
       // Make sure we write and read from the autoservice schema by default
       options: `-c search_path=${targetSchema},public`,
     });

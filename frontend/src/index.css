@@ -1,3 +1,24 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #667eea;
+  --color-primary-dark: #764ba2;
+  --color-secondary: #4f46e5;
+  --color-error: #e53e3e;
+  --color-success: #38a169;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 *, *::after, *::before {
   margin: 0;
   padding: 0;

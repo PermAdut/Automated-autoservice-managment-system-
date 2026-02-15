@@ -31,15 +31,9 @@ export class RegisterDto {
   @IsString()
   passportIdentityNumber: string;
 
-  @IsString()
-  passportNationality: string;
-
   @IsDateString()
   passportBirthDate: string;
 
   @IsIn(['M', 'F'])
   passportGender: 'M' | 'F';
-
-  @IsDateString()
-  passportExpirationDate: string;
 }

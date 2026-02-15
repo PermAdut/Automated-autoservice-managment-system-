@@ -1,14 +1,14 @@
 import { PartialType } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, Min } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsUUID, Min } from 'class-validator';
 
 export class CreateSpareStockDto {
-  @IsNumber()
+  @IsUUID()
   @IsNotEmpty()
-  sparePartId: number;
+  sparePartId: string;
 
-  @IsNumber()
+  @IsUUID()
   @IsNotEmpty()
-  storeId: number;
+  storeId: string;
 
   @IsNumber()
   @Min(0)

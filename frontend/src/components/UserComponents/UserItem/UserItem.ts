@@ -1,7 +1,7 @@
 import { UserDetailed } from "../../../api/usersApi";
 
 export interface UserItemProps {
-  id: number;
+  id: string;
   name: string;
   secondName: string;
   orders?: Order[];

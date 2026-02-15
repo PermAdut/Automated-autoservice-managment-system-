@@ -31,7 +31,7 @@ export class AuthService {
       .where(eq(roles.name, 'guest'))
       .limit(1);
 
-    return customerRole[0]?.id || guestRole[0]?.id || 1;
+    return customerRole[0]?.id || guestRole[0]?.id;
   }
 
   async register(dto: RegisterDto) {
@@ -73,10 +73,8 @@ export class AuthService {
     await this.databaseService.db.insert(passports).values({
       userId: createdUser.id,
       identityNumber: dto.passportIdentityNumber,
-      nationality: dto.passportNationality,
       birthDate: new Date(dto.passportBirthDate),
       gender: dto.passportGender,
-      expirationDate: new Date(dto.passportExpirationDate),
     });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -189,7 +187,7 @@ export class AuthService {
     };
   }
 
-  async generateRefreshToken(userId: number): Promise<string> {
+  async generateRefreshToken(userId: string): Promise<string> {
     const token = randomBytes(32).toString('hex');
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days

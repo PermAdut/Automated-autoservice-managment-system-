@@ -7,15 +7,14 @@ import {
 import { SubscribeModal } from "../SubscribeModal/SubscribeModal";
 import { ReviewModal } from "../ReviewModal/ReviewModal";
 import { getOrderStatusLabel } from "../../../utils/orderStatus";
-import "./EmployeeItem.css";
 
 interface EmployeeItemProps {
-  id: number;
+  id: string;
   name: string;
   surName: string;
   lastName?: string | null;
-  position: { id: number; name: string; description?: string };
-  orders?: { id: number; status: string };
+  position: { id: string; name: string; description?: string };
+  orders?: { id: string; status: string };
   schedule?: { startTime: string; endTime: string; isAvailable: boolean };
   hireDate: string;
   salary: number;
@@ -54,7 +53,6 @@ export const EmployeeItem: React.FC<EmployeeItemProps> = ({
   const isAuthenticated = !!localStorage.getItem("access_token");
   const fullName = `${surName} ${name} ${lastName ?? ""}`.trim();
 
-  // Проверяем статус подписки
   const {
     data: subscriptionData,
     refetch: refetchSubscription,
@@ -64,33 +62,28 @@ export const EmployeeItem: React.FC<EmployeeItemProps> = ({
     skip: !isAuthenticated,
   });
 
-  // Обновляем локальное состояние при изменении данных из API
   React.useEffect(() => {
     if (subscriptionData !== undefined) {
       setLocalSubscriptionStatus(subscriptionData.subscribed);
     }
   }, [subscriptionData]);
-  
+
   const [subscribe, { isLoading: isSubscribing }] =
     useSubscribeToEmployeeMutation();
   const [unsubscribe, { isLoading: isUnsubscribing }] =
     useUnsubscribeFromEmployeeMutation();
 
-  // Используем локальное состояние, если оно установлено, иначе данные из API
-  const isSubscribed = localSubscriptionStatus !== null 
-    ? localSubscriptionStatus 
+  const isSubscribed = localSubscriptionStatus !== null
+    ? localSubscriptionStatus
     : (subscriptionData?.subscribed ?? false);
 
   const handleQuickSubscribe = async () => {
     try {
-      // Оптимистичное обновление UI
       setLocalSubscriptionStatus(true);
       const result = await subscribe(id).unwrap();
       console.log("Subscribe result:", result);
-      // Обновляем данные из API
       await refetchSubscription();
     } catch (error: any) {
-      // Откатываем оптимистичное обновление при ошибке
       setLocalSubscriptionStatus(null);
       console.error("Failed to subscribe:", error);
       const errorMessage =
@@ -103,14 +96,11 @@ export const EmployeeItem: React.FC<EmployeeItemProps> = ({
 
   const handleQuickUnsubscribe = async () => {
     try {
-      // Оптимистичное обновление UI
       setLocalSubscriptionStatus(false);
       const result = await unsubscribe(id).unwrap();
       console.log("Unsubscribe result:", result);
-      // Обновляем данные из API
       await refetchSubscription();
     } catch (error: any) {
-      // Откатываем оптимистичное обновление при ошибке
       setLocalSubscriptionStatus(null);
       console.error("Failed to unsubscribe:", error);
       const errorMessage =
@@ -122,17 +112,17 @@ export const EmployeeItem: React.FC<EmployeeItemProps> = ({
   };
 
   return (
-    <div className="employee-item-card">
-      <div className="employee-item-header">
-        <h2 className="employee-item-name">
+    <div className="bg-white border-2 border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all">
+      <div className="mb-4">
+        <h2 className="text-xl font-semibold text-gray-800 m-0">
           {surName} {name} {lastName ?? ""}
         </h2>
-        <p className="employee-item-info">
-          ID: {id} · Должность: {position.name}
+        <p className="text-sm text-gray-500 mt-1">
+          ID: {id.slice(0, 8)} · Должность: {position.name}
         </p>
       </div>
 
-      <div className="employee-item-details">
+      <div className="[&_p]:text-base [&_p]:text-gray-500 [&_p]:my-1 [&_strong]:text-gray-800">
         <p>
           <strong>Описание должности:</strong>{" "}
           {position.description || "Нет описания"}
@@ -149,18 +139,18 @@ export const EmployeeItem: React.FC<EmployeeItemProps> = ({
         )}
       </div>
 
-      <div className="employee-item-section">
-        <h3>Текущий заказ</h3>
+      <div className="mt-4 [&_p]:text-base [&_p]:text-gray-500 [&_p]:my-1 [&_strong]:text-gray-800">
+        <h3 className="text-lg font-medium text-gray-700 mb-2">Текущий заказ</h3>
         <p>
-          <strong>ID заказа:</strong> {orders?.id ?? "Нет заказа"}
+          <strong>ID заказа:</strong> {orders?.id ? orders.id.slice(0, 8) : "Нет заказа"}
         </p>
             <p>
               <strong>Статус:</strong> {orders?.status ? getOrderStatusLabel(orders.status) : "Нет заказа"}
             </p>
       </div>
 
-      <div className="employee-item-section">
-        <h3>Расписание</h3>
+      <div className="mt-4 [&_p]:text-base [&_p]:text-gray-500 [&_p]:my-1 [&_strong]:text-gray-800">
+        <h3 className="text-lg font-medium text-gray-700 mb-2">Расписание</h3>
         <p>
           <strong>Начало работы:</strong>{" "}
           {formatScheduleTime(schedule?.startTime)}
@@ -175,18 +165,18 @@ export const EmployeeItem: React.FC<EmployeeItemProps> = ({
       </div>
 
       {isAuthenticated && (
-        <div className="employee-item-actions">
+        <div className="mt-5 pt-5 border-t border-gray-200 flex gap-2.5 flex-wrap">
           {isSubscribed ? (
             <>
               <button
-                className="btn btn-unsubscribe"
+                className="px-5 py-2.5 border-none rounded-md text-sm font-medium cursor-pointer transition-all bg-error text-white hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed"
                 onClick={handleQuickUnsubscribe}
                 disabled={isUnsubscribing}
               >
                 {isUnsubscribing ? "Отписка..." : "Отписаться от уведомлений"}
               </button>
               <button
-                className="btn btn-subscribe-info"
+                className="px-5 py-2.5 border-none rounded-md text-sm font-medium cursor-pointer transition-all bg-gray-400 text-white hover:bg-gray-500"
                 onClick={() => setIsSubscribeModalOpen(true)}
               >
                 Управление подпиской
@@ -195,14 +185,14 @@ export const EmployeeItem: React.FC<EmployeeItemProps> = ({
           ) : (
             <>
               <button
-                className="btn btn-subscribe"
+                className="px-5 py-2.5 border-none rounded-md text-sm font-medium cursor-pointer transition-all bg-primary text-white hover:bg-primary-dark disabled:opacity-60 disabled:cursor-not-allowed"
                 onClick={handleQuickSubscribe}
                 disabled={isSubscribing}
               >
                 {isSubscribing ? "Подписка..." : "Подписаться на уведомления"}
               </button>
               <button
-                className="btn btn-subscribe-info"
+                className="px-5 py-2.5 border-none rounded-md text-sm font-medium cursor-pointer transition-all bg-gray-400 text-white hover:bg-gray-500"
                 onClick={() => setIsSubscribeModalOpen(true)}
               >
                 Подробнее о подписке
@@ -210,7 +200,7 @@ export const EmployeeItem: React.FC<EmployeeItemProps> = ({
             </>
           )}
           <button
-            className="btn btn-review"
+            className="px-5 py-2.5 border-none rounded-md text-sm font-medium cursor-pointer transition-all bg-success text-white hover:bg-green-600"
             onClick={() => setIsReviewModalOpen(true)}
           >
             Оставить отзыв

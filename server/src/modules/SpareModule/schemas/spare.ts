@@ -1,19 +1,19 @@
 export interface Spare {
-  id: number;
+  id: string;
   name: string;
   partNumber: string;
   price: number;
-  categoryId: number;
-  idStore: number;
+  categoryId: string;
+  idStore: string;
 }
 
 export interface Category {
-  id: number;
+  id: string;
   name: string;
   description: string;
 }
 
 export interface Store {
-  id: number;
+  id: string;
   location: string;
 }

@@ -1,7 +1,7 @@
 export interface User {
-  id: number;
+  id: string;
   login: string;
-  roleId: number;
+  roleId: string;
   name: string;
   surName: string;
   email: string;
@@ -12,26 +12,27 @@ export interface User {
 }
 
 export interface Role {
-  id: number;
+  id: string;
   name: string;
 }
 
 export interface Subscription {
-  id: number;
+  id: string;
   name: string;
   description: string;
   price: number;
 }
 
 export interface Review {
-  id: number;
+  id: string;
   description: string;
   rate: number;
 }
 
 export interface Car {
-  id: number;
-  name: string;
+  id: string;
+  brand: string;
+  model: string;
   information: string;
   year: string;
   vin: string;
@@ -39,7 +40,7 @@ export interface Car {
 }
 
 export interface Order {
-  id: number;
+  id: string;
   status: string;
   createdAt: string;
   updateAt: string;
@@ -48,10 +49,8 @@ export interface Order {
 
 export interface Passport {
   identityNumber: string;
-  nationality: string;
   birthDate: string;
   gender: 'M' | 'F';
-  expirationDate: string;
 }
 
 export interface UserDetailed extends User {

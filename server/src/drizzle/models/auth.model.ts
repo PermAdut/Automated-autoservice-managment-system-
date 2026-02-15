@@ -1,11 +1,10 @@
 import { relations } from 'drizzle-orm';
 import {
-  bigint,
   index,
-  serial,
   text,
   timestamp,
   unique,
+  uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
 import { schema } from '../pgSchema';
@@ -20,7 +19,7 @@ export const oauthProviderEnum = schema.enum('oauth_provider', [
 export const roles = schema.table(
   'Role',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     name: varchar('name').notNull().unique(),
   },
   table => ({
@@ -31,8 +30,8 @@ export const roles = schema.table(
 export const users = schema.table(
   'Users',
   {
-    id: serial('id').primaryKey(),
-    roleId: bigint('roleId', { mode: 'number' })
+    id: uuid('id').defaultRandom().primaryKey(),
+    roleId: uuid('roleId')
       .notNull()
       .references(() => roles.id),
     login: varchar('login').notNull(),
@@ -59,8 +58,8 @@ export const users = schema.table(
 export const refreshTokens = schema.table(
   'RefreshTokens',
   {
-    id: serial('id').primaryKey(),
-    userId: bigint('userId', { mode: 'number' })
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('userId')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     token: text('token').notNull().unique(),
@@ -74,15 +73,13 @@ export const refreshTokens = schema.table(
 );
 
 export const passports = schema.table('Passport', {
-  id: serial('id').primaryKey(),
-  userId: bigint('userId', { mode: 'number' })
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('userId')
     .notNull()
     .references(() => users.id),
   identityNumber: varchar('identityNumber').notNull(),
-  nationality: varchar('nationality').notNull(),
   birthDate: timestamp('birthDate', { mode: 'date' }).notNull(),
   gender: genderEnum('gender').notNull(),
-  expirationDate: timestamp('expirationDate', { mode: 'date' }).notNull(),
 });
 
 export const usersRelations = relations(users, ({ one, many }) => ({

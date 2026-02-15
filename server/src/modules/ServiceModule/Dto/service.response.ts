@@ -3,9 +3,9 @@ import { Exclude, Expose } from 'class-transformer';
 
 @Exclude()
 export class ServiceResponseDto {
-  @ApiProperty({ example: 1 })
+  @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
   @Expose()
-  id: number;
+  id: string;
 
   @ApiProperty({ example: 'Замена масла' })
   @Expose()

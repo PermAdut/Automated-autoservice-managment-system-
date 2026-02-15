@@ -11,7 +11,6 @@ import OrderForm from "../OrderForm/OrderForm";
 import { getOrderStatusLabel } from "../../../utils/orderStatus";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store";
-import "./OrderList.css";
 
 const ORDERS_PER_PAGE = 3;
 
@@ -63,15 +62,15 @@ const OrderList: React.FC = () => {
       if (sortBy === "status") {
         return (a.status || "").localeCompare(b.status || "") * dir;
       }
-      return (a.id - b.id) * dir;
+      return a.id.localeCompare(b.id) * dir;
     });
     return sorted;
   }, [orders, search, sortBy, sortOrder]);
 
-  if (isLoading) return <div className="order-list-loading">Загрузка...</div>;
+  if (isLoading) return <div className="mt-10 text-center text-lg font-semibold text-gray-700 animate-pulse">Загрузка...</div>;
   if (error)
     return (
-      <div className="order-list-error">
+      <div className="mt-10 text-center text-lg font-semibold text-red-500">
         Ошибка:{" "}
         {error && "status" in error
           ? String(error.status)
@@ -86,11 +85,11 @@ const OrderList: React.FC = () => {
   );
 
   return (
-    <div className="order-list-container">
-      <div className="order-list-header">
-        <h1 className="order-list-title">Список заказов</h1>
+    <div className="p-6 pb-20 max-w-7xl mx-auto relative">
+      <div className="flex items-center justify-between gap-3 mb-6">
+        <h1 className="text-3xl font-bold text-gray-800 text-center">Список заказов</h1>
         <button
-          className="btn-add"
+          className="bg-primary text-white border-none px-4 py-2.5 rounded-lg cursor-pointer font-semibold transition-all hover:bg-primary-dark"
           onClick={() => {
             setEditingOrder(null);
             setShowForm(true);
@@ -99,8 +98,9 @@ const OrderList: React.FC = () => {
           + Добавить заказ
         </button>
       </div>
-      <div className="order-list-filters">
+      <div className="flex flex-wrap gap-3 mb-4 items-center">
         <input
+          className="px-3 py-2.5 border-2 border-gray-200 rounded-lg min-w-[200px] text-sm transition-all focus:border-primary focus:ring-3 focus:ring-primary/15 focus:outline-none"
           type="text"
           placeholder="Поиск по номеру/статусу"
           value={search}
@@ -110,6 +110,7 @@ const OrderList: React.FC = () => {
           }}
         />
         <select
+          className="px-3 py-2.5 border-2 border-gray-200 rounded-lg min-w-[140px] text-sm transition-all focus:border-primary focus:ring-3 focus:ring-primary/15 focus:outline-none"
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
         >
@@ -118,6 +119,7 @@ const OrderList: React.FC = () => {
           <option value="id">ID</option>
         </select>
         <select
+          className="px-3 py-2.5 border-2 border-gray-200 rounded-lg min-w-[140px] text-sm transition-all focus:border-primary focus:ring-3 focus:ring-primary/15 focus:outline-none"
           value={sortOrder}
           onChange={(e) => setSortOrder(e.target.value as typeof sortOrder)}
         >
@@ -125,9 +127,9 @@ const OrderList: React.FC = () => {
           <option value="desc">Убыв.</option>
         </select>
       </div>
-      <div className="order-list-grid">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {paginatedOrders.map((order) => (
-          <div className="order-card" key={order.id}>
+          <div className="border border-gray-200 rounded-xl p-3 shadow-sm flex flex-col gap-2.5" key={order.id}>
             <OrderItem
               id={order.id}
               userId={order.userId}
@@ -141,9 +143,9 @@ const OrderList: React.FC = () => {
               sparePart={order.sparePart}
             />
             {isAdminOrManager && (
-              <div className="order-card-actions">
+              <div className="flex gap-2.5 justify-end">
                 <button
-                  className="btn-edit"
+                  className="px-3 py-2 border-none rounded-lg cursor-pointer font-semibold bg-gray-100 text-gray-900 hover:bg-gray-200"
                   onClick={() => {
                     setEditingOrder(order);
                     setShowForm(true);
@@ -152,7 +154,7 @@ const OrderList: React.FC = () => {
                   Редактировать
                 </button>
                 <button
-                  className="btn-delete"
+                  className="px-3 py-2 border-none rounded-lg cursor-pointer font-semibold bg-red-500 text-white hover:bg-red-600"
                   onClick={async () => {
                     if (!window.confirm("Удалить заказ?")) return;
                     try {
@@ -172,19 +174,19 @@ const OrderList: React.FC = () => {
       </div>
 
       {totalPages > 1 && (
-        <div className="order-list-pagination">
+        <div className="flex justify-center items-center gap-3 mt-6 sticky bottom-5 bg-white p-2.5 rounded-md shadow-sm">
           <button
-            className="order-list-button"
+            className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-md bg-white text-primary cursor-pointer transition-all hover:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
           >
             Назад
           </button>
-          <span className="order-list-page-info">
+          <span className="text-sm font-medium text-gray-700">
             {currentPage} / {totalPages}
           </span>
           <button
-            className="order-list-button"
+            className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-md bg-white text-primary cursor-pointer transition-all hover:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
             onClick={() =>
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }

@@ -2,7 +2,7 @@ import { baseApi } from "./baseApi";
 import { apiTags } from "./tags";
 
 export interface User {
-  id: number;
+  id: string;
   name: string;
   surName: string;
   email: string;
@@ -13,8 +13,8 @@ export interface User {
 }
 
 export interface UserDetailed {
-  id: number;
-  role: { id: number; name: string };
+  id: string;
+  role: { id: string; name: string };
   login: string;
   name: string;
   surName: string;
@@ -25,10 +25,8 @@ export interface UserDetailed {
   updatedAt: string;
   passport?: {
     identityNumber: string;
-    nationality: string;
     birthDate: string;
     gender: "M" | "F";
-    expiriationDate: string;
   };
   subscriptions?: {
     subscriptionDescription: string;
@@ -44,15 +42,16 @@ export interface UserDetailed {
     deletedAt: string;
   }[];
   cars?: {
-    id?: number;
-    name: string;
+    id?: string;
+    brand: string;
+    model: string;
     information: string;
     year: string;
     vin: string;
     licensePlate: string;
   }[];
   orders?: {
-    id: number;
+    id: string;
     status: string;
     createdAt: string;
     updateAt: string;
@@ -68,10 +67,8 @@ export interface CreateUserDto {
   phone: string;
   password: string;
   passportIdentityNumber: string;
-  passportNationality: string;
   passportBirthDate: Date;
   passportGender: "M" | "F";
-  passportExpirationDate: Date;
 }
 
 export interface UpdateUserDto {
@@ -80,12 +77,13 @@ export interface UpdateUserDto {
   email?: string;
   phone?: string;
   password?: string;
-  roleId?: number;
+  roleId?: string;
 }
 
 export interface UpdateCarDto {
-  id?: number;
-  name?: string;
+  id?: string;
+  brand?: string;
+  model?: string;
   information?: string;
   year?: number;
   vin?: string;
@@ -101,7 +99,7 @@ export interface UpdateProfileDto {
 }
 
 export interface RoleOption {
-  id: number;
+  id: string;
   name: string;
 }
 
@@ -121,7 +119,7 @@ export const usersApi = baseApi.injectEndpoints({
       query: () => "/users/roles",
       providesTags: [apiTags.USERS],
     }),
-    getUserById: builder.query<UserDetailed, number>({
+    getUserById: builder.query<UserDetailed, string>({
       query: (id) => `/users/${id}`,
       providesTags: (_result, _error, id) => [{ type: apiTags.USER, id }],
     }),
@@ -139,7 +137,7 @@ export const usersApi = baseApi.injectEndpoints({
     }),
     updateUser: builder.mutation<
       UserDetailed,
-      { id: number; data: UpdateUserDto }
+      { id: string; data: UpdateUserDto }
     >({
       query: ({ id, data }) => ({
         url: `/users/${id}`,
@@ -151,7 +149,7 @@ export const usersApi = baseApi.injectEndpoints({
         apiTags.USERS,
       ],
     }),
-    deleteUser: builder.mutation<void, number>({
+    deleteUser: builder.mutation<void, string>({
       query: (id) => ({
         url: `/users/${id}`,
         method: "DELETE",

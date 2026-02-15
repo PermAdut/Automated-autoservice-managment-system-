@@ -5,6 +5,7 @@ import {
   IsOptional,
   Min,
   IsString,
+  IsUUID,
 } from 'class-validator';
 
 export class CreateEmployeeDto {
@@ -20,9 +21,9 @@ export class CreateEmployeeDto {
   @IsOptional()
   lastName?: string;
 
-  @IsNumber()
+  @IsUUID()
   @IsNotEmpty()
-  positionId: number;
+  positionId: string;
 
   @IsOptional()
   @IsDateString()

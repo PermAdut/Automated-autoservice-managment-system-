@@ -2,17 +2,17 @@ import { baseApi } from "./baseApi";
 import { apiTags } from "./tags";
 
 export interface SparePartStock {
-  id?: number;
-  store_id: number;
+  id?: string;
+  store_id: string;
   location: string;
   quantity: number;
   sparePart: {
-    id: number;
+    id: string;
     name: string;
     partNumber: string;
     price: string;
     category?: {
-      id: number;
+      id: string;
       name: string;
       description?: string;
     };
@@ -20,19 +20,19 @@ export interface SparePartStock {
 }
 
 export interface StoreOption {
-  id: number;
+  id: string;
   location: string;
 }
 
 export interface CategoryOption {
-  id: number;
+  id: string;
   name: string;
   description?: string;
 }
 
 export interface SpareStockPayload {
-  sparePartId: number;
-  storeId: number;
+  sparePartId: string;
+  storeId: string;
   quantity: number;
 }
 
@@ -48,7 +48,7 @@ export const sparePartsApi = baseApi.injectEndpoints({
       }),
       providesTags: [apiTags.SPARE_PARTS],
     }),
-    getSparePartById: builder.query<SparePartStock, number>({
+    getSparePartById: builder.query<SparePartStock, string>({
       query: (id) => `/stores/${id}`,
       providesTags: (_result, _error, id) => [
         { type: apiTags.SPARE_PART, id },
@@ -65,7 +65,7 @@ export const sparePartsApi = baseApi.injectEndpoints({
     }),
     updateSparePart: builder.mutation<
       SparePartStock,
-      { id: number; data: SpareStockPayload }
+      { id: string; data: SpareStockPayload }
     >({
       query: ({ id, data }) => ({
         url: `/stores/${id}`,
@@ -77,7 +77,7 @@ export const sparePartsApi = baseApi.injectEndpoints({
         apiTags.SPARE_PARTS,
       ],
     }),
-    deleteSparePart: builder.mutation<void, number>({
+    deleteSparePart: builder.mutation<void, string>({
       query: (id) => ({
         url: `/stores/${id}`,
         method: "DELETE",

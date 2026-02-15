@@ -2,7 +2,7 @@ import { baseApi } from "./baseApi";
 import { apiTags } from "./tags";
 
 export interface Service {
-  id: number;
+  id: string;
   name: string;
   description: string;
   price: string;
@@ -20,7 +20,7 @@ export const servicesApi = baseApi.injectEndpoints({
       }),
       providesTags: [apiTags.SERVICES],
     }),
-    getServiceById: builder.query<Service, number>({
+    getServiceById: builder.query<Service, string>({
       query: (id) => `/services/${id}`,
       providesTags: (_result, _error, id) => [{ type: apiTags.SERVICE, id }],
     }),
@@ -34,7 +34,7 @@ export const servicesApi = baseApi.injectEndpoints({
     }),
     updateService: builder.mutation<
       Service,
-      { id: number; data: Partial<Service> }
+      { id: string; data: Partial<Service> }
     >({
       query: ({ id, data }) => ({
         url: `/services/${id}`,
@@ -46,7 +46,7 @@ export const servicesApi = baseApi.injectEndpoints({
         apiTags.SERVICES,
       ],
     }),
-    deleteService: builder.mutation<void, number>({
+    deleteService: builder.mutation<void, string>({
       query: (id) => ({
         url: `/services/${id}`,
         method: "DELETE",

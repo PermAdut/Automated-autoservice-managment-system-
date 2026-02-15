@@ -1,19 +1,19 @@
 export interface Supplier {
-  id: number;
+  id: string;
   name: string;
   contact: string;
   address: string;
 }
 
 export interface PositionForBuying {
-  id: number;
+  id: string;
   quantity: number;
   deliverDate: string;
   status: string;
 }
 
 export interface SparePart {
-  id: number;
+  id: string;
   name: string;
   price: number;
   quantity: number;
@@ -21,7 +21,7 @@ export interface SparePart {
 }
 
 export interface Category {
-  id: number;
+  id: string;
   name: string;
   description: string;
 }

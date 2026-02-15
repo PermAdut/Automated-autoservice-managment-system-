@@ -1,16 +1,15 @@
 import React from "react";
-import "./StorageItem.css";
 
 interface StorageItemProps {
-  id: number;
+  id: string;
   quantity: number;
   sparePart: {
-    id: number;
+    id: string;
     name: string;
     price: number | string;
     partNumber: string;
     category?: {
-      id: number;
+      id: string;
       name: string;
       description?: string;
     };
@@ -25,12 +24,12 @@ export const StorageItem: React.FC<StorageItemProps> = ({
   location,
 }) => {
   return (
-    <div className="storage-item-card">
-      <div className="storage-item-header">
-        <h2 className="storage-item-title">{sparePart.name}</h2>
+    <div className="bg-white border-2 border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all">
+      <div className="mb-4">
+        <h2 className="text-xl font-semibold text-gray-800 m-0">{sparePart.name}</h2>
       </div>
 
-      <div className="storage-item-details">
+      <div className="[&_p]:text-base [&_p]:text-gray-500 [&_p]:my-1 [&_strong]:text-gray-800">
         <p>
           <strong>Количество:</strong> {quantity} шт.
         </p>

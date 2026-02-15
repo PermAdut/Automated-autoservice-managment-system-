@@ -70,6 +70,21 @@ const baseQueryWithReauth: BaseQueryFn<
   return result;
 };
 
+interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  surName: string;
+  roleId: string;
+  roleName: string;
+}
+
+interface AuthResponse {
+  access_token: string;
+  refresh_token: string;
+  user: AuthUser;
+}
+
 export const baseApi = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
@@ -77,18 +92,7 @@ export const baseApi = createApi({
   endpoints: (builder) => ({
     // Auth endpoints
     login: builder.mutation<
-      {
-        access_token: string;
-        refresh_token: string;
-        user: {
-          id: number;
-          email: string;
-          name: string;
-          surName: string;
-          roleId: number;
-          roleName: string;
-        };
-      },
+      AuthResponse,
       { email: string; password: string }
     >({
       queryFn: async (credentials, _api, _extraOptions) => {
@@ -103,18 +107,7 @@ export const baseApi = createApi({
         );
 
         if (result.data) {
-          const data = result.data as {
-            access_token: string;
-            refresh_token: string;
-            user: {
-              id: number;
-              email: string;
-              name: string;
-              surName: string;
-              roleId: number;
-              roleName: string;
-            };
-          };
+          const data = result.data as AuthResponse;
           (_api.dispatch as AppDispatch)(
             setCredentials({
               user: data.user,
@@ -128,18 +121,7 @@ export const baseApi = createApi({
       },
     }),
     register: builder.mutation<
-      {
-        access_token: string;
-        refresh_token: string;
-        user: {
-          id: number;
-          email: string;
-          name: string;
-          surName: string;
-          roleId: number;
-          roleName: string;
-        };
-      },
+      AuthResponse,
       {
         login: string;
         email: string;
@@ -148,10 +130,8 @@ export const baseApi = createApi({
         surName: string;
         phone?: string;
         passportIdentityNumber: string;
-        passportNationality: string;
         passportBirthDate: string;
         passportGender: "M" | "F";
-        passportExpirationDate: string;
       }
     >({
       queryFn: async (data, _api, _extraOptions) => {
@@ -166,18 +146,7 @@ export const baseApi = createApi({
         );
 
         if (result.data) {
-          const response = result.data as {
-            access_token: string;
-            refresh_token: string;
-            user: {
-              id: number;
-              email: string;
-              name: string;
-              surName: string;
-              roleId: number;
-              roleName: string;
-            };
-          };
+          const response = result.data as AuthResponse;
           (_api.dispatch as AppDispatch)(
             setCredentials({
               user: response.user,

@@ -1,27 +1,28 @@
 import { relations } from 'drizzle-orm';
 import {
-  bigint,
   boolean,
   numeric,
-  serial,
   timestamp,
+  uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
 import { schema } from '../pgSchema';
-import { orders, reviews, subscriptions } from '../schema';
+import { orders, reviews, subscriptions, users } from '../schema';
 
 export const positions = schema.table('Position', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').defaultRandom().primaryKey(),
   name: varchar('name').notNull(),
   description: varchar('description'),
 });
 
 export const employees = schema.table('Employees', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('userId')
+    .references(() => users.id),
   name: varchar('name', { length: 100 }).notNull(),
   surName: varchar('surName', { length: 100 }).notNull(),
   lastName: varchar('lastName', { length: 100 }),
-  positionId: bigint('positionId', { mode: 'number' })
+  positionId: uuid('positionId')
     .notNull()
     .references(() => positions.id),
   hireDate: timestamp('hireDate', { mode: 'date' }).defaultNow().notNull(),
@@ -29,8 +30,8 @@ export const employees = schema.table('Employees', {
 });
 
 export const workSchedules = schema.table('WorkSchedule', {
-  id: serial('id').primaryKey(),
-  employeeId: bigint('employeeId', { mode: 'number' })
+  id: uuid('id').defaultRandom().primaryKey(),
+  employeeId: uuid('employeeId')
     .notNull()
     .references(() => employees.id),
   startTime: timestamp('startTime', { mode: 'date' }).notNull(),
@@ -43,6 +44,10 @@ export const positionsRelations = relations(positions, ({ many }) => ({
 }));
 
 export const employeesRelations = relations(employees, ({ one, many }) => ({
+  user: one(users, {
+    fields: [employees.userId],
+    references: [users.id],
+  }),
   position: one(positions, {
     fields: [employees.positionId],
     references: [positions.id],

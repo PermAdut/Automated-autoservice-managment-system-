@@ -8,13 +8,17 @@ import {
   useGetEmployeeByIdQuery,
   useGetPositionsQuery,
 } from "../../../api/employeesApi";
-import "./EmployeeForm.css";
+
+const inputBase =
+  "w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-base transition-all focus:outline-none focus:border-primary focus:ring-3 focus:ring-primary/10";
+const inputError =
+  "w-full px-4 py-3 border-2 border-red-500 rounded-lg text-base transition-all focus:outline-none focus:border-red-500 focus:ring-3 focus:ring-red-500/10";
 
 const employeeSchema = z.object({
   name: z.string().trim().min(1, "Имя обязательно"),
   surName: z.string().trim().min(1, "Фамилия обязательна"),
   lastName: z.string().trim().optional(),
-  positionId: z.number().min(1, "Выберите должность"),
+  positionId: z.string().min(1, "Выберите должность"),
   hireDate: z.string().optional(),
   salary: z.number().min(0, "Зарплата должна быть положительной"),
 });
@@ -22,7 +26,7 @@ const employeeSchema = z.object({
 type EmployeeFormData = z.infer<typeof employeeSchema>;
 
 interface EmployeeFormProps {
-  employeeId?: number;
+  employeeId?: string;
   onClose: () => void;
   onSuccess?: () => void;
 }
@@ -58,7 +62,7 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({
       name: "",
       surName: "",
       lastName: "",
-      positionId: undefined,
+      positionId: "",
       hireDate: "",
       salary: 0,
     },
@@ -102,127 +106,94 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({
       onClose();
     } catch (error) {
       console.error("Error saving employee:", error);
-      alert("Ошибка при сохранении сотрудника");
     }
   };
 
-  if (isLoadingEmployee) {
-    return <div className="employee-form-loading">Загрузка...</div>;
-  }
-
-  if (isLoadingPositions) {
-    return <div className="employee-form-loading">Загрузка должностей...</div>;
+  if (isLoadingEmployee || isLoadingPositions) {
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-xl p-8 text-center text-gray-500">
+          Загрузка...
+        </div>
+      </div>
+    );
   }
 
   if (positionsError) {
     return (
-      <div className="employee-form-loading">
-        Ошибка загрузки должностей. Попробуйте позже.
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-xl p-8 text-center text-red-500">
+          Ошибка загрузки должностей.
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="employee-form-overlay" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
       <div
-        className="employee-form-content"
+        className="bg-white rounded-xl p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="employee-form-title">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">
           {employeeId ? "Редактировать сотрудника" : "Добавить сотрудника"}
         </h2>
-        <form onSubmit={handleSubmit(onSubmit)} className="employee-form">
-          <div className="form-row">
-            <label>
-              Имя *
-              <input
-                type="text"
-                {...register("name")}
-                className={errors.name ? "error" : ""}
-                placeholder="Иван"
-              />
-              {errors.name && (
-                <span className="error-message">{errors.name.message}</span>
-              )}
-            </label>
-            <label>
-              Фамилия *
-              <input
-                type="text"
-                {...register("surName")}
-                className={errors.surName ? "error" : ""}
-                placeholder="Иванов"
-              />
-              {errors.surName && (
-                <span className="error-message">{errors.surName.message}</span>
-              )}
-            </label>
-            <label>
-              Отчество
-              <input
-                type="text"
-                {...register("lastName")}
-                placeholder="Петрович"
-              />
-            </label>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-gray-600">Имя *</label>
+              <input type="text" {...register("name")} className={errors.name ? inputError : inputBase} placeholder="Иван" />
+              {errors.name && <span className="text-red-500 text-xs">{errors.name.message}</span>}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-gray-600">Фамилия *</label>
+              <input type="text" {...register("surName")} className={errors.surName ? inputError : inputBase} placeholder="Иванов" />
+              {errors.surName && <span className="text-red-500 text-xs">{errors.surName.message}</span>}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-gray-600">Отчество</label>
+              <input type="text" {...register("lastName")} className={inputBase} placeholder="Петрович" />
+            </div>
           </div>
-          <div className="form-group">
-            <label htmlFor="positionId">Должность *</label>
-            <select
-              id="positionId"
-              {...register("positionId", { valueAsNumber: true })}
-              className={errors.positionId ? "error" : ""}
-            >
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-semibold text-gray-600">Должность *</label>
+            <select {...register("positionId")} className={errors.positionId ? inputError : inputBase}>
               <option value="">Выберите должность</option>
               {positions.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
+                <option key={p.id} value={p.id}>{p.name}</option>
               ))}
             </select>
-            {errors.positionId && (
-              <span className="error-message">{errors.positionId.message}</span>
-            )}
+            {errors.positionId && <span className="text-red-500 text-xs">{errors.positionId.message}</span>}
           </div>
 
-          <div className="form-group">
-            <label htmlFor="hireDate">Дата найма</label>
-            <input id="hireDate" type="date" {...register("hireDate")} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-gray-600">Дата найма</label>
+              <input type="date" {...register("hireDate")} className={inputBase} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-gray-600">Зарплата *</label>
+              <input type="number" step="0.01" {...register("salary", { valueAsNumber: true })} className={errors.salary ? inputError : inputBase} />
+              {errors.salary && <span className="text-red-500 text-xs">{errors.salary.message}</span>}
+            </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="salary">Зарплата *</label>
-            <input
-              id="salary"
-              type="number"
-              step="0.01"
-              {...register("salary", { valueAsNumber: true })}
-              className={errors.salary ? "error" : ""}
-            />
-            {errors.salary && (
-              <span className="error-message">{errors.salary.message}</span>
-            )}
-          </div>
-
-          <div className="form-actions">
+          <div className="flex gap-3 justify-end mt-4">
             <button
               type="button"
               onClick={onClose}
-              className="btn-cancel"
+              className="px-6 py-3 bg-gray-500 text-white rounded-lg font-semibold transition-all hover:bg-gray-600 disabled:opacity-60 disabled:cursor-not-allowed"
               disabled={isCreating || isUpdating}
             >
               Отмена
             </button>
             <button
               type="submit"
-              className="btn-submit"
+              className="px-6 py-3 bg-gradient-to-br from-primary to-primary-dark text-white rounded-lg font-semibold transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
               disabled={isCreating || isUpdating}
             >
-              {isCreating || isUpdating
-                ? "Сохранение..."
-                : employeeId
-                ? "Сохранить"
-                : "Создать"}
+              {isCreating || isUpdating ? "Сохранение..." : employeeId ? "Сохранить" : "Создать"}
             </button>
           </div>
         </form>

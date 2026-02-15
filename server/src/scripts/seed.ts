@@ -316,19 +316,30 @@ async function seed() {
     await dbService.db.insert(sparePartStore).values(sparePartStoreData);
 
     // Create cars for users
+    const carModels = [
+      { brand: 'Toyota', model: 'Camry' },
+      { brand: 'BMW', model: 'X5' },
+      { brand: 'Mercedes', model: 'E-Class' },
+      { brand: 'Audi', model: 'A4' },
+      { brand: 'Volkswagen', model: 'Passat' },
+      { brand: 'Kia', model: 'Sportage' },
+    ];
     const carsData: Array<{
-      userId: number;
-      name: string;
+      userId: string;
+      brand: string;
+      model: string;
       information: string;
       year: number;
       vin: string;
       licensePlate: string;
     }> = [];
     for (let i = 0; i < createdUsers.length; i++) {
+      const carModel = carModels[i % carModels.length];
       carsData.push({
         userId: createdUsers[i].id,
-        name: `Car Model ${i + 1}`,
-        information: `Car information ${i + 1}`,
+        brand: carModel.brand,
+        model: carModel.model,
+        information: `${carModel.brand} ${carModel.model}, ${2020 + (i % 5)} год`,
         year: 2020 + (i % 5),
         vin: `VIN${i.toString().padStart(10, '0')}`,
         licensePlate: `ABC-${i.toString().padStart(3, '0')}`,
@@ -341,9 +352,9 @@ async function seed() {
 
     // Create orders (10+)
     const ordersData: Array<{
-      userId: number;
-      carId: number;
-      employeeId: number;
+      userId: string;
+      carId: string;
+      employeeId: string;
       status: string;
       createdAt: Date;
     }> = [];
@@ -367,8 +378,8 @@ async function seed() {
 
     // Create services_orders relationships
     const servicesOrdersData: Array<{
-      orderId: number;
-      servicesId: number;
+      orderId: string;
+      servicesId: string;
       quantity: number;
     }> = [];
     for (let i = 0; i < createdOrders.length; i++) {
@@ -387,8 +398,8 @@ async function seed() {
 
     // Create spare_part_orders relationships
     const sparePartOrdersData: Array<{
-      ordersId: number;
-      sparePartId: number;
+      ordersId: string;
+      sparePartId: string;
       quantity: number;
     }> = [];
     for (let i = 0; i < createdOrders.length; i++) {
@@ -411,7 +422,7 @@ async function seed() {
 
     // Create payments (для оплаченных заказов)
     const paymentsData: Array<{
-      orderId: number;
+      orderId: string;
       amount: string;
       status: boolean;
       paymentMethod: string;
@@ -460,7 +471,7 @@ async function seed() {
 
     // Create work schedules for employees
     const workSchedulesData: Array<{
-      employeeId: number;
+      employeeId: string;
       startTime: Date;
       endTime: Date;
       isAvailable: boolean;
@@ -487,8 +498,8 @@ async function seed() {
 
     // Create subscriptions for customers
     const subscriptionsData: Array<{
-      userId: number;
-      employeeId?: number;
+      userId: string;
+      employeeId?: string;
       subscriptionName: string;
       subscriptionDescription: string;
       dateStart: Date;
@@ -521,8 +532,8 @@ async function seed() {
 
     // Create reviews for customers
     const reviewsData: Array<{
-      userId: number;
-      employeeId?: number;
+      userId: string;
+      employeeId?: string;
       description: string;
       rate: number;
       createdAt: Date;
@@ -554,7 +565,7 @@ async function seed() {
 
     // Create positions for buying (для отчёта по складам)
     const positionsForBuyingData: Array<{
-      supplierId: number;
+      supplierId: string;
       quantity: number;
       deliveryDate: Date;
       status: string;
@@ -577,7 +588,7 @@ async function seed() {
 
     // Create invoices (для оплаченных позиций)
     const invoicesData: Array<{
-      positionForBuyingId: number;
+      positionForBuyingId: string;
       amount: string;
       status: string;
       invoiceDate: Date;

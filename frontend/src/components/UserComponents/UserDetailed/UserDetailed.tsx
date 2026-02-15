@@ -13,7 +13,7 @@ export const DetailedUserComponent: React.FC = () => {
     data: detailedUser,
     isLoading: loading,
     error,
-  } = useGetUserByIdQuery(Number(userId || 0), { skip: !userId });
+  } = useGetUserByIdQuery(userId || "", { skip: !userId });
 
   const [subscriptionsPage, setSubscriptionsPage] = useState(1);
   const [reviewsPage, setReviewsPage] = useState(1);
@@ -92,22 +92,12 @@ export const DetailedUserComponent: React.FC = () => {
               <strong>Номер:</strong> {detailedUser.passport.identityNumber}
             </p>
             <p>
-              <strong>Национальность:</strong>{" "}
-              {detailedUser.passport.nationality}
-            </p>
-            <p>
               <strong>Дата рождения:</strong>{" "}
               {new Date(detailedUser.passport.birthDate).toLocaleDateString()}
             </p>
             <p>
               <strong>Пол:</strong>{" "}
               {detailedUser.passport.gender === "M" ? "Мужской" : "Женский"}
-            </p>
-            <p>
-              <strong>Срок действия:</strong>{" "}
-              {new Date(
-                detailedUser.passport.expiriationDate
-              ).toLocaleDateString()}
             </p>
           </div>
         )}
@@ -237,7 +227,7 @@ export const DetailedUserComponent: React.FC = () => {
             {paginate(detailedUser.cars, carsPage).map((car, index) => (
               <div key={index} className="detailed-user-item">
                 <p>
-                  <strong>Название:</strong> {car.name}
+                  <strong>Марка:</strong> {car.brand} {car.model}
                 </p>
                 <p>
                   <strong>VIN:</strong> {car.vin}

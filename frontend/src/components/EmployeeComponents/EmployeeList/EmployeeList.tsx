@@ -8,7 +8,6 @@ import { EmployeeForm } from "../EmployeeForm/EmployeeForm";
 import { useDebounce } from "../../../hooks/useDebounce";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store";
-import "./EmployeeList.css";
 
 const EMPLOYEE_PER_PAGE = 6;
 
@@ -20,7 +19,7 @@ const EmployeeList: React.FC = () => {
   );
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<number | undefined>();
+  const [editingId, setEditingId] = useState<string | undefined>();
   const debouncedSearch = useDebounce(search, 300);
   const { user } = useSelector((state: RootState) => state.auth);
   const isAdmin = user?.roleName === 'admin' || user?.roleName === 'manager';
@@ -39,10 +38,10 @@ const EmployeeList: React.FC = () => {
   const [deleteEmployee] = useDeleteEmployeeMutation();
 
   if (isLoading)
-    return <div className="employee-list-loading">Загрузка...</div>;
+    return <div className="mt-10 text-center text-lg font-semibold text-gray-700 animate-pulse">Загрузка...</div>;
   if (error)
     return (
-      <div className="employee-list-error">
+      <div className="mt-10 text-center text-lg font-semibold text-red-500">
         Ошибка:{" "}
         {error && "status" in error
           ? String(error.status)
@@ -57,7 +56,7 @@ const EmployeeList: React.FC = () => {
     currentPage * EMPLOYEE_PER_PAGE
   );
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm("Вы уверены, что хотите удалить этого сотрудника?")) {
       try {
         await deleteEmployee(id).unwrap();
@@ -69,7 +68,7 @@ const EmployeeList: React.FC = () => {
     }
   };
 
-  const handleEdit = (id: number) => {
+  const handleEdit = (id: string) => {
     setEditingId(id);
     setShowForm(true);
   };
@@ -89,18 +88,18 @@ const EmployeeList: React.FC = () => {
   };
 
   return (
-    <div className="employee-list-container">
-      <div className="employee-list-header">
-        <h1 className="employee-list-title">Список сотрудников</h1>
+    <div className="p-6 pb-20 max-w-7xl mx-auto relative">
+      <div className="flex items-center justify-between gap-3 mb-6">
+        <h1 className="text-3xl font-bold text-gray-800 text-center">Список сотрудников</h1>
         {isAdmin && (
-          <button className="btn-add" onClick={handleAdd}>
+          <button className="bg-primary text-white border-none px-4 py-2.5 rounded-lg cursor-pointer font-semibold transition-all hover:bg-primary-dark" onClick={handleAdd}>
             + Добавить сотрудника
           </button>
         )}
       </div>
-      <div className="employee-list-filters filter-bar">
+      <div className="flex flex-wrap gap-3 mb-4 items-center">
         <input
-          className="filter-input"
+          className="px-3 py-2.5 border-2 border-gray-200 rounded-lg min-w-[200px] text-sm transition-all focus:border-primary focus:ring-3 focus:ring-primary/15 focus:outline-none"
           type="text"
           placeholder="Поиск по ID/должности/зарплате"
           value={search}
@@ -110,7 +109,7 @@ const EmployeeList: React.FC = () => {
           }}
         />
         <select
-          className="filter-select"
+          className="px-3 py-2.5 border-2 border-gray-200 rounded-lg min-w-[140px] text-sm transition-all focus:border-primary focus:ring-3 focus:ring-primary/15 focus:outline-none"
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
         >
@@ -120,7 +119,7 @@ const EmployeeList: React.FC = () => {
           <option value="id">По ID</option>
         </select>
         <select
-          className="filter-select"
+          className="px-3 py-2.5 border-2 border-gray-200 rounded-lg min-w-[140px] text-sm transition-all focus:border-primary focus:ring-3 focus:ring-primary/15 focus:outline-none"
           value={sortOrder}
           onChange={(e) => setSortOrder(e.target.value as typeof sortOrder)}
         >
@@ -128,9 +127,9 @@ const EmployeeList: React.FC = () => {
           <option value="desc">Убыв.</option>
         </select>
       </div>
-      <div className="employee-list-grid">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {paginatedEmployees.map((employee) => (
-          <div key={employee.id} className="employee-item-wrapper">
+          <div key={employee.id} className="border border-gray-200 rounded-xl p-3 shadow-sm flex flex-col gap-2.5">
             <EmployeeItem
               id={employee.id}
               name={(employee as any).name}
@@ -144,15 +143,15 @@ const EmployeeList: React.FC = () => {
               showAdminInfo={isAdmin}
             />
             {isAdmin && (
-              <div className="employee-item-actions">
+              <div className="flex gap-2.5 justify-end">
                 <button
-                  className="btn-edit"
+                  className="px-3 py-2 border-none rounded-lg cursor-pointer font-semibold bg-gray-100 text-gray-900 hover:bg-gray-200"
                   onClick={() => handleEdit(employee.id)}
                 >
                   Редактировать
                 </button>
                 <button
-                  className="btn-delete"
+                  className="px-3 py-2 border-none rounded-lg cursor-pointer font-semibold bg-red-500 text-white hover:bg-red-600"
                   onClick={() => handleDelete(employee.id)}
                 >
                   Удалить
@@ -171,19 +170,19 @@ const EmployeeList: React.FC = () => {
       )}
 
       {totalPages > 1 && (
-        <div className="employee-list-pagination">
+        <div className="flex justify-center items-center gap-3 mt-6 sticky bottom-5 bg-white p-2.5 rounded-md shadow-sm">
           <button
-            className="employee-list-button"
+            className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-md bg-white text-primary cursor-pointer transition-all hover:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
           >
             Назад
           </button>
-          <span className="employee-list-page-info">
+          <span className="text-sm font-medium text-gray-700">
             {currentPage} / {totalPages}
           </span>
           <button
-            className="employee-list-button"
+            className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-md bg-white text-primary cursor-pointer transition-all hover:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
             onClick={() =>
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }

@@ -6,10 +6,9 @@ import { useLazyGetUserByIdQuery } from "../../../api/usersApi";
 import { UserDetailed } from "../../../api/usersApi";
 import updateIcon from "../../../assets/icons/updateIcon.png";
 import deleteIcon from "../../../assets/icons/deleteIcon.png";
-import "./UserItem.css";
 
 interface UserItemProps {
-  id: number;
+  id: string;
   name: string;
   secondName: string;
   onDelete: () => void;
@@ -42,7 +41,7 @@ export const UserItem: FC<UserItemProps> = ({
   };
 
   const handleEditSave = (
-    userData: Partial<UserDetailed> & { roleId?: number }
+    userData: Partial<UserDetailed> & { roleId?: string }
   ) => {
     onUpdate(userData);
     setIsEditModalOpen(false);
@@ -58,26 +57,29 @@ export const UserItem: FC<UserItemProps> = ({
 
   return (
     <>
-      <div className="useritem-card">
-        <div className="useritem-header">
-          <h2 className="useritem-name">
-            <Link to={`/user/${id}`} className="useritem-link">
+      <div className="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all flex justify-between items-center">
+        <div className="mb-4 flex-1">
+          <h2 className="text-xl font-semibold text-gray-800 m-0">
+            <Link
+              to={`/user/${id}`}
+              className="text-gray-800 no-underline transition-colors hover:text-blue-600"
+            >
               {name} {secondName}
             </Link>
           </h2>
-          <p className="useritem-info">Информация пользователя</p>
+          <p className="text-sm text-gray-500 mt-1">Информация пользователя</p>
         </div>
-        <div className="useritem-actions">
+        <div className="flex gap-2.5 ml-4">
           <img
             src={updateIcon}
             alt="Update"
-            className="useritem-icon"
+            className="w-6 h-6 cursor-pointer transition-opacity hover:opacity-70"
             onClick={handleUpdateClick}
           />
           <img
             src={deleteIcon}
             alt="Delete"
-            className="useritem-icon"
+            className="w-6 h-6 cursor-pointer transition-opacity hover:opacity-70"
             onClick={handleDeleteClick}
           />
         </div>

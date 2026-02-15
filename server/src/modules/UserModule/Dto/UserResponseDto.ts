@@ -7,9 +7,9 @@ export class UserResponseDto {
   @Expose()
   @ApiProperty({
     description: 'User id',
-    type: Number,
+    type: String,
   })
-  id: number;
+  id: string;
 
   @Expose()
   @ApiProperty({

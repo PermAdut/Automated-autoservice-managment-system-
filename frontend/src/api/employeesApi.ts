@@ -2,49 +2,49 @@ import { baseApi } from "./baseApi";
 import { apiTags } from "./tags";
 
 export interface Employee {
-  id: number;
+  id: string;
   name: string;
   surName: string;
   lastName?: string | null;
-  positionId: number;
+  positionId: string;
   hireDate: string;
   salary: string;
   position?: {
-    id: number;
+    id: string;
     name: string;
     description: string;
   };
   schedule?: {
-    id: number;
+    id: string;
     startTime: string;
     endTime: string;
     isAvailable: boolean;
   };
   orders?: {
-    id: number;
+    id: string;
     status: string;
   };
 }
 
 export interface PositionOption {
-  id: number;
+  id: string;
   name: string;
   description?: string;
 }
 
 export interface Subscription {
-  id: number;
-  userId: number;
-  employeeId?: number;
+  id: string;
+  userId: string;
+  employeeId?: string;
   subscriptionName: string;
   dateStart: string;
   dateEnd: string;
 }
 
 export interface Review {
-  id: number;
-  userId: number;
-  employeeId?: number;
+  id: string;
+  userId: string;
+  employeeId?: string;
   description?: string;
   rate: number;
   createdAt: string;
@@ -53,7 +53,7 @@ export interface Review {
 }
 
 export interface CreateReviewDto {
-  employeeId: number;
+  employeeId: string;
   description?: string;
   rate: number;
 }
@@ -70,7 +70,7 @@ export const employeesApi = baseApi.injectEndpoints({
       }),
       providesTags: [apiTags.EMPLOYEES],
     }),
-    getEmployeeById: builder.query<Employee, number>({
+    getEmployeeById: builder.query<Employee, string>({
       query: (id) => `/employee/${id}`,
       providesTags: (_result, _error, id) => [{ type: apiTags.EMPLOYEE, id }],
     }),
@@ -88,7 +88,7 @@ export const employeesApi = baseApi.injectEndpoints({
     }),
     updateEmployee: builder.mutation<
       Employee,
-      { id: number; data: Partial<Employee> }
+      { id: string; data: Partial<Employee> }
     >({
       query: ({ id, data }) => ({
         url: `/employee/${id}`,
@@ -101,14 +101,14 @@ export const employeesApi = baseApi.injectEndpoints({
         apiTags.POSITIONS,
       ],
     }),
-    deleteEmployee: builder.mutation<void, number>({
+    deleteEmployee: builder.mutation<void, string>({
       query: (id) => ({
         url: `/employee/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: [apiTags.EMPLOYEES, apiTags.POSITIONS],
     }),
-    subscribeToEmployee: builder.mutation<Subscription, number>({
+    subscribeToEmployee: builder.mutation<Subscription, string>({
       query: (employeeId) => ({
         url: `/employee/${employeeId}/subscribe`,
         method: "POST",
@@ -117,7 +117,7 @@ export const employeesApi = baseApi.injectEndpoints({
         { type: apiTags.EMPLOYEE, id: `subscription-${employeeId}` },
       ],
     }),
-    unsubscribeFromEmployee: builder.mutation<{ message: string }, number>({
+    unsubscribeFromEmployee: builder.mutation<{ message: string }, string>({
       query: (employeeId) => ({
         url: `/employee/${employeeId}/subscribe`,
         method: "DELETE",
@@ -128,7 +128,7 @@ export const employeesApi = baseApi.injectEndpoints({
     }),
     getUserSubscription: builder.query<
       { subscribed: boolean; subscription?: Subscription },
-      number
+      string
     >({
       query: (employeeId) => `/employee/${employeeId}/subscription`,
       providesTags: (_result, _error, employeeId) => [
@@ -145,7 +145,7 @@ export const employeesApi = baseApi.injectEndpoints({
         { type: apiTags.EMPLOYEE, id: employeeId },
       ],
     }),
-    getEmployeeReviews: builder.query<Review[], number>({
+    getEmployeeReviews: builder.query<Review[], string>({
       query: (employeeId) => `/employee/${employeeId}/reviews`,
       providesTags: (_result, _error, employeeId) => [
         { type: apiTags.EMPLOYEE, id: employeeId },

@@ -1,23 +1,22 @@
 import React from "react";
 import { getOrderStatusLabel } from "../../../utils/orderStatus";
-import "./OrderItem.css";
 
 interface OrderItemProps {
-  id: number;
-  userId: number;
-  carId: number | null;
-  employeeId: number | null;
+  id: string;
+  userId: string;
+  carId: string | null;
+  employeeId: string | null;
   status: string;
   createdAt: string;
   updatedAt: string | null;
   completedAt: string | null;
-  services?: { id: number; name: string; description: string; price: number }[];
+  services?: { id: string; name: string; description: string; price: number }[];
   sparePart?: {
-    id: number;
+    id: string;
     name: string;
     partNumber: string;
     price: number;
-    category?: { id: number; name: string; description?: string };
+    category?: { id: string; name: string; description?: string };
   }[];
 }
 
@@ -39,13 +38,17 @@ export const OrderItem: React.FC<OrderItemProps> = ({
     : "Сотрудник не назначен";
 
   return (
-    <div className="order-item-card">
-      <div className="order-item-header">
-        <h2 className="order-item-title">Заказ #{id}</h2>
-        <p className="order-item-info">Статус: {getOrderStatusLabel(status)}</p>
+    <div className="bg-white border-2 border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all">
+      <div className="mb-4">
+        <h2 className="text-xl font-semibold text-gray-800 m-0">
+          Заказ #{id.slice(0, 8)}
+        </h2>
+        <p className="text-sm text-gray-500 mt-1">
+          Статус: {getOrderStatusLabel(status)}
+        </p>
       </div>
 
-      <div className="order-item-details">
+      <div className="[&_p]:text-base [&_p]:text-gray-500 [&_p]:my-1 [&_strong]:text-gray-800">
         <p>
           <strong>Клиент:</strong> Клиент назначен
         </p>
@@ -69,10 +72,13 @@ export const OrderItem: React.FC<OrderItemProps> = ({
       </div>
 
       {services && services.length > 0 && (
-        <div className="order-item-section">
-          <h3>Услуги</h3>
+        <div className="mt-4">
+          <h3 className="text-lg font-medium text-gray-700 mb-2">Услуги</h3>
           {services.map((service) => (
-            <div key={service.id} className="order-item-subitem">
+            <div
+              key={service.id}
+              className="p-2.5 border border-gray-200 rounded-lg mb-2.5 bg-gray-50 [&_p]:text-sm [&_p]:text-gray-500 [&_p]:my-1 [&_strong]:text-gray-800"
+            >
               <p>
                 <strong>Название:</strong> {service.name}
               </p>
@@ -88,10 +94,13 @@ export const OrderItem: React.FC<OrderItemProps> = ({
       )}
 
       {sparePart && sparePart.length > 0 && (
-        <div className="order-item-section">
-          <h3>Запчасти</h3>
+        <div className="mt-4">
+          <h3 className="text-lg font-medium text-gray-700 mb-2">Запчасти</h3>
           {sparePart.map((part) => (
-            <div key={part.id} className="order-item-subitem">
+            <div
+              key={part.id}
+              className="p-2.5 border border-gray-200 rounded-lg mb-2.5 bg-gray-50 [&_p]:text-sm [&_p]:text-gray-500 [&_p]:my-1 [&_strong]:text-gray-800"
+            >
               <p>
                 <strong>Название:</strong> {part.name}
               </p>

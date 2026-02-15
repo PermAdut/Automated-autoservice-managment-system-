@@ -4,10 +4,9 @@ import {
   useUnsubscribeFromEmployeeMutation,
   useGetUserSubscriptionQuery,
 } from "../../../api/employeesApi";
-import "./SubscribeModal.css";
 
 interface SubscribeModalProps {
-  employeeId: number;
+  employeeId: string;
   employeeName: string;
   isOpen: boolean;
   onClose: () => void;
@@ -52,23 +51,34 @@ export const SubscribeModal: React.FC<SubscribeModalProps> = ({
   const isLoading = isLoadingSubscription || isSubscribing || isUnsubscribing;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>Подписка на рабочего</h2>
-          <button className="modal-close" onClick={onClose}>
+    <div
+      className="fixed inset-0 bg-black/50 flex justify-center items-center z-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-xl max-w-[500px] w-[90%] max-h-[90vh] overflow-y-auto shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center p-5 border-b border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-800">
+            Подписка на рабочего
+          </h2>
+          <button
+            className="bg-transparent border-none text-3xl cursor-pointer text-gray-500 w-[30px] h-[30px] flex items-center justify-center hover:text-black"
+            onClick={onClose}
+          >
             ×
           </button>
         </div>
-        <div className="modal-body">
-          <p>
+        <div className="p-5">
+          <p className="mb-4 text-gray-600 leading-relaxed">
             {isSubscribed
               ? `Вы подписаны на уведомления о доступности рабочего ${employeeName}.`
               : `Подпишитесь на уведомления о доступности рабочего ${employeeName}. Вы будете получать уведомления, когда рабочий станет доступен.`}
           </p>
           {subscriptionData?.subscription && (
-            <div className="subscription-info">
-              <p>
+            <div className="bg-gray-100 p-4 rounded mt-4">
+              <p className="m-0 text-gray-800">
                 <strong>Подписка активна до:</strong>{" "}
                 {new Date(
                   subscriptionData.subscription.dateEnd
@@ -77,9 +87,13 @@ export const SubscribeModal: React.FC<SubscribeModalProps> = ({
             </div>
           )}
         </div>
-        <div className="modal-footer">
+        <div className="flex justify-end gap-2.5 p-5 border-t border-gray-200">
           <button
-            className={`btn ${isSubscribed ? "btn-danger" : "btn-primary"}`}
+            className={`px-5 py-2.5 border-none rounded-lg cursor-pointer text-base font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
+              isSubscribed
+                ? "bg-error text-white hover:bg-red-700"
+                : "bg-gradient-to-br from-primary to-primary-dark text-white hover:opacity-90"
+            }`}
             onClick={isSubscribed ? handleUnsubscribe : handleSubscribe}
             disabled={isLoading}
           >
@@ -89,7 +103,10 @@ export const SubscribeModal: React.FC<SubscribeModalProps> = ({
               ? "Отписаться"
               : "Подписаться"}
           </button>
-          <button className="btn btn-secondary" onClick={onClose}>
+          <button
+            className="px-5 py-2.5 border-none rounded-lg cursor-pointer text-base font-semibold transition-colors bg-gray-400 text-white hover:bg-gray-500"
+            onClick={onClose}
+          >
             Отмена
           </button>
         </div>
@@ -97,4 +114,3 @@ export const SubscribeModal: React.FC<SubscribeModalProps> = ({
     </div>
   );
 };
-

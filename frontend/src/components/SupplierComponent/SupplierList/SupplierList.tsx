@@ -6,7 +6,6 @@ import {
 import { SupplierItem } from "../SupplierItem/SupplierItem";
 import { useDebounce } from "../../../hooks/useDebounce";
 import SupplierForm from "../SupplierForm/SupplierForm";
-import "./SupplierList.css";
 
 const SUPPLIERS_PER_PAGE = 6;
 
@@ -28,17 +27,17 @@ const SupplierList: React.FC = () => {
 
   const [deleteSupplier] = useDeleteSupplierMutation();
   const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const editingSupplier = useMemo(
     () => suppliers.find((s) => s.id === editingId),
     [editingId, suppliers]
   );
 
-  if (loading) return <div className="supplier-list-loading">Загрузка...</div>;
+  if (loading) return <div className="mt-10 text-center text-lg font-semibold text-gray-700 animate-pulse">Загрузка...</div>;
   if (error)
     return (
-      <div className="supplier-list-error">
+      <div className="mt-10 text-center text-lg font-semibold text-red-500">
         Ошибка:{" "}
         {error && "status" in error
           ? String(error.status)
@@ -53,11 +52,11 @@ const SupplierList: React.FC = () => {
   );
 
   return (
-    <div className="supplier-list-container">
-      <div className="supplier-list-header">
-        <h1 className="supplier-list-title">Список поставщиков</h1>
+    <div className="p-6 pb-20 max-w-7xl mx-auto relative">
+      <div className="flex items-center justify-between gap-3 mb-6">
+        <h1 className="text-3xl font-bold text-gray-800 text-center">Список поставщиков</h1>
         <button
-          className="btn-add"
+          className="bg-primary text-white border-none px-4 py-2.5 rounded-lg cursor-pointer font-semibold transition-all hover:bg-primary-dark"
           onClick={() => {
             setEditingId(null);
             setShowForm(true);
@@ -66,9 +65,9 @@ const SupplierList: React.FC = () => {
           + Добавить поставщика
         </button>
       </div>
-      <div className="supplier-list-filters filter-bar">
+      <div className="flex flex-wrap gap-3 mb-4 items-center">
         <input
-          className="filter-input"
+          className="px-3 py-2.5 border-2 border-gray-200 rounded-lg min-w-[200px] text-sm transition-all focus:border-primary focus:ring-3 focus:ring-primary/15 focus:outline-none"
           type="text"
           placeholder="Поиск по названию/ID"
           value={search}
@@ -78,7 +77,7 @@ const SupplierList: React.FC = () => {
           }}
         />
         <select
-          className="filter-select"
+          className="px-3 py-2.5 border-2 border-gray-200 rounded-lg min-w-[140px] text-sm transition-all focus:border-primary focus:ring-3 focus:ring-primary/15 focus:outline-none"
           value={sortOrder}
           onChange={(e) => setSortOrder(e.target.value as typeof sortOrder)}
         >
@@ -86,9 +85,9 @@ const SupplierList: React.FC = () => {
           <option value="desc">Убыв.</option>
         </select>
       </div>
-      <div className="supplier-list-grid">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {paginatedSuppliers.map((supplier) => (
-          <div className="supplier-card" key={supplier.id}>
+          <div className="border border-gray-200 rounded-xl p-3 shadow-sm flex flex-col gap-2.5" key={supplier.id}>
             <SupplierItem
               id={supplier.id}
               name={supplier.name}
@@ -96,9 +95,9 @@ const SupplierList: React.FC = () => {
               contact={supplier.contact}
               positionsForBuying={supplier.positionsForBuying}
             />
-            <div className="supplier-card-actions">
+            <div className="flex gap-2.5 justify-end">
               <button
-                className="btn-edit"
+                className="px-3 py-2 border-none rounded-lg cursor-pointer font-semibold bg-gray-100 text-gray-900 hover:bg-gray-200"
                 onClick={() => {
                   setEditingId(supplier.id);
                   setShowForm(true);
@@ -107,7 +106,7 @@ const SupplierList: React.FC = () => {
                 Редактировать
               </button>
               <button
-                className="btn-delete"
+                className="px-3 py-2 border-none rounded-lg cursor-pointer font-semibold bg-red-500 text-white hover:bg-red-600"
                 onClick={async () => {
                   if (!window.confirm("Удалить поставщика?")) return;
                   try {
@@ -126,19 +125,19 @@ const SupplierList: React.FC = () => {
       </div>
 
       {totalPages > 1 && (
-        <div className="supplier-list-pagination">
+        <div className="flex justify-center items-center gap-3 mt-6 sticky bottom-5 bg-white p-2.5 rounded-md shadow-sm">
           <button
-            className="supplier-list-button"
+            className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-md bg-white text-primary cursor-pointer transition-all hover:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
           >
             Назад
           </button>
-          <span className="supplier-list-page-info">
+          <span className="text-sm font-medium text-gray-700">
             {currentPage} / {totalPages}
           </span>
           <button
-            className="supplier-list-button"
+            className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-md bg-white text-primary cursor-pointer transition-all hover:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
             onClick={() =>
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }

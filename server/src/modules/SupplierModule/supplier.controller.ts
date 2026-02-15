@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
   HttpCode,
-  ParseIntPipe,
+  ParseUUIDPipe,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -45,7 +45,7 @@ export class SupplierController {
 
   @Get(':id')
   @Public()
-  async getSupplierById(@Param('id', ParseIntPipe) id: number) {
+  async getSupplierById(@Param('id', ParseUUIDPipe) id: string) {
     return await this.supplierService.findById(id);
   }
 
@@ -60,7 +60,7 @@ export class SupplierController {
   @HttpCode(200)
   @Roles('admin', 'manager')
   async updateSupplier(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() supplierData: UpdateSupplierDto
   ) {
     return await this.supplierService.update(id, supplierData);
@@ -69,7 +69,7 @@ export class SupplierController {
   @Delete(':id')
   @HttpCode(204)
   @Roles('admin')
-  async deleteSupplier(@Param('id', ParseIntPipe) id: number) {
+  async deleteSupplier(@Param('id', ParseUUIDPipe) id: string) {
     return await this.supplierService.delete(id);
   }
 }

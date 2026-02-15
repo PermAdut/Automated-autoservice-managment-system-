@@ -9,7 +9,7 @@ import {
   Put,
   Query,
   UseGuards,
-  ParseIntPipe,
+  ParseUUIDPipe,
   UsePipes,
   ValidationPipe,
   BadRequestException,
@@ -57,7 +57,7 @@ export class UserController {
   @HttpCode(200)
   @Get(':id')
   @Public()
-  async getUser(@Param('id', ParseIntPipe) id: number) {
+  async getUser(@Param('id', ParseUUIDPipe) id: string) {
     return await this.userService.findById(id);
   }
 
@@ -71,7 +71,7 @@ export class UserController {
   @HttpCode(200)
   @Get('/rawData/users/:id')
   @Roles('admin', 'manager')
-  async getRawUser(@Param('id', ParseIntPipe) id: number) {
+  async getRawUser(@Param('id', ParseUUIDPipe) id: string) {
     return await this.userService.findByIdRaw(id);
   }
 
@@ -85,7 +85,7 @@ export class UserController {
   @HttpCode(204)
   @Delete(':id')
   @Roles('admin')
-  async deleteUser(@Param('id', ParseIntPipe) id: number) {
+  async deleteUser(@Param('id', ParseUUIDPipe) id: string) {
     return await this.userService.deleteUser(id);
   }
 
@@ -93,7 +93,7 @@ export class UserController {
   @Put(':id')
   @Roles('admin', 'manager')
   async updateUser(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() user: UpdateUserDto
   ) {
     return await this.userService.updateUser(id, user);

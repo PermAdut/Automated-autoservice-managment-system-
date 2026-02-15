@@ -6,15 +6,16 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
   Min,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class OrderServiceItemDto {
-  @IsNumber()
+  @IsUUID()
   @IsNotEmpty()
-  serviceId: number;
+  serviceId: string;
 
   @IsNumber()
   @Min(1)
@@ -22,9 +23,9 @@ export class OrderServiceItemDto {
 }
 
 export class OrderSparePartItemDto {
-  @IsNumber()
+  @IsUUID()
   @IsNotEmpty()
-  sparePartId: number;
+  sparePartId: string;
 
   @IsNumber()
   @Min(1)
@@ -32,17 +33,17 @@ export class OrderSparePartItemDto {
 }
 
 export class CreateOrderDto {
-  @IsNumber()
+  @IsUUID()
   @IsOptional()
-  userId?: number;
+  userId?: string;
 
-  @IsNumber()
+  @IsUUID()
   @IsNotEmpty()
-  carId: number;
+  carId: string;
 
-  @IsNumber()
-  @IsNotEmpty()
-  employeeId: number;
+  @IsUUID()
+  @IsOptional()
+  employeeId?: string;
 
   @IsDateString()
   @IsOptional()

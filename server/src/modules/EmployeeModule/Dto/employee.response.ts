@@ -1,16 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude, Expose } from 'class-transformer';
-import { IsBoolean, IsInt, IsISO8601, IsString } from 'class-validator';
+import { IsBoolean, IsISO8601, IsString, IsUUID } from 'class-validator';
 
 @Exclude()
 export class EmployeeResponse {
   @ApiProperty({
     description: 'The id of the employee',
-    example: 1,
+    example: '550e8400-e29b-41d4-a716-446655440000',
   })
-  @IsInt()
+  @IsUUID()
   @Expose()
-  id: number;
+  id: string;
 
   @ApiProperty({ description: 'First name', example: 'Иван' })
   @IsString()
@@ -33,10 +33,6 @@ export class EmployeeResponse {
 
   @ApiProperty({
     description: 'The position of the employee',
-    example: {
-      id: 1,
-      name: 'Manager',
-    },
     nullable: true,
   })
   @Expose()
@@ -54,19 +50,11 @@ export class EmployeeResponse {
     description: 'The salary of the employee',
     example: 100000,
   })
-  @IsInt()
   @Expose()
   salary: number;
 
   @ApiProperty({
     description: 'The schedule of the employee',
-    example: {
-      id: 1,
-      employeeId: 1,
-      startTime: '2024-01-01T09:00:00Z',
-      endTime: '2024-01-01T17:00:00Z',
-      isAvailable: true,
-    },
     nullable: true,
   })
   @Expose()
@@ -74,10 +62,6 @@ export class EmployeeResponse {
 
   @ApiProperty({
     description: 'The orders of the employee',
-    example: {
-      id: 1,
-      status: 'Pending',
-    },
     nullable: true,
   })
   @Expose()
@@ -88,11 +72,10 @@ export class EmployeeResponse {
 export class PositionResponse {
   @ApiProperty({
     description: 'The id of the position',
-    example: 1,
   })
-  @IsInt()
+  @IsUUID()
   @Expose()
-  id: number;
+  id: string;
 
   @ApiProperty({
     description: 'The name of the position',
@@ -116,19 +99,17 @@ export class PositionResponse {
 export class ScheduleResponse {
   @ApiProperty({
     description: 'The id of the schedule',
-    example: 1,
   })
-  @IsInt()
+  @IsUUID()
   @Expose()
-  id: number;
+  id: string;
 
   @ApiProperty({
     description: 'The employee id',
-    example: 1,
   })
-  @IsInt()
+  @IsUUID()
   @Expose()
-  employeeId: number;
+  employeeId: string;
 
   @ApiProperty({
     description: 'The start time of the schedule',
@@ -159,11 +140,10 @@ export class ScheduleResponse {
 export class OrderResponse {
   @ApiProperty({
     description: 'The id of the order',
-    example: 1,
   })
-  @IsInt()
+  @IsUUID()
   @Expose()
-  id: number;
+  id: string;
 
   @ApiProperty({
     description: 'The status of the order',

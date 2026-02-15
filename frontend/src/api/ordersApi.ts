@@ -2,27 +2,27 @@ import { baseApi } from "./baseApi";
 import { apiTags } from "./tags";
 
 export interface Order {
-  id: number;
-  userId: number;
-  carId: number;
-  employeeId: number;
+  id: string;
+  userId: string;
+  carId: string;
+  employeeId: string | null;
   status: string;
   createdAt: string;
   updatedAt: string;
   completedAt: string;
   services?: {
-    id: number;
+    id: string;
     name: string;
     description: string;
     price: string;
   }[];
   sparePart?: {
-    id: number;
+    id: string;
     name: string;
     partNumber: string;
     price: string;
     category: {
-      id: number;
+      id: string;
       name: string;
       description: string;
     };
@@ -44,7 +44,7 @@ export const ordersApi = baseApi.injectEndpoints({
       }),
       providesTags: [apiTags.ORDERS],
     }),
-    getOrderById: builder.query<Order, number>({
+    getOrderById: builder.query<Order, string>({
       query: (id) => `/orders/${id}`,
       providesTags: (_result, _error, id) => [{ type: apiTags.ORDER, id }],
     }),
@@ -56,7 +56,7 @@ export const ordersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [apiTags.ORDERS],
     }),
-    updateOrder: builder.mutation<Order, { id: number; data: Partial<Order> }>({
+    updateOrder: builder.mutation<Order, { id: string; data: Partial<Order> }>({
       query: ({ id, data }) => ({
         url: `/orders/${id}`,
         method: "PUT",
@@ -67,7 +67,7 @@ export const ordersApi = baseApi.injectEndpoints({
         apiTags.ORDERS,
       ],
     }),
-    deleteOrder: builder.mutation<void, number>({
+    deleteOrder: builder.mutation<void, string>({
       query: (id) => ({
         url: `/orders/${id}`,
         method: "DELETE",

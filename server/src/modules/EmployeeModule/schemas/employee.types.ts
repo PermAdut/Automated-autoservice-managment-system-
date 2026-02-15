@@ -1,24 +1,24 @@
 export interface Employee {
-  id: number;
-  positionId: number;
+  id: string;
+  positionId: string;
   hireDate: string;
   salary: number;
 }
 
 export interface Position {
-  id: number;
+  id: string;
   name: string;
   description: string;
 }
 
 export interface Schedule {
-  id: number;
+  id: string;
   startTime: string;
   endTime: string;
   isAvailable: boolean;
 }
 
 export interface Order {
-  id: number;
+  id: string;
   status: string;
 }

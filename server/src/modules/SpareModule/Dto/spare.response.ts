@@ -2,7 +2,7 @@ import { Expose } from 'class-transformer';
 
 export class SparePartStockResponseDto {
   @Expose({ name: 'store_id' })
-  id: number;
+  id: string;
 
   @Expose()
   location: string;
@@ -12,12 +12,12 @@ export class SparePartStockResponseDto {
 
   @Expose()
   sparePart: {
-    id: number;
+    id: string;
     name: string;
     partNumber: string;
     price: number;
     category: {
-      id: number;
+      id: string;
       name: string;
       description: string;
     };

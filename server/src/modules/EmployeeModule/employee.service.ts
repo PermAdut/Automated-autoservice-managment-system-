@@ -147,7 +147,7 @@ export class EmployeeService {
     }
   }
 
-  async getEmployeeById(id: number): Promise<EmployeeResponse> {
+  async getEmployeeById(id: string): Promise<EmployeeResponse> {
     const [employee] = await this.databaseService.db
       .select()
       .from(employees)
@@ -231,7 +231,7 @@ export class EmployeeService {
   }
 
   async updateEmployee(
-    id: number,
+    id: string,
     employeeData: UpdateEmployeeDto
   ): Promise<EmployeeResponse> {
     const updatePayload: Partial<typeof employees.$inferInsert> = {};
@@ -279,7 +279,7 @@ export class EmployeeService {
     return this.getEmployeeById(id);
   }
 
-  async deleteEmployee(id: number): Promise<void> {
+  async deleteEmployee(id: string): Promise<void> {
     const employee = await this.databaseService.db
       .select()
       .from(employees)
@@ -305,7 +305,7 @@ export class EmployeeService {
   }
 
   async subscribeToEmployee(
-    userId: number,
+    userId: string,
     subscribeDto: SubscribeEmployeeDto
   ) {
     // Проверяем, существует ли сотрудник
@@ -367,7 +367,7 @@ export class EmployeeService {
     };
   }
 
-  async unsubscribeFromEmployee(userId: number, employeeId: number) {
+  async unsubscribeFromEmployee(userId: string, employeeId: string) {
     const result = await this.databaseService.db
       .update(subscriptions)
       .set({ dateEnd: new Date() }) // Завершаем подписку сейчас
@@ -387,7 +387,7 @@ export class EmployeeService {
     return { message: 'Successfully unsubscribed' };
   }
 
-  async createReview(userId: number, createReviewDto: CreateReviewDto) {
+  async createReview(userId: string, createReviewDto: CreateReviewDto) {
     // Проверяем, существует ли сотрудник
     const [employee] = await this.databaseService.db
       .select()
@@ -426,7 +426,7 @@ export class EmployeeService {
     };
   }
 
-  async getEmployeeReviews(employeeId: number) {
+  async getEmployeeReviews(employeeId: string) {
     const reviewsList = await this.databaseService.db
       .select({
         id: reviews.id,
@@ -451,7 +451,7 @@ export class EmployeeService {
     return reviewsList;
   }
 
-  async getUserSubscription(userId: number, employeeId: number) {
+  async getUserSubscription(userId: string, employeeId: string) {
     const [subscription] = await this.databaseService.db
       .select()
       .from(subscriptions)
