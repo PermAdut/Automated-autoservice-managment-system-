@@ -25,6 +25,8 @@ import ReportGenerator from "./components/Reports/ReportGenerator.tsx";
 import Page404 from "./components/Page404/Page404";
 import AnalyticsDashboard from "./components/Analytics/AnalyticsDashboard.tsx";
 import SetupWizard from "./components/Setup/SetupWizard.tsx";
+import OnlineBooking from "./components/Booking/OnlineBooking.tsx";
+import TenantSettings from "./components/TenantSettings/TenantSettings.tsx";
 
 function App() {
   return (
@@ -49,6 +51,26 @@ function App() {
                     element={
                       <ProtectedRoute allowedRoles={["admin"]}>
                         <SetupWizard />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Online booking — all authenticated */}
+                  <Route
+                    path="/booking"
+                    element={
+                      <ProtectedRoute allowedRoles={["customer", "admin", "manager"]}>
+                        <OnlineBooking />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Tenant settings — admin only */}
+                  <Route
+                    path="/settings"
+                    element={
+                      <ProtectedRoute allowedRoles={["admin"]}>
+                        <TenantSettings />
                       </ProtectedRoute>
                     }
                   />

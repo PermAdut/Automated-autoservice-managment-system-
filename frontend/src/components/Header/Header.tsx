@@ -12,6 +12,7 @@ const Header = () => {
   );
   const [logoutMutation] = useLogoutMutation();
   const companyName = useSelector((state: RootState) => state.tenant.branding?.companyName ?? "АвтоСервис");
+  const featureOnlineBooking = useSelector((state: RootState) => state.tenant.branding?.features?.onlineBooking ?? true);
 
   const handleLogout = async () => {
     try {
@@ -53,6 +54,14 @@ const Header = () => {
           </Link>
           {isAuthenticated && (
             <>
+              {featureOnlineBooking && (
+                <Link
+                  to="/booking"
+                  className="font-medium text-indigo-200 no-underline transition-all duration-300 hover:text-white hover:scale-105 hover:underline hover:underline-offset-4"
+                >
+                  Запись
+                </Link>
+              )}
               <Link
                 to="/orders"
                 className="font-medium text-indigo-200 no-underline transition-all duration-300 hover:text-white hover:scale-105 hover:underline hover:underline-offset-4"
@@ -92,6 +101,14 @@ const Header = () => {
                     Аналитика
                   </Link>
                 </>
+              )}
+              {canAccess(["admin"]) && (
+                <Link
+                  to="/settings"
+                  className="font-medium text-indigo-200 no-underline transition-all duration-300 hover:text-white hover:scale-105 hover:underline hover:underline-offset-4"
+                >
+                  Настройки
+                </Link>
               )}
             </>
           )}
