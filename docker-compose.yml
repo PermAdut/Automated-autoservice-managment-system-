@@ -1,0 +1,207 @@
+name: autoservice
+
+# ==============================================================================
+# AutoService Management System — Production Docker Compose
+# ==============================================================================
+# Usage:
+#   cp server/.env.example server/.env   # fill in values
+#   docker compose up -d
+#   docker compose logs -f server worker
+#
+# Services:
+#   postgres   — Primary PostgreSQL 16 database
+#   redis      — Redis 7 (BullMQ queues + caching)
+#   pgbouncer  — PostgreSQL connection pooler (reduces DB load)
+#   server     — NestJS API (HTTP + WebSocket)
+#   worker     — BullMQ notification worker (same image, no HTTP)
+#   frontend   — React app served via Nginx
+#   nginx      — Reverse proxy (routes /api/, /auth/, /socket.io/ to server)
+# ==============================================================================
+
+services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: autoservice_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-autoservice_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-autoservice_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - internal
+
+  # ── PgBouncer (connection pooling) ─────────────────────────────────────────
+  # Multiplexes app connections into a small DB pool.
+  # Server connects to pgbouncer:6432 instead of postgres:5432.
+  pgbouncer:
+    image: bitnami/pgbouncer:latest
+    container_name: autoservice_pgbouncer
+    restart: unless-stopped
+    environment:
+      POSTGRESQL_HOST: postgres
+      POSTGRESQL_PORT: 5432
+      POSTGRESQL_USERNAME: ${DB_USER:-postgres}
+      POSTGRESQL_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRESQL_DATABASE: ${DB_NAME:-autoservice_db}
+      PGBOUNCER_DATABASE: ${DB_NAME:-autoservice_db}
+      PGBOUNCER_POOL_MODE: transaction
+      PGBOUNCER_MAX_CLIENT_CONN: 200
+      PGBOUNCER_DEFAULT_POOL_SIZE: 20
+      PGBOUNCER_LOG_CONNECTIONS: 0
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - internal
+
+  # ── Redis ───────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: autoservice_redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --requirepass ${REDIS_PASSWORD:-}
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  # ── API Server ──────────────────────────────────────────────────────────────
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: production
+    image: autoservice/server:latest
+    container_name: autoservice_server
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      pgbouncer:
+        condition: service_started
+    env_file:
+      - ./server/.env
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3000
+      # Use PgBouncer for connection pooling
+      DB_HOST: pgbouncer
+      DB_PORT: 6432
+      DB_NAME: ${DB_NAME:-autoservice_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ── BullMQ Worker ───────────────────────────────────────────────────────────
+  # Same image as server, different entrypoint.
+  # No HTTP port — only connects to DB + Redis and processes queue jobs.
+  # Scale: docker compose up --scale worker=3
+  worker:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: production
+    image: autoservice/server:latest
+    container_name: autoservice_worker
+    restart: unless-stopped
+    command: ["node", "dist/worker.js"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./server/.env
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      DB_HOST: pgbouncer
+      DB_PORT: 6432
+      DB_NAME: ${DB_NAME:-autoservice_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    networks:
+      - internal
+
+  # ── Frontend ────────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost}
+        VITE_APP_NAME: ${VITE_APP_NAME:-АвтоСервис}
+    image: autoservice/frontend:latest
+    container_name: autoservice_frontend
+    restart: unless-stopped
+    depends_on:
+      - server
+    networks:
+      - internal
+
+  # ── Nginx Reverse Proxy ─────────────────────────────────────────────────────
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: autoservice_nginx
+    restart: unless-stopped
+    depends_on:
+      - server
+      - frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    networks:
+      - internal
+      - external
+
+volumes:
+  pgdata:
+    driver: local
+  redisdata:
+    driver: local
+
+networks:
+  internal:
+    driver: bridge
+  external:
+    driver: bridge

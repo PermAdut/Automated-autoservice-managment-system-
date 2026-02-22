@@ -5,9 +5,10 @@ import { SmsService } from './sms.service';
 import { EmailService } from './email.service';
 import { ScheduledNotificationsService } from './scheduled-notifications.service';
 import { DatabaseModule } from '../database/database.module';
+import { QueueModule } from '../QueueModule/queue.module';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, QueueModule],
   controllers: [NotificationController],
   providers: [
     NotificationService,

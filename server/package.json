@@ -48,6 +48,13 @@
     "@aws-sdk/client-s3": "^3.750.0",
     "@aws-sdk/s3-request-presigner": "^3.750.0",
     "@aws-sdk/client-ses": "^3.750.0",
+    "@nestjs/bullmq": "^11.0.1",
+    "@nestjs/websockets": "^11.0.1",
+    "@nestjs/platform-socket.io": "^11.0.1",
+    "@nestjs/throttler": "^6.2.1",
+    "bullmq": "^5.27.0",
+    "ioredis": "^5.3.2",
+    "socket.io": "^4.7.4",
     "helmet": "^8.0.0",
     "compression": "^1.7.5",
     "multer": "^1.4.5-lts.2"

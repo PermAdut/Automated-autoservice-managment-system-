@@ -1,0 +1,53 @@
+# ==============================================================================
+# Development overrides — automatically merged with docker-compose.yml
+# ==============================================================================
+# This file exposes ports for local development tools (pgAdmin, RedisInsight).
+# Do NOT expose these ports in production.
+
+name: autoservice
+
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  pgbouncer:
+    ports:
+      - "6432:6432"
+
+  server:
+    build:
+      target: development
+    volumes:
+      - ./server/src:/app/src   # hot reload source mapping
+    environment:
+      NODE_ENV: development
+    command: ["npm", "run", "start:dev"]
+
+  worker:
+    build:
+      target: development
+    volumes:
+      - ./server/src:/app/src
+    environment:
+      NODE_ENV: development
+    command: ["npx", "ts-node", "-r", "tsconfig-paths/register", "src/worker.ts"]
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src
+    environment:
+      VITE_API_URL: http://localhost:3000
+
+  nginx:
+    profiles:
+      - prod   # nginx only in prod profile; dev uses direct ports

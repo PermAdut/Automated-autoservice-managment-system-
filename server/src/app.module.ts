@@ -26,6 +26,9 @@ import { VehicleModule } from './modules/VehicleModule/vehicle.module';
 import { TenantModule } from './modules/TenantModule/tenant.module';
 import { AnalyticsModule } from './modules/AnalyticsModule/analytics.module';
 import { StorageModule } from './modules/StorageModule/storage.module';
+import { RedisModule } from './modules/RedisModule/redis.module';
+import { QueueModule } from './modules/QueueModule/queue.module';
+import { GatewayModule } from './modules/GatewayModule/gateway.module';
 
 @Module({
   imports: [
@@ -50,6 +53,9 @@ import { StorageModule } from './modules/StorageModule/storage.module';
     TenantModule,
     AnalyticsModule,
     StorageModule,
+    RedisModule,
+    QueueModule,
+    GatewayModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
