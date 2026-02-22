@@ -11,6 +11,7 @@ const Header = () => {
     (state: RootState) => state.auth
   );
   const [logoutMutation] = useLogoutMutation();
+  const companyName = useSelector((state: RootState) => state.tenant.branding?.companyName ?? "АвтоСервис");
 
   const handleLogout = async () => {
     try {
@@ -39,7 +40,7 @@ const Header = () => {
           onClick={() => navigate("/")}
         >
           <h1 className="text-[1.875rem] font-extrabold text-white m-0 [text-shadow:0_2px_4px_rgba(0,0,0,0.1)] sm:text-2xl">
-            АвтоСервис
+            {companyName}
           </h1>
         </div>
 
@@ -83,6 +84,12 @@ const Header = () => {
                     className="font-medium text-indigo-200 no-underline transition-all duration-300 hover:text-white hover:scale-105 hover:underline hover:underline-offset-4"
                   >
                     Отчёты
+                  </Link>
+                  <Link
+                    to="/analytics"
+                    className="font-medium text-indigo-200 no-underline transition-all duration-300 hover:text-white hover:scale-105 hover:underline hover:underline-offset-4"
+                  >
+                    Аналитика
                   </Link>
                 </>
               )}
