@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useGetUserByIdQuery } from "../../../api/usersApi";
 import { getOrderStatusLabel } from "../../../utils/orderStatus";
-import "./UserDetailed.css";
 
 const ITEMS_PER_PAGE = 1;
+
+const paginationBtnClass =
+  "px-3 py-1.5 text-sm font-medium border border-gray-300 rounded-md bg-white text-blue-600 cursor-pointer transition-all hover:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed";
 
 export const DetailedUserComponent: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -24,10 +26,11 @@ export const DetailedUserComponent: React.FC = () => {
     navigate(-1);
   };
 
-  if (loading) return <div className="detailed-user-loading">Загрузка...</div>;
+  if (loading)
+    return <div className="p-8 text-center text-xl text-gray-700">Загрузка...</div>;
   if (error)
     return (
-      <div className="detailed-user-error">
+      <div className="p-8 text-center text-xl text-red-500">
         Ошибка:{" "}
         {error && "status" in error
           ? String(error.status)
@@ -47,38 +50,37 @@ export const DetailedUserComponent: React.FC = () => {
     items ? Math.ceil(items.length / ITEMS_PER_PAGE) : 0;
 
   return (
-    <div className="detailed-user-overlay" onClick={handleClose}>
-      <div className="detailed-user-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="detailed-user-close" onClick={handleClose}>
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000]"
+      onClick={handleClose}
+    >
+      <div
+        className="bg-white rounded-xl p-6 max-w-[600px] w-[90%] max-h-[80vh] overflow-y-auto shadow-xl relative"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          className="absolute top-2.5 right-2.5 text-2xl bg-transparent border-none cursor-pointer text-gray-500 transition-colors hover:text-gray-800"
+          onClick={handleClose}
+        >
           ×
         </button>
-        <h2 className="detailed-user-title">
+        <h2 className="text-2xl font-bold text-gray-800 mb-5 text-center">
           {detailedUser.name} {detailedUser.surName}
         </h2>
 
-        <div className="detailed-user-section">
-          <h3>Общая информация</h3>
-          <p>
-            <strong>ID:</strong> {detailedUser.id}
-          </p>
-          <p>
-            <strong>Роль:</strong> {detailedUser.role.name}
-          </p>
-          <p>
-            <strong>Логин:</strong> {detailedUser.login}
-          </p>
-          <p>
-            <strong>Email:</strong> {detailedUser.email}
-          </p>
-          <p>
-            <strong>Телефон:</strong> {detailedUser.phone}
-          </p>
-          <p>
-            <strong>Дата создания:</strong>{" "}
+        <div className="mb-5">
+          <h3 className="text-xl font-semibold text-gray-700 mb-2.5">Общая информация</h3>
+          <p className="text-gray-500 my-1.5"><strong className="text-gray-800">ID:</strong> {detailedUser.id}</p>
+          <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Роль:</strong> {detailedUser.role.name}</p>
+          <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Логин:</strong> {detailedUser.login}</p>
+          <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Email:</strong> {detailedUser.email}</p>
+          <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Телефон:</strong> {detailedUser.phone}</p>
+          <p className="text-gray-500 my-1.5">
+            <strong className="text-gray-800">Дата создания:</strong>{" "}
             {new Date(detailedUser.createdAt).toLocaleString()}
           </p>
-          <p>
-            <strong>Дата обновления:</strong>{" "}
+          <p className="text-gray-500 my-1.5">
+            <strong className="text-gray-800">Дата обновления:</strong>{" "}
             {detailedUser.updatedAt
               ? new Date(detailedUser.updatedAt).toLocaleString()
               : "Нет"}
@@ -86,239 +88,156 @@ export const DetailedUserComponent: React.FC = () => {
         </div>
 
         {detailedUser.passport && (
-          <div className="detailed-user-section">
-            <h3>Паспортные данные</h3>
-            <p>
-              <strong>Номер:</strong> {detailedUser.passport.identityNumber}
+          <div className="mb-5">
+            <h3 className="text-xl font-semibold text-gray-700 mb-2.5">Паспортные данные</h3>
+            <p className="text-gray-500 my-1.5">
+              <strong className="text-gray-800">Номер:</strong> {detailedUser.passport.identityNumber}
             </p>
-            <p>
-              <strong>Дата рождения:</strong>{" "}
+            <p className="text-gray-500 my-1.5">
+              <strong className="text-gray-800">Дата рождения:</strong>{" "}
               {new Date(detailedUser.passport.birthDate).toLocaleDateString()}
             </p>
-            <p>
-              <strong>Пол:</strong>{" "}
+            <p className="text-gray-500 my-1.5">
+              <strong className="text-gray-800">Пол:</strong>{" "}
               {detailedUser.passport.gender === "M" ? "Мужской" : "Женский"}
             </p>
           </div>
         )}
 
-        {detailedUser.subscriptions &&
-          detailedUser.subscriptions.length > 0 && (
-            <div className="detailed-user-section">
-              <h3>Подписки</h3>
-              {paginate(detailedUser.subscriptions, subscriptionsPage).map(
-                (sub, index) => (
-                  <div key={index} className="detailed-user-item">
-                    <p>
-                      <strong>Название:</strong> {sub.subscriptionName}
-                    </p>
-                    <p>
-                      <strong>Описание:</strong>{" "}
-                      {sub.subscriptionDescription || "Нет"}
-                    </p>
-                    <p>
-                      <strong>Дата начала:</strong>{" "}
-                      {new Date(sub.dateStart).toLocaleDateString()}
-                    </p>
-                    <p>
-                      <strong>Дата окончания:</strong>{" "}
-                      {new Date(sub.dateEnd).toLocaleDateString()}
-                    </p>
-                  </div>
-                )
-              )}
-              {getTotalPages(detailedUser.subscriptions) > 1 && (
-                <div className="pagination">
-                  <button
-                    onClick={() =>
-                      setSubscriptionsPage((prev) => Math.max(prev - 1, 1))
-                    }
-                    disabled={subscriptionsPage === 1}
-                  >
-                    Назад
-                  </button>
-                  <span>
-                    {subscriptionsPage} /{" "}
-                    {getTotalPages(detailedUser.subscriptions)}
-                  </span>
-                  <button
-                    onClick={() =>
-                      setSubscriptionsPage((prev) =>
-                        Math.min(
-                          prev + 1,
-                          getTotalPages(detailedUser.subscriptions)
-                        )
-                      )
-                    }
-                    disabled={
-                      subscriptionsPage ===
-                      getTotalPages(detailedUser.subscriptions)
-                    }
-                  >
-                    Вперед
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+        {detailedUser.subscriptions && detailedUser.subscriptions.length > 0 && (
+          <div className="mb-5">
+            <h3 className="text-xl font-semibold text-gray-700 mb-2.5">Подписки</h3>
+            {paginate(detailedUser.subscriptions, subscriptionsPage).map((sub, index) => (
+              <div key={index} className="p-2.5 border border-gray-200 rounded-lg mb-2.5 bg-gray-50">
+                <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Название:</strong> {sub.subscriptionName}</p>
+                <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Описание:</strong> {sub.subscriptionDescription || "Нет"}</p>
+                <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Дата начала:</strong> {new Date(sub.dateStart).toLocaleDateString()}</p>
+                <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Дата окончания:</strong> {new Date(sub.dateEnd).toLocaleDateString()}</p>
+              </div>
+            ))}
+            {getTotalPages(detailedUser.subscriptions) > 1 && (
+              <div className="flex justify-center items-center gap-2.5 mt-2.5">
+                <button
+                  className={paginationBtnClass}
+                  onClick={() => setSubscriptionsPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={subscriptionsPage === 1}
+                >Назад</button>
+                <span className="text-sm font-medium text-gray-700">
+                  {subscriptionsPage} / {getTotalPages(detailedUser.subscriptions)}
+                </span>
+                <button
+                  className={paginationBtnClass}
+                  onClick={() => setSubscriptionsPage((prev) => Math.min(prev + 1, getTotalPages(detailedUser.subscriptions)))}
+                  disabled={subscriptionsPage === getTotalPages(detailedUser.subscriptions)}
+                >Вперед</button>
+              </div>
+            )}
+          </div>
+        )}
 
         {detailedUser.reviews && detailedUser.reviews.length > 0 && (
-          <div className="detailed-user-section">
-            <h3>Отзывы</h3>
-            {paginate(detailedUser.reviews, reviewsPage).map(
-              (review, index) => (
-                <div key={index} className="detailed-user-item">
-                  <p>
-                    <strong>Описание:</strong> {review.description || "Нет"}
-                  </p>
-                  <p>
-                    <strong>Оценка:</strong> {review.rate}/5
-                  </p>
-                  <p>
-                    <strong>Создан:</strong>{" "}
-                    {new Date(review.createdAt).toLocaleString()}
-                  </p>
-                  <p>
-                    <strong>Обновлён:</strong>{" "}
-                    {review.updatedAt
-                      ? new Date(review.updatedAt).toLocaleString()
-                      : "Нет"}
-                  </p>
-                  <p>
-                    <strong>Удалён:</strong>{" "}
-                    {review.deletedAt
-                      ? new Date(review.deletedAt).toLocaleString()
-                      : "Нет"}
-                  </p>
-                </div>
-              )
-            )}
+          <div className="mb-5">
+            <h3 className="text-xl font-semibold text-gray-700 mb-2.5">Отзывы</h3>
+            {paginate(detailedUser.reviews, reviewsPage).map((review, index) => (
+              <div key={index} className="p-2.5 border border-gray-200 rounded-lg mb-2.5 bg-gray-50">
+                <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Описание:</strong> {review.description || "Нет"}</p>
+                <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Оценка:</strong> {review.rate}/5</p>
+                <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Создан:</strong> {new Date(review.createdAt).toLocaleString()}</p>
+                <p className="text-gray-500 my-1.5">
+                  <strong className="text-gray-800">Обновлён:</strong>{" "}
+                  {review.updatedAt ? new Date(review.updatedAt).toLocaleString() : "Нет"}
+                </p>
+                <p className="text-gray-500 my-1.5">
+                  <strong className="text-gray-800">Удалён:</strong>{" "}
+                  {review.deletedAt ? new Date(review.deletedAt).toLocaleString() : "Нет"}
+                </p>
+              </div>
+            ))}
             {getTotalPages(detailedUser.reviews) > 1 && (
-              <div className="pagination">
+              <div className="flex justify-center items-center gap-2.5 mt-2.5">
                 <button
-                  onClick={() =>
-                    setReviewsPage((prev) => Math.max(prev - 1, 1))
-                  }
+                  className={paginationBtnClass}
+                  onClick={() => setReviewsPage((prev) => Math.max(prev - 1, 1))}
                   disabled={reviewsPage === 1}
-                >
-                  Назад
-                </button>
-                <span>
+                >Назад</button>
+                <span className="text-sm font-medium text-gray-700">
                   {reviewsPage} / {getTotalPages(detailedUser.reviews)}
                 </span>
                 <button
-                  onClick={() =>
-                    setReviewsPage((prev) =>
-                      Math.min(prev + 1, getTotalPages(detailedUser.reviews))
-                    )
-                  }
+                  className={paginationBtnClass}
+                  onClick={() => setReviewsPage((prev) => Math.min(prev + 1, getTotalPages(detailedUser.reviews)))}
                   disabled={reviewsPage === getTotalPages(detailedUser.reviews)}
-                >
-                  Вперед
-                </button>
+                >Вперед</button>
               </div>
             )}
           </div>
         )}
 
         {detailedUser.cars && detailedUser.cars.length > 0 && (
-          <div className="detailed-user-section">
-            <h3>Автомобили</h3>
+          <div className="mb-5">
+            <h3 className="text-xl font-semibold text-gray-700 mb-2.5">Автомобили</h3>
             {paginate(detailedUser.cars, carsPage).map((car, index) => (
-              <div key={index} className="detailed-user-item">
-                <p>
-                  <strong>Марка:</strong> {car.brand} {car.model}
-                </p>
-                <p>
-                  <strong>VIN:</strong> {car.vin}
-                </p>
-                <p>
-                  <strong>Номерной знак:</strong> {car.licensePlate}
-                </p>
-                <p>
-                  <strong>Год:</strong> {car.year}
-                </p>
-                <p>
-                  <strong>Информация:</strong> {car.information || "Нет"}
-                </p>
+              <div key={index} className="p-2.5 border border-gray-200 rounded-lg mb-2.5 bg-gray-50">
+                <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Марка:</strong> {car.brand} {car.model}</p>
+                <p className="text-gray-500 my-1.5"><strong className="text-gray-800">VIN:</strong> {car.vin}</p>
+                <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Номерной знак:</strong> {car.licensePlate}</p>
+                <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Год:</strong> {car.year}</p>
+                <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Информация:</strong> {car.information || "Нет"}</p>
               </div>
             ))}
             {getTotalPages(detailedUser.cars) > 1 && (
-              <div className="pagination">
+              <div className="flex justify-center items-center gap-2.5 mt-2.5">
                 <button
+                  className={paginationBtnClass}
                   onClick={() => setCarsPage((prev) => Math.max(prev - 1, 1))}
                   disabled={carsPage === 1}
-                >
-                  Назад
-                </button>
-                <span>
+                >Назад</button>
+                <span className="text-sm font-medium text-gray-700">
                   {carsPage} / {getTotalPages(detailedUser.cars)}
                 </span>
                 <button
-                  onClick={() =>
-                    setCarsPage((prev) =>
-                      Math.min(prev + 1, getTotalPages(detailedUser.cars))
-                    )
-                  }
+                  className={paginationBtnClass}
+                  onClick={() => setCarsPage((prev) => Math.min(prev + 1, getTotalPages(detailedUser.cars)))}
                   disabled={carsPage === getTotalPages(detailedUser.cars)}
-                >
-                  Вперед
-                </button>
+                >Вперед</button>
               </div>
             )}
           </div>
         )}
 
         {detailedUser.orders && detailedUser.orders.length > 0 && (
-          <div className="detailed-user-section">
-            <h3>Заказы</h3>
+          <div className="mb-5">
+            <h3 className="text-xl font-semibold text-gray-700 mb-2.5">Заказы</h3>
             {paginate(detailedUser.orders, ordersPage).map((order, index) => (
-              <div key={index} className="detailed-user-item">
-                <p>
-                  <strong>ID:</strong> {order.id}
+              <div key={index} className="p-2.5 border border-gray-200 rounded-lg mb-2.5 bg-gray-50">
+                <p className="text-gray-500 my-1.5"><strong className="text-gray-800">ID:</strong> {order.id}</p>
+                <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Статус:</strong> {getOrderStatusLabel(order.status)}</p>
+                <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Создан:</strong> {new Date(order.createdAt).toLocaleString()}</p>
+                <p className="text-gray-500 my-1.5">
+                  <strong className="text-gray-800">Обновлён:</strong>{" "}
+                  {order.updateAt ? new Date(order.updateAt).toLocaleString() : "Нет"}
                 </p>
-                <p>
-                  <strong>Статус:</strong> {getOrderStatusLabel(order.status)}
-                </p>
-                <p>
-                  <strong>Создан:</strong>{" "}
-                  {new Date(order.createdAt).toLocaleString()}
-                </p>
-                <p>
-                  <strong>Обновлён:</strong>{" "}
-                  {order.updateAt
-                    ? new Date(order.updateAt).toLocaleString()
-                    : "Нет"}
-                </p>
-                <p>
-                  <strong>Завершён:</strong>{" "}
-                  {order.completedAt
-                    ? new Date(order.completedAt).toLocaleString()
-                    : "Нет"}
+                <p className="text-gray-500 my-1.5">
+                  <strong className="text-gray-800">Завершён:</strong>{" "}
+                  {order.completedAt ? new Date(order.completedAt).toLocaleString() : "Нет"}
                 </p>
               </div>
             ))}
             {getTotalPages(detailedUser.orders) > 1 && (
-              <div className="pagination">
+              <div className="flex justify-center items-center gap-2.5 mt-2.5">
                 <button
+                  className={paginationBtnClass}
                   onClick={() => setOrdersPage((prev) => Math.max(prev - 1, 1))}
                   disabled={ordersPage === 1}
-                >
-                  Назад
-                </button>
-                <span>
+                >Назад</button>
+                <span className="text-sm font-medium text-gray-700">
                   {ordersPage} / {getTotalPages(detailedUser.orders)}
                 </span>
                 <button
-                  onClick={() =>
-                    setOrdersPage((prev) =>
-                      Math.min(prev + 1, getTotalPages(detailedUser.orders))
-                    )
-                  }
+                  className={paginationBtnClass}
+                  onClick={() => setOrdersPage((prev) => Math.min(prev + 1, getTotalPages(detailedUser.orders)))}
                   disabled={ordersPage === getTotalPages(detailedUser.orders)}
-                >
-                  Вперед
-                </button>
+                >Вперед</button>
               </div>
             )}
           </div>

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGetMyProfileQuery, useUpdateMyProfileMutation, UpdateCarDto } from "../../../api/usersApi";
 import { useFieldArray, useForm } from "react-hook-form";
-import "./Profile.css";
 
 interface ProfileFormData {
   name: string;
@@ -11,6 +10,20 @@ interface ProfileFormData {
   phone: string;
   cars: UpdateCarDto[];
 }
+
+const btnPrimary =
+  "px-6 py-3 rounded-md font-semibold cursor-pointer transition-all border-none text-base bg-indigo-700 text-white hover:bg-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed";
+const btnSecondary =
+  "px-6 py-3 rounded-md font-semibold cursor-pointer transition-all border-none text-base bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed";
+const btnSecondarySmall =
+  "px-4 py-2 rounded-md font-semibold cursor-pointer transition-all border-none text-sm bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed";
+const btnDangerSmall =
+  "px-4 py-2 rounded-md font-semibold cursor-pointer transition-all border-none text-sm bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed";
+
+const inputClass = (hasError: boolean) =>
+  `w-full px-3 py-3 border rounded-md text-base transition-colors focus:outline-none focus:border-indigo-700 focus:ring-2 focus:ring-indigo-700/10 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed ${
+    hasError ? "border-red-600" : "border-gray-300"
+  }`;
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
@@ -88,28 +101,29 @@ const Profile: React.FC = () => {
     }
   };
 
-  if (isLoading) return <div className="profile-loading">Загрузка...</div>;
+  if (isLoading)
+    return <div className="text-center p-8 text-lg">Загрузка...</div>;
   if (error)
     return (
-      <div className="profile-error">
+      <div className="text-center p-8 text-lg text-red-600">
         Ошибка: {error && "status" in error ? String(error.status) : "Неизвестная ошибка"}
       </div>
     );
   if (!profile) return null;
 
   return (
-    <div className="profile-container">
-      <div className="profile-header">
-        <h1 className="profile-title">Мой профиль</h1>
-        <div className="profile-actions">
+    <div className="max-w-[1000px] mx-auto p-4 md:p-8">
+      <div className="flex flex-col gap-4 mb-8 md:flex-row md:justify-between md:items-center">
+        <h1 className="text-4xl font-bold text-gray-800 m-0">Мой профиль</h1>
+        <div className="flex gap-3 flex-wrap">
           {!isEditing ? (
-            <button className="btn btn-primary" onClick={() => setIsEditing(true)}>
+            <button className={btnPrimary} onClick={() => setIsEditing(true)}>
               Редактировать
             </button>
           ) : (
             <>
               <button
-                className="btn btn-secondary"
+                className={btnSecondary}
                 onClick={() => {
                   setIsEditing(false);
                   reset();
@@ -118,7 +132,7 @@ const Profile: React.FC = () => {
                 Отмена
               </button>
               <button
-                className="btn btn-primary"
+                className={btnPrimary}
                 onClick={handleSubmit(onSubmit)}
                 disabled={isUpdating}
               >
@@ -126,153 +140,182 @@ const Profile: React.FC = () => {
               </button>
             </>
           )}
-          <button className="btn btn-secondary" onClick={() => navigate("/")}>
+          <button className={btnSecondary} onClick={() => navigate("/")}>
             На главную
           </button>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="profile-form">
-        <div className="profile-section">
-          <h2 className="profile-section-title">Основная информация</h2>
-          <div className="profile-form-grid">
-            <div className="form-group">
-              <label htmlFor="name">Имя *</label>
+      <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg p-8 shadow-sm">
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold text-gray-700 mb-4">Основная информация</h2>
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(250px,1fr))]">
+            <div className="flex flex-col">
+              <label className="font-medium text-gray-700 mb-2" htmlFor="name">Имя *</label>
               <input
                 id="name"
                 {...register("name", { required: "Имя обязательно" })}
                 disabled={!isEditing}
-                className={errors.name ? "error" : ""}
+                className={inputClass(!!errors.name)}
               />
-              {errors.name && <span className="error-message">{errors.name.message}</span>}
+              {errors.name && (
+                <span className="text-red-600 text-sm mt-1">{errors.name.message}</span>
+              )}
             </div>
-            <div className="form-group">
-              <label htmlFor="surName">Фамилия *</label>
+            <div className="flex flex-col">
+              <label className="font-medium text-gray-700 mb-2" htmlFor="surName">Фамилия *</label>
               <input
                 id="surName"
                 {...register("surName", { required: "Фамилия обязательна" })}
                 disabled={!isEditing}
-                className={errors.surName ? "error" : ""}
+                className={inputClass(!!errors.surName)}
               />
-              {errors.surName && <span className="error-message">{errors.surName.message}</span>}
+              {errors.surName && (
+                <span className="text-red-600 text-sm mt-1">{errors.surName.message}</span>
+              )}
             </div>
-            <div className="form-group">
-              <label htmlFor="email">Email *</label>
+            <div className="flex flex-col">
+              <label className="font-medium text-gray-700 mb-2" htmlFor="email">Email *</label>
               <input
                 id="email"
                 type="email"
                 {...register("email", { required: "Email обязателен" })}
                 disabled={!isEditing}
-                className={errors.email ? "error" : ""}
+                className={inputClass(!!errors.email)}
               />
-              {errors.email && <span className="error-message">{errors.email.message}</span>}
+              {errors.email && (
+                <span className="text-red-600 text-sm mt-1">{errors.email.message}</span>
+              )}
             </div>
-            <div className="form-group">
-              <label htmlFor="phone">Телефон</label>
+            <div className="flex flex-col">
+              <label className="font-medium text-gray-700 mb-2" htmlFor="phone">Телефон</label>
               <input
                 id="phone"
                 {...register("phone")}
                 disabled={!isEditing}
+                className={inputClass(false)}
               />
             </div>
           </div>
         </div>
 
-        <div className="profile-section">
-          <div className="profile-section-header">
-            <h2 className="profile-section-title">Автомобили</h2>
+        <div className="mb-8 last:mb-0">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-semibold text-gray-700 m-0">Автомобили</h2>
             {isEditing && (
               <button
                 type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={() => appendCar({ brand: "", model: "", vin: "", year: undefined, licensePlate: "", information: "" })}
+                className={btnSecondarySmall}
+                onClick={() =>
+                  appendCar({
+                    brand: "",
+                    model: "",
+                    vin: "",
+                    year: undefined,
+                    licensePlate: "",
+                    information: "",
+                  })
+                }
               >
                 + Добавить автомобиль
               </button>
             )}
           </div>
           {carFields.length === 0 && !isEditing ? (
-            <p className="profile-empty">Нет добавленных автомобилей</p>
+            <p className="text-gray-500 italic p-4 text-center">Нет добавленных автомобилей</p>
           ) : (
-            <div className="cars-list">
+            <div className="flex flex-col gap-6">
               {carFields.map((field, index) => (
-                <div key={field.id} className="car-item">
-                  <div className="car-item-header">
-                    <h3>Автомобиль {index + 1}</h3>
+                <div key={field.id} className="border border-gray-200 rounded-lg p-6 bg-gray-50">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-semibold text-gray-700 m-0">Автомобиль {index + 1}</h3>
                     {isEditing && (
                       <button
                         type="button"
-                        className="btn btn-danger btn-sm"
+                        className={btnDangerSmall}
                         onClick={() => removeCar(index)}
                       >
                         Удалить
                       </button>
                     )}
                   </div>
-                  <div className="car-form-grid">
-                    <div className="form-group">
-                      <label>Марка *</label>
+                  <div className="grid gap-4 grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
+                    <div className="flex flex-col">
+                      <label className="font-medium text-gray-700 mb-2">Марка *</label>
                       <input
                         {...register(`cars.${index}.brand`, { required: "Марка обязательна" })}
                         disabled={!isEditing}
-                        className={errors.cars?.[index]?.brand ? "error" : ""}
+                        className={inputClass(!!errors.cars?.[index]?.brand)}
                       />
                       {errors.cars?.[index]?.brand && (
-                        <span className="error-message">{errors.cars[index].brand?.message}</span>
+                        <span className="text-red-600 text-sm mt-1">
+                          {errors.cars[index].brand?.message}
+                        </span>
                       )}
                     </div>
-                    <div className="form-group">
-                      <label>Модель *</label>
+                    <div className="flex flex-col">
+                      <label className="font-medium text-gray-700 mb-2">Модель *</label>
                       <input
                         {...register(`cars.${index}.model`, { required: "Модель обязательна" })}
                         disabled={!isEditing}
-                        className={errors.cars?.[index]?.model ? "error" : ""}
+                        className={inputClass(!!errors.cars?.[index]?.model)}
                       />
                       {errors.cars?.[index]?.model && (
-                        <span className="error-message">{errors.cars[index].model?.message}</span>
+                        <span className="text-red-600 text-sm mt-1">
+                          {errors.cars[index].model?.message}
+                        </span>
                       )}
                     </div>
-                    <div className="form-group">
-                      <label>VIN *</label>
+                    <div className="flex flex-col">
+                      <label className="font-medium text-gray-700 mb-2">VIN *</label>
                       <input
                         {...register(`cars.${index}.vin`, { required: "VIN обязателен" })}
                         disabled={!isEditing}
-                        className={errors.cars?.[index]?.vin ? "error" : ""}
+                        className={inputClass(!!errors.cars?.[index]?.vin)}
                       />
                       {errors.cars?.[index]?.vin && (
-                        <span className="error-message">{errors.cars[index].vin?.message}</span>
+                        <span className="text-red-600 text-sm mt-1">
+                          {errors.cars[index].vin?.message}
+                        </span>
                       )}
                     </div>
-                    <div className="form-group">
-                      <label>Год *</label>
+                    <div className="flex flex-col">
+                      <label className="font-medium text-gray-700 mb-2">Год *</label>
                       <input
                         type="number"
                         {...register(`cars.${index}.year`, {
                           required: "Год обязателен",
                           valueAsNumber: true,
                           min: { value: 1900, message: "Год должен быть больше 1900" },
-                          max: { value: new Date().getFullYear() + 1, message: "Год не может быть в будущем" },
+                          max: {
+                            value: new Date().getFullYear() + 1,
+                            message: "Год не может быть в будущем",
+                          },
                         })}
                         disabled={!isEditing}
-                        className={errors.cars?.[index]?.year ? "error" : ""}
+                        className={inputClass(!!errors.cars?.[index]?.year)}
                       />
                       {errors.cars?.[index]?.year && (
-                        <span className="error-message">{errors.cars[index].year?.message}</span>
+                        <span className="text-red-600 text-sm mt-1">
+                          {errors.cars[index].year?.message}
+                        </span>
                       )}
                     </div>
-                    <div className="form-group">
-                      <label>Номерной знак</label>
+                    <div className="flex flex-col">
+                      <label className="font-medium text-gray-700 mb-2">Номерной знак</label>
                       <input
                         {...register(`cars.${index}.licensePlate`)}
                         disabled={!isEditing}
+                        className={inputClass(false)}
                       />
                     </div>
-                    <div className="form-group form-group-full">
-                      <label>Информация</label>
+                    <div className="flex flex-col col-span-full">
+                      <label className="font-medium text-gray-700 mb-2">Информация</label>
                       <textarea
                         {...register(`cars.${index}.information`)}
                         disabled={!isEditing}
                         rows={3}
+                        className={inputClass(false)}
                       />
                     </div>
                   </div>
@@ -283,13 +326,17 @@ const Profile: React.FC = () => {
         </div>
 
         {isEditing && (
-          <div className="profile-form-actions">
-            <button type="submit" className="btn btn-primary" disabled={isUpdating}>
+          <div className="flex flex-col gap-3 justify-end mt-8 pt-8 border-t border-gray-200 md:flex-row">
+            <button
+              type="submit"
+              className={`${btnPrimary} w-full md:w-auto`}
+              disabled={isUpdating}
+            >
               {isUpdating ? "Сохранение..." : "Сохранить изменения"}
             </button>
             <button
               type="button"
-              className="btn btn-secondary"
+              className={`${btnSecondary} w-full md:w-auto`}
               onClick={() => {
                 setIsEditing(false);
                 reset();

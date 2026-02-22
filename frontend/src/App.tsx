@@ -1,5 +1,4 @@
 import { Route, Routes } from "react-router";
-import "./App.css";
 import Page404 from "./components/Page404/Page404";
 import { Provider } from "react-redux";
 import { store } from "./store";
@@ -27,9 +26,9 @@ function App() {
     <Provider store={store}>
       <BrowserRouter>
         <ErrorBoundary>
-          <div className="app-container">
+          <div className="flex flex-col min-h-screen bg-gray-50">
             <Header />
-            <main className="app-main">
+            <main className="flex-1 px-4 py-8 pb-[100px] max-w-[1400px] w-full mx-auto md:px-2 md:py-4 md:pb-[100px]">
               <Routes>
                 <Route path="/" element={<MainPage />} />
                 <Route path="/login" element={<Login />} />
