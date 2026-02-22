@@ -25,6 +25,7 @@ import { PromotionsModule } from './modules/PromotionsModule/promotions.module';
 import { VehicleModule } from './modules/VehicleModule/vehicle.module';
 import { TenantModule } from './modules/TenantModule/tenant.module';
 import { AnalyticsModule } from './modules/AnalyticsModule/analytics.module';
+import { StorageModule } from './modules/StorageModule/storage.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { AnalyticsModule } from './modules/AnalyticsModule/analytics.module';
     VehicleModule,
     TenantModule,
     AnalyticsModule,
+    StorageModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
