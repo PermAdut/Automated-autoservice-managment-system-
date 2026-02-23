@@ -1,4 +1,4 @@
-export const export const apiTags = {
+export const apiTags = {
   USERS: "Users",
   USER: "User",
   EMPLOYEES: "Employees",
@@ -13,4 +13,4 @@ export const export const apiTags = {
   SPARE_PART: "SparePart",
   POSITIONS: "Positions",
   Booking: "Booking",
-} as const;;
+} as const;

@@ -1,88 +1,142 @@
+import {
+  FileTextOutlined,
+  InboxOutlined,
+  TeamOutlined,
+  FundOutlined,
+  ThunderboltOutlined,
+  SafetyCertificateOutlined,
+  LockOutlined,
+  CustomerServiceOutlined,
+  CalendarOutlined,
+  CheckCircleOutlined,
+} from "@ant-design/icons";
+
+const features = [
+  {
+    icon: <FileTextOutlined />,
+    title: "Управление заказами",
+    desc: "Создавайте и отслеживайте заказы на ремонт автомобилей. Управляйте статусами и контролируйте процесс выполнения работ.",
+    color: "bg-indigo-50 text-indigo-600",
+  },
+  {
+    icon: <InboxOutlined />,
+    title: "Каталог запчастей",
+    desc: "Полный каталог запчастей и услуг с актуальными ценами. Удобный поиск и фильтрация по категориям.",
+    color: "bg-orange-50 text-orange-500",
+  },
+  {
+    icon: <TeamOutlined />,
+    title: "Управление клиентами",
+    desc: "Ведите базу клиентов, отслеживайте историю обслуживания и управляйте автомобилями ваших клиентов.",
+    color: "bg-blue-50 text-blue-600",
+  },
+  {
+    icon: <FundOutlined />,
+    title: "Отчёты и аналитика",
+    desc: "Генерируйте подробные отчёты о работе автосервиса, анализируйте статистику и планируйте развитие бизнеса.",
+    color: "bg-green-50 text-green-600",
+  },
+];
+
+const advantages = [
+  {
+    icon: <ThunderboltOutlined />,
+    title: "Удобство использования",
+    desc: "Интуитивно понятный интерфейс без лишней сложности",
+    color: "bg-amber-50 text-amber-500",
+  },
+  {
+    icon: <SafetyCertificateOutlined />,
+    title: "Надёжность",
+    desc: "Стабильная работа системы 24/7",
+    color: "bg-green-50 text-green-600",
+  },
+  {
+    icon: <LockOutlined />,
+    title: "Безопасность",
+    desc: "Защита данных клиентов и компании",
+    color: "bg-red-50 text-red-500",
+  },
+  {
+    icon: <CustomerServiceOutlined />,
+    title: "Поддержка",
+    desc: "Всегда готовы помочь вам",
+    color: "bg-indigo-50 text-indigo-600",
+  },
+];
+
 export const About = () => {
   return (
-    <div className="max-w-[1200px] mx-auto px-6 py-10 min-h-[calc(100vh-200px)] md:px-4 md:py-6">
-      <div className="bg-white rounded-xl shadow-md px-12 py-12 md:px-6 md:py-8">
-        <h1 className="text-5xl font-extrabold text-indigo-700 mb-8 text-center md:text-4xl">
+    <div className="max-w-5xl mx-auto px-6 py-10 pb-20">
+      {/* Hero */}
+      <div className="text-center mb-12">
+        <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-1.5 rounded-full text-sm font-medium mb-4">
+          <CalendarOutlined />
+          Система управления автосервисом
+        </div>
+        <h1 className="text-4xl font-extrabold text-gray-900 mb-3">
           О нас
         </h1>
+        <p className="text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
+          Мы — современная система управления автосервисом, которая помогает
+          эффективно организовывать работу, управлять заказами, клиентами и сотрудниками.
+        </p>
+      </div>
 
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold text-slate-800 mb-4 border-b-4 border-indigo-700 pb-2 md:text-2xl">
-            Добро пожаловать в АвтоСервис
-          </h2>
-          <p className="text-lg leading-7 text-slate-600 mb-4 md:text-base">
-            Мы — современная система управления автосервисом, которая помогает
-            эффективно организовывать работу автосервиса, управлять заказами,
-            клиентами и сотрудниками.
-          </p>
-        </section>
+      {/* Features */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-bold text-gray-900 mb-1">Наши возможности</h2>
+        <p className="text-gray-500 mb-6">Всё необходимое для современного автосервиса</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {features.map((f) => (
+            <div
+              key={f.title}
+              className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md hover:-translate-y-0.5 transition-all"
+            >
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg mb-3 ${f.color}`}>
+                {f.icon}
+              </div>
+              <h3 className="text-base font-semibold text-gray-900 mb-1.5">{f.title}</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold text-slate-800 mb-4 border-b-4 border-indigo-700 pb-2 md:text-2xl">
-            Наши возможности
-          </h2>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6 mt-6 md:grid-cols-1">
-            <div className="bg-slate-50 rounded-lg p-6 border-l-4 border-indigo-700 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_16px_rgba(67,56,202,0.1)]">
-              <h3 className="text-xl font-semibold text-indigo-700 mb-3">Управление заказами</h3>
-              <p className="text-lg leading-7 text-slate-600 md:text-base">
-                Создавайте и отслеживайте заказы на ремонт автомобилей.
-                Управляйте статусами заказов и контролируйте процесс выполнения работ.
-              </p>
+      {/* Advantages */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-bold text-gray-900 mb-1">Почему выбирают нас</h2>
+        <p className="text-gray-500 mb-6">Наши преимущества перед другими системами</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {advantages.map((a) => (
+            <div key={a.title} className="bg-white border border-gray-200 rounded-xl p-4 text-center">
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl mx-auto mb-3 ${a.color}`}>
+                {a.icon}
+              </div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-1">{a.title}</h3>
+              <p className="text-xs text-gray-500 leading-relaxed">{a.desc}</p>
             </div>
-            <div className="bg-slate-50 rounded-lg p-6 border-l-4 border-indigo-700 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_16px_rgba(67,56,202,0.1)]">
-              <h3 className="text-xl font-semibold text-indigo-700 mb-3">Каталог запчастей</h3>
-              <p className="text-lg leading-7 text-slate-600 md:text-base">
-                Полный каталог запчастей и услуг с актуальными ценами.
-                Удобный поиск и фильтрация по категориям.
-              </p>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-6 border-l-4 border-indigo-700 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_16px_rgba(67,56,202,0.1)]">
-              <h3 className="text-xl font-semibold text-indigo-700 mb-3">Управление клиентами</h3>
-              <p className="text-lg leading-7 text-slate-600 md:text-base">
-                Ведите базу клиентов, отслеживайте историю обслуживания
-                и управляйте автомобилями ваших клиентов.
-              </p>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-6 border-l-4 border-indigo-700 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_16px_rgba(67,56,202,0.1)]">
-              <h3 className="text-xl font-semibold text-indigo-700 mb-3">Отчёты и аналитика</h3>
-              <p className="text-lg leading-7 text-slate-600 md:text-base">
-                Генерируйте подробные отчёты о работе автосервиса,
-                анализируйте статистику и планируйте развитие бизнеса.
-              </p>
-            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Contact */}
+      <section>
+        <div className="bg-gradient-to-br from-indigo-600 to-blue-500 rounded-2xl p-8 text-white text-center">
+          <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3">
+            <CustomerServiceOutlined />
           </div>
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold text-slate-800 mb-4 border-b-4 border-indigo-700 pb-2 md:text-2xl">
-            Почему выбирают нас
-          </h2>
-          <ul className="list-none p-0 m-0">
-            <li className="text-lg leading-7 text-slate-600 py-3 pl-8 relative before:content-['✓'] before:absolute before:left-0 before:text-indigo-700 before:font-bold before:text-2xl md:text-base">
-              <strong className="text-slate-800 font-semibold">Удобство использования</strong> — интуитивно понятный интерфейс
-            </li>
-            <li className="text-lg leading-7 text-slate-600 py-3 pl-8 relative before:content-['✓'] before:absolute before:left-0 before:text-indigo-700 before:font-bold before:text-2xl md:text-base">
-              <strong className="text-slate-800 font-semibold">Надёжность</strong> — стабильная работа системы 24/7
-            </li>
-            <li className="text-lg leading-7 text-slate-600 py-3 pl-8 relative before:content-['✓'] before:absolute before:left-0 before:text-indigo-700 before:font-bold before:text-2xl md:text-base">
-              <strong className="text-slate-800 font-semibold">Безопасность</strong> — защита данных клиентов и компании
-            </li>
-            <li className="text-lg leading-7 text-slate-600 py-3 pl-8 relative before:content-['✓'] before:absolute before:left-0 before:text-indigo-700 before:font-bold before:text-2xl md:text-base">
-              <strong className="text-slate-800 font-semibold">Поддержка</strong> — мы всегда готовы помочь вам
-            </li>
-          </ul>
-        </section>
-
-        <section>
-          <h2 className="text-3xl font-bold text-slate-800 mb-4 border-b-4 border-indigo-700 pb-2 md:text-2xl">
-            Свяжитесь с нами
-          </h2>
-          <p className="text-lg leading-7 text-slate-600 mb-4 md:text-base">
+          <h2 className="text-2xl font-bold mb-2">Свяжитесь с нами</h2>
+          <p className="text-indigo-100 max-w-md mx-auto">
             Если у вас есть вопросы или предложения, мы будем рады услышать от вас.
             Используйте систему для связи с нашей командой поддержки.
           </p>
-        </section>
-      </div>
+          <div className="flex items-center justify-center gap-2 mt-4 text-sm text-indigo-200">
+            <CheckCircleOutlined />
+            Ответим в течение рабочего дня
+          </div>
+        </div>
+      </section>
     </div>
   );
 };

@@ -1,160 +1,189 @@
 import React, { useMemo, useState } from "react";
+import { ColumnDef } from "@tanstack/react-table";
 import {
   useGetSuppliersQuery,
   useDeleteSupplierMutation,
+  Supplier,
 } from "../../../api/suppliersApi";
-import { SupplierItem } from "../SupplierItem/SupplierItem";
-import { useDebounce } from "../../../hooks/useDebounce";
+import { DataTable } from "../../ui/data-table";
+import { Button } from "../../ui/button";
+import { Badge } from "../../ui/badge";
 import SupplierForm from "../SupplierForm/SupplierForm";
-
-const SUPPLIERS_PER_PAGE = 6;
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  ShopOutlined,
+  PhoneOutlined,
+  EnvironmentOutlined,
+} from "@ant-design/icons";
 
 const SupplierList: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const debouncedSearch = useDebounce(search, 300);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const {
     data: suppliers = [],
-    isLoading: loading,
+    isLoading,
     error,
   } = useGetSuppliersQuery({
-    search: debouncedSearch,
+    search: "",
     sortBy: "name",
-    sortOrder,
+    sortOrder: "asc",
   });
 
   const [deleteSupplier] = useDeleteSupplierMutation();
-  const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
 
   const editingSupplier = useMemo(
     () => suppliers.find((s) => s.id === editingId),
     [editingId, suppliers]
   );
 
-  if (loading) return <div className="mt-10 text-center text-lg font-semibold text-gray-700 animate-pulse">Загрузка...</div>;
-  if (error)
+  const columns: ColumnDef<Supplier>[] = [
+    {
+      accessorKey: "name",
+      header: "Поставщик",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500 shrink-0">
+            <ShopOutlined className="text-sm" />
+          </div>
+          <div>
+            <p className="font-medium text-gray-900">{row.original.name}</p>
+            <p className="text-xs text-gray-400 font-mono">{row.original.id.slice(0, 8)}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "contact",
+      header: "Контакт",
+      cell: ({ getValue }) => {
+        const contact = getValue() as string;
+        return contact ? (
+          <span className="flex items-center gap-1.5 text-sm text-gray-600">
+            <PhoneOutlined className="text-gray-400 text-xs" />
+            {contact}
+          </span>
+        ) : (
+          <span className="text-gray-400 text-sm">—</span>
+        );
+      },
+    },
+    {
+      accessorKey: "address",
+      header: "Адрес",
+      cell: ({ getValue }) => {
+        const address = getValue() as string;
+        return address ? (
+          <span className="flex items-center gap-1.5 text-sm text-gray-600">
+            <EnvironmentOutlined className="text-gray-400 text-xs" />
+            {address}
+          </span>
+        ) : (
+          <span className="text-gray-400 text-sm">—</span>
+        );
+      },
+    },
+    {
+      id: "positions",
+      header: "Позиции",
+      accessorFn: (row) => row.positionsForBuying?.length ?? 0,
+      cell: ({ getValue }) => {
+        const count = getValue() as number;
+        return count > 0 ? (
+          <Badge variant="info">{count} позиций</Badge>
+        ) : (
+          <span className="text-gray-400 text-sm">—</span>
+        );
+      },
+    },
+    {
+      id: "actions",
+      header: "",
+      enableSorting: false,
+      cell: ({ row }) => (
+        <div className="flex items-center gap-1.5 justify-end">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => {
+              setEditingId(row.original.id);
+              setShowForm(true);
+            }}
+          >
+            <EditOutlined />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="text-red-500 hover:text-red-600 hover:bg-red-50"
+            onClick={async () => {
+              if (!window.confirm("Удалить поставщика?")) return;
+              try {
+                await deleteSupplier(row.original.id).unwrap();
+              } catch (err) {
+                console.error("Failed to delete supplier", err);
+              }
+            }}
+          >
+            <DeleteOutlined />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  if (isLoading) {
     return (
-      <div className="mt-10 text-center text-lg font-semibold text-red-500">
-        Ошибка:{" "}
-        {error && "status" in error
-          ? String(error.status)
-          : "Неизвестная ошибка"}
+      <div className="p-6 max-w-7xl mx-auto space-y-3">
+        <div className="h-8 w-56 bg-gray-200 rounded animate-pulse" />
+        <div className="h-10 w-64 bg-gray-200 rounded animate-pulse" />
+        <div className="h-64 bg-gray-200 rounded-xl animate-pulse" />
       </div>
     );
+  }
 
-  const totalPages = Math.ceil(suppliers.length / SUPPLIERS_PER_PAGE);
-  const paginatedSuppliers = suppliers.slice(
-    (currentPage - 1) * SUPPLIERS_PER_PAGE,
-    currentPage * SUPPLIERS_PER_PAGE
-  );
+  if (error) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <div className="text-center py-10 text-red-500 font-medium">
+          Ошибка загрузки данных
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6 pb-20 max-w-7xl mx-auto relative">
-      <div className="flex items-center justify-between gap-3 mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 text-center">Список поставщиков</h1>
-        <button
-          className="bg-primary text-white border-none px-4 py-2.5 rounded-lg cursor-pointer font-semibold transition-all hover:bg-primary-dark"
+    <div className="p-6 pb-20 max-w-7xl mx-auto">
+      <div className="flex items-center gap-2.5 mb-6">
+        <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
+          <ShopOutlined className="text-base" />
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900">Поставщики</h1>
+        <span className="ml-auto text-sm text-gray-400 font-medium">{suppliers.length} записей</span>
+        <Button
           onClick={() => {
             setEditingId(null);
             setShowForm(true);
           }}
         >
-          + Добавить поставщика
-        </button>
-      </div>
-      <div className="flex flex-wrap gap-3 mb-4 items-center">
-        <input
-          className="px-3 py-2.5 border-2 border-gray-200 rounded-lg min-w-[200px] text-sm transition-all focus:border-primary focus:ring-3 focus:ring-primary/15 focus:outline-none"
-          type="text"
-          placeholder="Поиск по названию/ID"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setCurrentPage(1);
-          }}
-        />
-        <select
-          className="px-3 py-2.5 border-2 border-gray-200 rounded-lg min-w-[140px] text-sm transition-all focus:border-primary focus:ring-3 focus:ring-primary/15 focus:outline-none"
-          value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value as typeof sortOrder)}
-        >
-          <option value="asc">Возр.</option>
-          <option value="desc">Убыв.</option>
-        </select>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {paginatedSuppliers.map((supplier) => (
-          <div className="border border-gray-200 rounded-xl p-3 shadow-sm flex flex-col gap-2.5" key={supplier.id}>
-            <SupplierItem
-              id={supplier.id}
-              name={supplier.name}
-              address={supplier.address}
-              contact={supplier.contact}
-              positionsForBuying={supplier.positionsForBuying}
-            />
-            <div className="flex gap-2.5 justify-end">
-              <button
-                className="px-3 py-2 border-none rounded-lg cursor-pointer font-semibold bg-gray-100 text-gray-900 hover:bg-gray-200"
-                onClick={() => {
-                  setEditingId(supplier.id);
-                  setShowForm(true);
-                }}
-              >
-                Редактировать
-              </button>
-              <button
-                className="px-3 py-2 border-none rounded-lg cursor-pointer font-semibold bg-red-500 text-white hover:bg-red-600"
-                onClick={async () => {
-                  if (!window.confirm("Удалить поставщика?")) return;
-                  try {
-                    await deleteSupplier(supplier.id).unwrap();
-                  } catch (err) {
-                    console.error("Failed to delete supplier", err);
-                    alert("Не удалось удалить поставщика");
-                  }
-                }}
-              >
-                Удалить
-              </button>
-            </div>
-          </div>
-        ))}
+          <PlusOutlined className="mr-1.5" />
+          Добавить
+        </Button>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-3 mt-6 sticky bottom-5 bg-white p-2.5 rounded-md shadow-sm">
-          <button
-            className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-md bg-white text-primary cursor-pointer transition-all hover:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-          >
-            Назад
-          </button>
-          <span className="text-sm font-medium text-gray-700">
-            {currentPage} / {totalPages}
-          </span>
-          <button
-            className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-md bg-white text-primary cursor-pointer transition-all hover:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-            disabled={currentPage === totalPages}
-          >
-            Вперед
-          </button>
-        </div>
-      )}
+      <DataTable
+        columns={columns}
+        data={suppliers}
+        searchPlaceholder="Поиск по названию, контакту..."
+        pageSize={10}
+      />
+
       {showForm && (
         <SupplierForm
           initialData={
-            editingSupplier ?? {
-              name: "",
-              contact: "",
-              address: "",
-            }
+            editingSupplier ?? { name: "", contact: "", address: "" }
           }
           onClose={() => {
             setShowForm(false);

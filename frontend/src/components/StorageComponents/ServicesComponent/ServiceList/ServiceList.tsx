@@ -1,177 +1,157 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { useSelector } from "react-redux";
+import { ColumnDef } from "@tanstack/react-table";
 import { RootState } from "../../../../store";
 import {
   useGetServicesQuery,
-  useCreateServiceMutation,
-  useUpdateServiceMutation,
   useDeleteServiceMutation,
+  Service,
 } from "../../../../api/servicesApi";
-import { ServiceItem } from "../ServiceItem/ServiceItem";
-import { useDebounce } from "../../../../hooks/useDebounce";
+import { DataTable } from "../../../ui/data-table";
+import { Button } from "../../../ui/button";
 import { ServiceForm } from "../ServiceForm/ServiceForm";
-
-const SERVICES_PER_PAGE = 6;
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  ToolOutlined,
+} from "@ant-design/icons";
 
 const ServiceList: React.FC = () => {
-  const { isAuthenticated, user } = useSelector(
-    (state: RootState) => state.auth
-  );
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   const canManage =
     isAuthenticated &&
     (user?.roleName === "admin" || user?.roleName === "manager");
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const debouncedSearch = useDebounce(search, 300);
-
-  const {
-    data: services = [],
-    isLoading,
-    error,
-  } = useGetServicesQuery({
-    search: debouncedSearch,
-    sortBy: "name",
-    sortOrder,
-  });
-
-  const [createService] = useCreateServiceMutation();
-  const [updateService] = useUpdateServiceMutation();
-  const [deleteService] = useDeleteServiceMutation();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const safeServices = useMemo(
-    () => (Array.isArray(services) ? services : []),
-    [services]
-  );
+  const { data: services = [], isLoading, error } = useGetServicesQuery({
+    search: "",
+    sortBy: "name",
+    sortOrder: "asc",
+  });
 
-  if (isLoading) return <div className="mt-10 text-center text-lg font-semibold text-gray-700 animate-pulse">Загрузка...</div>;
-  if (error)
+  const [deleteService] = useDeleteServiceMutation();
+
+  const columns: ColumnDef<Service>[] = [
+    {
+      accessorKey: "name",
+      header: "Название",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500 shrink-0">
+            <ToolOutlined className="text-sm" />
+          </div>
+          <p className="font-medium text-gray-900">{row.original.name}</p>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "description",
+      header: "Описание",
+      cell: ({ getValue }) => (
+        <span className="text-sm text-gray-500 line-clamp-2">
+          {(getValue() as string) || "—"}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "price",
+      header: "Цена",
+      cell: ({ getValue }) => (
+        <span className="text-sm font-semibold text-gray-800">
+          {Number(getValue() || 0).toLocaleString("ru-RU")} ₽
+        </span>
+      ),
+    },
+    ...(canManage
+      ? [
+          {
+            id: "actions",
+            header: "",
+            enableSorting: false,
+            cell: ({ row }: { row: { original: Service } }) => (
+              <div className="flex items-center gap-1.5 justify-end">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => {
+                    setEditingId(row.original.id);
+                    setShowForm(true);
+                  }}
+                >
+                  <EditOutlined />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                  onClick={async () => {
+                    if (!window.confirm("Удалить услугу?")) return;
+                    try {
+                      await deleteService(row.original.id).unwrap();
+                    } catch (err) {
+                      console.error("Failed to delete service", err);
+                    }
+                  }}
+                >
+                  <DeleteOutlined />
+                </Button>
+              </div>
+            ),
+          } satisfies ColumnDef<Service>,
+        ]
+      : []),
+  ];
+
+  if (isLoading) {
     return (
-      <div className="mt-10 text-center text-lg font-semibold text-red-500">
-        Ошибка:{" "}
-        {error && "status" in error
-          ? String(error.status)
-          : "Неизвестная ошибка"}
+      <div className="p-6 max-w-7xl mx-auto space-y-3">
+        <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+        <div className="h-64 bg-gray-200 rounded-xl animate-pulse" />
       </div>
     );
+  }
 
-  const totalPages = Math.ceil(safeServices.length / SERVICES_PER_PAGE);
-  const paginatedServices =
-    safeServices.length > 0
-      ? safeServices.slice(
-          (currentPage - 1) * SERVICES_PER_PAGE,
-          currentPage * SERVICES_PER_PAGE
-        )
-      : [];
+  if (error) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <div className="text-center py-10 text-red-500 font-medium">
+          Ошибка загрузки данных
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6 pb-20 max-w-7xl mx-auto relative">
-      <div className="flex items-center justify-between gap-3 mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 text-center">Список услуг</h1>
+    <div className="p-6 pb-20 max-w-7xl mx-auto">
+      <div className="flex items-center gap-2.5 mb-6">
+        <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+          <ToolOutlined className="text-base" />
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900">Услуги</h1>
+        <span className="ml-auto text-sm text-gray-400 font-medium">{services.length} услуг</span>
         {canManage && (
-          <button
-            className="bg-primary text-white border-none px-4 py-2.5 rounded-lg cursor-pointer font-semibold transition-all hover:bg-primary-dark"
+          <Button
             onClick={() => {
               setEditingId(null);
               setShowForm(true);
             }}
           >
-            + Добавить услугу
-          </button>
-        )}
-      </div>
-      <div className="flex flex-wrap gap-3 mb-4 items-center">
-        <input
-          className="px-3 py-2.5 border-2 border-gray-200 rounded-lg min-w-[200px] text-sm transition-all focus:border-primary focus:ring-3 focus:ring-primary/15 focus:outline-none"
-          type="text"
-          placeholder="Поиск по названию/ID"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setCurrentPage(1);
-          }}
-        />
-        <select
-          className="px-3 py-2.5 border-2 border-gray-200 rounded-lg min-w-[140px] text-sm transition-all focus:border-primary focus:ring-3 focus:ring-primary/15 focus:outline-none"
-          value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value as typeof sortOrder)}
-        >
-          <option value="asc">Возр.</option>
-          <option value="desc">Убыв.</option>
-        </select>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {paginatedServices.length > 0 ? (
-          paginatedServices.map((service) => (
-            <div className="border border-gray-200 rounded-xl p-3 shadow-sm flex flex-col gap-2.5" key={service.id}>
-              <ServiceItem
-                id={service.id}
-                name={service.name}
-                description={service.description}
-                price={service.price}
-              />
-              {canManage && (
-                <div className="flex gap-2.5 justify-end">
-                  <button
-                    className="px-3 py-2 border-none rounded-lg cursor-pointer font-semibold bg-gray-100 text-gray-900 hover:bg-gray-200"
-                    onClick={() => {
-                      setEditingId(service.id);
-                      setShowForm(true);
-                    }}
-                  >
-                    Редактировать
-                  </button>
-                  <button
-                    className="px-3 py-2 border-none rounded-lg cursor-pointer font-semibold bg-red-500 text-white hover:bg-red-600"
-                    onClick={async () => {
-                      if (!window.confirm("Удалить услугу?")) return;
-                      try {
-                        await deleteService(service.id).unwrap();
-                      } catch (err) {
-                        console.error("Failed to delete service", err);
-                        alert("Не удалось удалить услугу");
-                      }
-                    }}
-                  >
-                    Удалить
-                  </button>
-                </div>
-              )}
-            </div>
-          ))
-        ) : (
-          <div className="col-span-full text-center p-8 text-lg text-gray-500">
-            Услуг нет
-          </div>
+            <PlusOutlined className="mr-1.5" />
+            Добавить
+          </Button>
         )}
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-3 mt-6 sticky bottom-5 bg-white p-2.5 rounded-md shadow-sm">
-          <button
-            className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-md bg-white text-primary cursor-pointer transition-all hover:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-          >
-            Назад
-          </button>
-          <span className="text-sm font-medium text-gray-700">
-            {currentPage} / {totalPages}
-          </span>
-          <button
-            className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-md bg-white text-primary cursor-pointer transition-all hover:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-            disabled={currentPage === totalPages}
-          >
-            Вперед
-          </button>
-        </div>
-      )}
+      <DataTable
+        columns={columns}
+        data={services}
+        searchPlaceholder="Поиск по названию..."
+        pageSize={10}
+      />
+
       {canManage && showForm && (
         <ServiceForm
           serviceId={editingId ?? undefined}

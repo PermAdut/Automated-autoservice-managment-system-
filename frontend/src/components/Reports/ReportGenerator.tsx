@@ -1,80 +1,152 @@
 import React from "react";
 import { useLazyGetReportQuery } from "../../api/reportsApi";
 import type { ReportData } from "../../api/reportsApi";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "../ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../ui/table";
+import {
+  FileTextOutlined,
+  InboxOutlined,
+  ToolOutlined,
+  TeamOutlined,
+  StarOutlined,
+  FundOutlined,
+  LoadingOutlined,
+} from "@ant-design/icons";
 
 const reportTypes = [
-  { type: "orders", label: "Отчёт о заказах клиентов" },
-  { type: "stock", label: "Отчёт о запасах на складах" },
-  { type: "services", label: "Отчёт о доходах по услугам" },
-  { type: "employees", label: "Отчёт о работе сотрудников" },
-  { type: "subscriptions", label: "Отчёт о подписках и отзывах клиентов" },
+  { type: "orders", label: "Заказы клиентов", icon: <FileTextOutlined />, color: "bg-indigo-50 text-indigo-600" },
+  { type: "stock", label: "Запасы склада", icon: <InboxOutlined />, color: "bg-orange-50 text-orange-500" },
+  { type: "services", label: "Доходы по услугам", icon: <ToolOutlined />, color: "bg-green-50 text-green-600" },
+  { type: "employees", label: "Работа сотрудников", icon: <TeamOutlined />, color: "bg-blue-50 text-blue-600" },
+  { type: "subscriptions", label: "Подписки и отзывы", icon: <StarOutlined />, color: "bg-amber-50 text-amber-500" },
 ];
 
 const ReportTable: React.FC<{ data: ReportData }> = ({ data }) => {
   if (data.rows.length === 0) {
-    return <p className="text-center py-5 italic text-gray-400">Нет данных для отчёта</p>;
+    return (
+      <div className="text-center py-10 text-gray-400">
+        <FundOutlined className="text-3xl mb-2 block" />
+        Нет данных для отчёта
+      </div>
+    );
   }
 
   return (
-    <>
-      <h2 className="text-center text-gray-800 my-5 text-xl font-semibold">{data.title}</h2>
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse shadow-md">
-          <thead>
-            <tr>
+    <div>
+      <h2 className="text-lg font-semibold text-gray-900 mb-4">{data.title}</h2>
+      <div className="rounded-xl border border-gray-200 overflow-hidden">
+        <Table>
+          <TableHeader className="bg-gray-50">
+            <TableRow>
               {data.columns.map((col) => (
-                <th
-                  key={col.key}
-                  className="px-3 py-3 text-left border border-gray-200 text-sm font-bold bg-primary text-white"
-                >
-                  {col.label}
-                </th>
+                <TableHead key={col.key}>{col.label}</TableHead>
               ))}
-            </tr>
-          </thead>
-          <tbody>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {data.rows.map((row, idx) => (
-              <tr key={idx} className="even:bg-gray-50 hover:bg-blue-50 transition-colors">
+              <TableRow key={idx}>
                 {data.columns.map((col) => (
-                  <td key={col.key} className="px-3 py-3 text-left border border-gray-200 text-sm">
-                    {String(row[col.key] ?? "-")}
-                  </td>
+                  <TableCell key={col.key} className="text-sm">
+                    {String(row[col.key] ?? "—")}
+                  </TableCell>
                 ))}
-              </tr>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
-    </>
+      <p className="text-xs text-gray-400 mt-2 text-right">
+        Всего строк: {data.rows.length}
+      </p>
+    </div>
   );
 };
 
 const ReportGenerator: React.FC = () => {
-  const [fetchReport, { data, isLoading, error }] = useLazyGetReportQuery();
+  const [fetchReport, { data, isLoading, error, originalArgs }] =
+    useLazyGetReportQuery();
 
   return (
-    <div className="max-w-7xl mx-auto px-5 py-5">
-      <h1 className="text-3xl text-center text-gray-800 mb-8 uppercase font-bold">
-        Генератор отчётов
-      </h1>
-      <div className="flex flex-wrap gap-4 justify-center mb-8">
-        {reportTypes.map((report) => (
-          <button
-            key={report.type}
-            className="bg-primary text-white border-none px-6 py-3 text-base rounded-lg cursor-pointer transition-all hover:bg-primary-dark hover:-translate-y-0.5 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
-            onClick={() => fetchReport(report.type)}
-            disabled={isLoading}
-          >
-            {report.label}
-          </button>
-        ))}
+    <div className="max-w-7xl mx-auto px-6 py-6 pb-20">
+      <div className="flex items-center gap-2.5 mb-6">
+        <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+          <FundOutlined className="text-base" />
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900">Отчёты</h1>
       </div>
 
-      {isLoading && <div className="text-center text-lg text-gray-400 my-5">Загрузка отчёта...</div>}
-      {error && <div className="text-center text-lg text-red-500 my-5">Не удалось загрузить отчёт. Проверьте соединение с сервером.</div>}
-      {data && (
-        <div className="bg-white rounded-lg shadow-lg p-5">
-          <ReportTable data={data} />
+      {/* Report Type Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 mb-8">
+        {reportTypes.map((report) => {
+          const isActive = originalArgs === report.type && data;
+          return (
+            <button
+              key={report.type}
+              onClick={() => fetchReport(report.type)}
+              disabled={isLoading}
+              className={`
+                group relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all cursor-pointer
+                disabled:opacity-60 disabled:cursor-not-allowed text-left
+                ${isActive
+                  ? "border-indigo-500 bg-indigo-50 shadow-sm"
+                  : "border-gray-200 bg-white hover:border-indigo-300 hover:shadow-sm"
+                }
+              `}
+            >
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-base ${report.color}`}>
+                {isLoading && originalArgs === report.type
+                  ? <LoadingOutlined />
+                  : report.icon
+                }
+              </div>
+              <span className={`text-sm font-medium text-center leading-tight ${isActive ? "text-indigo-700" : "text-gray-700"}`}>
+                {report.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Report Output */}
+      {isLoading && (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <LoadingOutlined className="text-2xl text-indigo-500 animate-spin" />
+            <p className="mt-3 text-sm text-gray-400">Загрузка отчёта...</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {error && !isLoading && (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <p className="text-red-500 font-medium">Не удалось загрузить отчёт</p>
+            <p className="text-sm text-gray-400 mt-1">Проверьте соединение с сервером</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {data && !isLoading && (
+        <Card>
+          <CardContent className="pt-6">
+            <ReportTable data={data} />
+          </CardContent>
+        </Card>
+      )}
+
+      {!data && !isLoading && !error && (
+        <div className="text-center py-16 text-gray-400">
+          <FundOutlined className="text-5xl mb-3 block" />
+          <p className="text-sm">Выберите тип отчёта выше</p>
         </div>
       )}
     </div>
