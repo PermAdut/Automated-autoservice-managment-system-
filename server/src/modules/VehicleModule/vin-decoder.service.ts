@@ -42,7 +42,7 @@ export class VinDecoderService {
         throw new Error(`NHTSA API returned ${response.status}`);
       }
 
-      const data = (await response.json()) as any;
+      const data = (await response.json());
       const result = data?.Results?.[0];
 
       if (!result) {

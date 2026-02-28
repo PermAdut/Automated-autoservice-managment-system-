@@ -6,7 +6,6 @@ import {
   useDeleteUserMutation,
   useUpdateUserMutation,
 } from "../../../api/usersApi";
-import { UserDetailed } from "../../../api/usersApi";
 import { DataTable } from "../../ui/data-table";
 import { Button } from "../../ui/button";
 import { Badge } from "../../ui/badge";
@@ -19,6 +18,7 @@ import {
   EyeOutlined,
 } from "@ant-design/icons";
 import { useLazyGetUserByIdQuery } from "../../../api/usersApi";
+import { PageLayout } from "../../layout/PageLayout";
 
 type UserRow = {
   id: string;
@@ -160,26 +160,26 @@ const UserList = () => {
 
   if (isLoading) {
     return (
-      <div className="p-6 max-w-7xl mx-auto space-y-3">
+      <PageLayout className="space-y-3">
         <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
         <div className="h-10 w-64 bg-gray-200 rounded animate-pulse" />
         <div className="h-64 bg-gray-200 rounded-xl animate-pulse" />
-      </div>
+      </PageLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
+      <PageLayout>
         <div className="text-center py-10 text-red-500 font-medium">
           Ошибка загрузки данных
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="p-6 pb-20 max-w-7xl mx-auto">
+    <PageLayout className="pb-20">
       <div className="flex items-center gap-2.5 mb-6">
         <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
           <UserOutlined className="text-base" />
@@ -194,7 +194,7 @@ const UserList = () => {
         searchPlaceholder="Поиск по имени, email..."
         pageSize={10}
       />
-    </div>
+    </PageLayout>
   );
 };
 

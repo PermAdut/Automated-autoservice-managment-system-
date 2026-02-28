@@ -137,7 +137,7 @@ const StorageList: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="p-6 max-w-7xl mx-auto space-y-3">
+      <div className="space-y-3">
         <div className="h-8 w-64 bg-gray-200 rounded animate-pulse" />
         <div className="h-10 w-64 bg-gray-200 rounded animate-pulse" />
         <div className="h-64 bg-gray-200 rounded-xl animate-pulse" />
@@ -147,16 +147,14 @@ const StorageList: React.FC = () => {
 
   if (error) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
-        <div className="text-center py-10 text-red-500 font-medium">
-          Ошибка загрузки данных
-        </div>
+      <div className="text-center py-10 text-red-500 font-medium">
+        Ошибка загрузки данных
       </div>
     );
   }
 
   return (
-    <div className="p-6 pb-20 max-w-7xl mx-auto">
+    <section className="space-y-6">
       <div className="flex items-center gap-2.5 mb-6">
         <div className="w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center text-orange-500">
           <InboxOutlined className="text-base" />
@@ -207,7 +205,7 @@ const StorageList: React.FC = () => {
           }}
         />
       )}
-    </div>
+    </section>
   );
 };
 

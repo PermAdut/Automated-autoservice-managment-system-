@@ -5,7 +5,7 @@ import { UserDetailed, useGetRolesQuery } from "../../api/usersApi";
 interface EditUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (userData: Partial<UserDetailed>) => void;
+  onSave: (userData: Partial<UserDetailed> & { roleId?: string }) => void;
   initialData: UserDetailed;
 }
 
@@ -59,8 +59,8 @@ export const EditUserModal: FC<EditUserModalProps> = ({
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-2xl w-[90%] max-w-[500px] shadow-xl border-2 border-gray-200">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 sm:p-6">
+      <div className="bg-white p-6 sm:p-8 rounded-2xl w-full max-w-lg shadow-xl border-2 border-gray-200 max-h-[90vh] overflow-y-auto m-2.5">
         <h3 className="mb-6 text-2xl font-bold text-gray-900 text-center">
           Редактирование пользователя
         </h3>

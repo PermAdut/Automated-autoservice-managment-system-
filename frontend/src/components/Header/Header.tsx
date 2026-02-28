@@ -114,8 +114,8 @@ const Header = () => {
   );
 
   return (
-    <header className="bg-gradient-to-r from-indigo-700 via-indigo-600 to-blue-500 shadow-md sticky top-0 z-50">
-      <div className="max-w-[1200px] mx-auto px-4 py-3 flex items-center justify-between gap-4">
+    <header className="w-full min-w-full bg-gradient-to-r from-indigo-700 via-indigo-600 to-blue-500 shadow-md sticky top-0 z-50">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-4">
         {/* Logo */}
         <button
           onClick={() => navigate("/")}
@@ -181,14 +181,14 @@ const Header = () => {
           onClick={() => setMobileOpen((v) => !v)}
           aria-label="Меню"
         >
-          {mobileOpen ? <CloseOutlined style={{ fontSize: 20 }} /> : <MenuOutlined style={{ fontSize: 20 }} />}
+          {mobileOpen ? <CloseOutlined className="text-xl" /> : <MenuOutlined className="text-xl" />}
         </button>
       </div>
 
       {/* Mobile menu */}
       {mobileOpen && (
         <div className="md:hidden border-t border-white/20 bg-indigo-700/95 backdrop-blur-sm">
-          <nav className="max-w-[1200px] mx-auto px-4 py-3 flex flex-col gap-2">
+          <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col gap-2 w-full">
             {navItems.map((item) => (
               <Link
                 key={item.to}

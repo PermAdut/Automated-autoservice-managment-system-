@@ -78,8 +78,8 @@ const StorageForm = ({ stock, onClose, onSubmit }: StorageFormProps) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white rounded-xl p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 sm:p-6" onClick={onClose}>
+      <div className="bg-white rounded-xl p-6 sm:p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl m-2.5" onClick={(e) => e.stopPropagation()}>
         <h3 className="text-2xl font-bold text-gray-800 mb-6">
           {stock ? "Редактировать запчасть на складе" : "Добавить запчасть на склад"}
         </h3>

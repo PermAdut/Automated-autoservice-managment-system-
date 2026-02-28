@@ -56,8 +56,6 @@ export const EmployeeItem: React.FC<EmployeeItemProps> = ({
   const {
     data: subscriptionData,
     refetch: refetchSubscription,
-    error: subscriptionError,
-    isLoading: isLoadingSubscription,
   } = useGetUserSubscriptionQuery(id, {
     skip: !isAuthenticated,
   });
@@ -112,7 +110,7 @@ export const EmployeeItem: React.FC<EmployeeItemProps> = ({
   };
 
   return (
-    <div className="bg-white border-2 border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all">
+    <div className="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all">
       <div className="mb-4">
         <h2 className="text-xl font-semibold text-gray-800 m-0">
           {surName} {name} {lastName ?? ""}

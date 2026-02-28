@@ -5,8 +5,6 @@ import {
   OnGatewayDisconnect,
   OnGatewayInit,
   SubscribeMessage,
-  MessageBody,
-  ConnectedSocket,
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -69,7 +67,7 @@ export class EventsGateway
       }
 
       try {
-        const payload = this.jwtService.verify(token) as any;
+        const payload = this.jwtService.verify(token);
         socket.data.userId = payload.sub;
         socket.data.roleId = payload.roleId;
         next();
@@ -104,7 +102,7 @@ export class EventsGateway
   // ── Client → Server messages ──────────────────────────────────────────────
 
   @SubscribeMessage('ping')
-  handlePing(@ConnectedSocket() client: WsClient): string {
+  handlePing(): string {
     return 'pong';
   }
 

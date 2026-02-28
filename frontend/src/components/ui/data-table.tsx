@@ -17,7 +17,7 @@ import {
   SearchOutlined,
 } from "@ant-design/icons";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table";
-import { Input } from "./input";
+import { InputWithIcon } from "./input-with-icon";
 import { Button } from "./button";
 import { cn } from "../../lib/utils";
 
@@ -58,15 +58,14 @@ export function DataTable<TData, TValue>({
   const pageIndex = table.getState().pagination.pageIndex;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* Search */}
-      <div className="relative max-w-xs">
-        <SearchOutlined className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-        <Input
+      <div className="w-full max-w-md">
+        <InputWithIcon
           placeholder={searchPlaceholder}
           value={globalFilter}
           onChange={(e) => table.setGlobalFilter(e.target.value)}
-          className="pl-9"
+          icon={<SearchOutlined className="text-sm" />}
         />
       </div>
 
@@ -161,7 +160,7 @@ export function DataTable<TData, TValue>({
                 variant={i === pageIndex ? "default" : "ghost"}
                 size="icon-sm"
                 onClick={() => table.setPageIndex(i)}
-                className={cn("min-w-[32px]", i === pageIndex && "pointer-events-none")}
+                className={cn("min-w-8", i === pageIndex && "pointer-events-none")}
               >
                 {i + 1}
               </Button>

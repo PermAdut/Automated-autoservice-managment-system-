@@ -107,7 +107,7 @@ const ServiceList: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="p-6 max-w-7xl mx-auto space-y-3">
+      <div className="space-y-3">
         <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
         <div className="h-64 bg-gray-200 rounded-xl animate-pulse" />
       </div>
@@ -116,16 +116,14 @@ const ServiceList: React.FC = () => {
 
   if (error) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
-        <div className="text-center py-10 text-red-500 font-medium">
-          Ошибка загрузки данных
-        </div>
+      <div className="text-center py-10 text-red-500 font-medium">
+        Ошибка загрузки данных
       </div>
     );
   }
 
   return (
-    <div className="p-6 pb-20 max-w-7xl mx-auto">
+    <section className="space-y-6">
       <div className="flex items-center gap-2.5 mb-6">
         <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
           <ToolOutlined className="text-base" />
@@ -162,7 +160,7 @@ const ServiceList: React.FC = () => {
           onSuccess={() => {}}
         />
       )}
-    </div>
+    </section>
   );
 };
 

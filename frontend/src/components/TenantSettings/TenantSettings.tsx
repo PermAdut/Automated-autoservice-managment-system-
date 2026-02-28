@@ -30,8 +30,6 @@ const FEATURES = [
   { key: "featurePartnerNetwork", label: "Партнёрская сеть" },
 ] as const;
 
-type FeatureKey = (typeof FEATURES)[number]["key"];
-
 const tabs = [
   { id: "company", label: "Компания", icon: <BankOutlined /> },
   { id: "branding", label: "Брендинг", icon: <BgColorsOutlined /> },

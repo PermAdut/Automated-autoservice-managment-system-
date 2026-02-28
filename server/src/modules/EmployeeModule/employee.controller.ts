@@ -21,7 +21,6 @@ import { Roles } from '../AuthModule/decorators/roles.decorator';
 import { Public } from '../AuthModule/decorators/public.decorator';
 import { CreateEmployeeDto } from './Dto/create-employee.dto';
 import { UpdateEmployeeDto } from './Dto/update-employee.dto';
-import { SubscribeEmployeeDto } from './Dto/subscribe-employee.dto';
 import { CreateReviewDto } from './Dto/create-review.dto';
 import { Req } from '@nestjs/common';
 import { Request } from 'express';

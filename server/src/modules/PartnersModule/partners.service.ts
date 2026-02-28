@@ -10,7 +10,7 @@ import {
   partnerSparePartRequests,
   partnerClientRedirects,
 } from '../database/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { randomBytes, createHash } from 'crypto';
 
 @Injectable()

@@ -5,7 +5,6 @@ import {
   text,
   timestamp,
   uuid,
-  varchar,
 } from 'drizzle-orm/pg-core';
 import { schema } from '../pgSchema';
 import { orders, spareParts, users } from '../schema';

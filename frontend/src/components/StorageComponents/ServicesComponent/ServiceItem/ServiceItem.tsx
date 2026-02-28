@@ -14,7 +14,7 @@ export const ServiceItem: React.FC<ServiceItemProps> = ({
   price,
 }) => {
   return (
-    <div className="bg-white border-2 border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all">
+    <div className="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all">
       <div className="mb-4">
         <h2 className="text-xl font-semibold text-gray-800 m-0">{name}</h2>
         <p className="text-sm text-gray-500 mt-1">ID: {id}</p>

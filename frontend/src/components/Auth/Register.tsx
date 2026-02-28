@@ -12,6 +12,7 @@ import { useRegisterMutation } from "../../api/baseApi";
 import { serverConfig } from "../../configs/serverConfig";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { InputWithIcon } from "../ui/input-with-icon";
 import { Label } from "../ui/label";
 
 const Register = () => {
@@ -55,157 +56,126 @@ const Register = () => {
     window.location.href = `${serverConfig.url}/auth/google`;
   };
 
-  const fieldClass = "pl-9";
-
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-200px)] p-6">
-      <div className="bg-white rounded-2xl p-8 shadow-xl w-full max-w-lg border border-gray-100 animate-[slideUp_0.3s_ease-out]">
+    <div className="flex flex-1 items-center justify-center py-12 px-6 sm:px-8 lg:px-12">
+      <div className="bg-white rounded-2xl p-8 sm:p-10 lg:p-12 shadow-xl w-full max-w-xl sm:max-w-2xl border border-gray-100 animate-[slideUp_0.3s_ease-out] max-h-[90vh] overflow-y-auto m-4">
         {/* Header */}
-        <div className="text-center mb-7">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 text-2xl mb-4">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 text-2xl mb-5">
             <IdcardOutlined />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">Регистрация</h2>
-          <p className="text-sm text-gray-500 mt-1">Создайте аккаунт для доступа к системе</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Регистрация</h2>
+          <p className="text-sm text-gray-500 mt-2">Создайте аккаунт для доступа к системе</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           {/* Name row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="name">Имя *</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                  <UserOutlined />
-                </span>
-                <Input
-                  id="name"
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
-                  required
-                  placeholder="Иван"
-                  className={fieldClass}
-                />
-              </div>
+              <InputWithIcon
+                id="name"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                required
+                placeholder="Иван"
+                icon={<UserOutlined />}
+              />
             </div>
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="surName">Фамилия *</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                  <UserOutlined />
-                </span>
-                <Input
-                  id="surName"
-                  name="surName"
-                  value={form.surName}
-                  onChange={handleChange}
-                  required
-                  placeholder="Иванов"
-                  className={fieldClass}
-                />
-              </div>
+              <InputWithIcon
+                id="surName"
+                name="surName"
+                value={form.surName}
+                onChange={handleChange}
+                required
+                placeholder="Иванов"
+                icon={<UserOutlined />}
+              />
             </div>
           </div>
 
           {/* Login */}
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="login">Логин *</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                <UserOutlined />
-              </span>
-              <Input
-                id="login"
-                name="login"
-                value={form.login}
-                onChange={handleChange}
-                required
-                placeholder="ivanov"
-                className={fieldClass}
-              />
-            </div>
+            <InputWithIcon
+              id="login"
+              name="login"
+              value={form.login}
+              onChange={handleChange}
+              required
+              placeholder="ivanov"
+              icon={<UserOutlined />}
+            />
           </div>
 
           {/* Email */}
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="email">Email *</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                <MailOutlined />
-              </span>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={form.email}
-                onChange={handleChange}
-                required
-                placeholder="ivan@mail.com"
-                className={fieldClass}
-              />
-            </div>
+            <InputWithIcon
+              id="email"
+              name="email"
+              type="email"
+              value={form.email}
+              onChange={handleChange}
+              required
+              placeholder="ivan@mail.com"
+              icon={<MailOutlined />}
+            />
           </div>
 
           {/* Password */}
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="password">Пароль *</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                <LockOutlined />
-              </span>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                minLength={6}
-                value={form.password}
-                onChange={handleChange}
-                required
-                placeholder="Минимум 6 символов"
-                className={fieldClass}
-              />
-            </div>
+            <InputWithIcon
+              id="password"
+              name="password"
+              type="password"
+              minLength={6}
+              value={form.password}
+              onChange={handleChange}
+              required
+              placeholder="Минимум 6 символов"
+              icon={<LockOutlined />}
+            />
           </div>
 
           {/* Phone */}
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="phone">Телефон</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                <PhoneOutlined />
-              </span>
-              <Input
-                id="phone"
-                name="phone"
-                value={form.phone}
-                onChange={handleChange}
-                placeholder="+7 999 123-45-67"
-                className={fieldClass}
-              />
-            </div>
+            <InputWithIcon
+              id="phone"
+              name="phone"
+              value={form.phone}
+              onChange={handleChange}
+              placeholder="+7 999 123-45-67"
+              icon={<PhoneOutlined />}
+            />
           </div>
 
           {/* Passport section */}
-          <div className="border-t border-gray-100 pt-4 mt-1">
-            <h3 className="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-1.5">
+          <div className="border-t border-gray-100 pt-5 mt-2">
+            <h3 className="text-sm font-semibold text-gray-600 mb-4 flex items-center gap-1.5">
               <IdcardOutlined />
               Паспортные данные
             </h3>
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="passportIdentityNumber">Номер паспорта *</Label>
-                <Input
+                <InputWithIcon
                   id="passportIdentityNumber"
                   name="passportIdentityNumber"
                   value={form.passportIdentityNumber}
                   onChange={handleChange}
                   required
                   placeholder="AB1234567"
+                  icon={<IdcardOutlined />}
                 />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="passportBirthDate">Дата рождения *</Label>
                   <Input
                     id="passportBirthDate"
@@ -217,7 +187,7 @@ const Register = () => {
                     required
                   />
                 </div>
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="passportGender">Пол *</Label>
                   <select
                     id="passportGender"
@@ -240,12 +210,12 @@ const Register = () => {
             </div>
           )}
 
-          <Button type="submit" disabled={isLoading} size="lg" className="mt-1">
+          <Button type="submit" disabled={isLoading} size="lg" className="mt-2">
             {isLoading ? "Регистрируемся..." : "Зарегистрироваться"}
           </Button>
         </form>
 
-        <div className="flex items-center my-5">
+        <div className="flex items-center my-6">
           <div className="flex-1 border-b border-gray-200" />
           <span className="px-4 text-gray-400 text-xs font-medium">или</span>
           <div className="flex-1 border-b border-gray-200" />

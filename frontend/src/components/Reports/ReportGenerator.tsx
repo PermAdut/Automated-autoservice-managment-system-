@@ -1,8 +1,8 @@
 import React from "react";
 import { useLazyGetReportQuery } from "../../api/reportsApi";
 import type { ReportData } from "../../api/reportsApi";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
+import { PageLayout } from "../layout/PageLayout";
 import {
   Table,
   TableBody,
@@ -76,7 +76,7 @@ const ReportGenerator: React.FC = () => {
     useLazyGetReportQuery();
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-6 pb-20">
+    <PageLayout className="pb-20">
       <div className="flex items-center gap-2.5 mb-6">
         <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
           <FundOutlined className="text-base" />
@@ -149,7 +149,7 @@ const ReportGenerator: React.FC = () => {
           <p className="text-sm">Выберите тип отчёта выше</p>
         </div>
       )}
-    </div>
+    </PageLayout>
   );
 };
 

@@ -20,6 +20,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { cn } from "../../lib/utils";
+import { PageLayout } from "../layout/PageLayout";
 
 type Period = "today" | "week" | "month" | "year";
 
@@ -93,7 +94,7 @@ export default function AnalyticsDashboard() {
   const { data: lowStock } = useGetLowStockQuery();
 
   return (
-    <div className="space-y-6">
+    <PageLayout className="space-y-6">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-2">
@@ -165,7 +166,7 @@ export default function AnalyticsDashboard() {
                   {[1, 2, 3, 4, 5].map((s) => (
                     <StarOutlined
                       key={s}
-                      className={s <= Math.round(kpi.averageRating ?? 0) ? "text-amber-400" : "text-gray-200"}
+                      className={s <= Math.round(Number(kpi.averageRating ?? 0)) ? "text-amber-400" : "text-gray-200"}
                       style={{ fontSize: 14 }}
                     />
                   ))}
@@ -324,6 +325,6 @@ export default function AnalyticsDashboard() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageLayout>
   );
 }

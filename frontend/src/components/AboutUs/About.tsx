@@ -67,31 +67,31 @@ const advantages = [
 
 export const About = () => {
   return (
-    <div className="max-w-5xl mx-auto px-6 py-10 pb-20">
+    <div className="w-full max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-12 py-12 sm:py-16 pb-24">
       {/* Hero */}
-      <div className="text-center mb-12">
+      <div className="text-center mb-14">
         <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-1.5 rounded-full text-sm font-medium mb-4">
           <CalendarOutlined />
           Система управления автосервисом
         </div>
-        <h1 className="text-4xl font-extrabold text-gray-900 mb-3">
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-4">
           О нас
         </h1>
-        <p className="text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
+        <p className="text-lg sm:text-xl text-gray-500 max-w-3xl mx-auto leading-relaxed">
           Мы — современная система управления автосервисом, которая помогает
           эффективно организовывать работу, управлять заказами, клиентами и сотрудниками.
         </p>
       </div>
 
       {/* Features */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-1">Наши возможности</h2>
-        <p className="text-gray-500 mb-6">Всё необходимое для современного автосервиса</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <section className="mb-14">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Наши возможности</h2>
+        <p className="text-gray-500 mb-8 text-base sm:text-lg">Всё необходимое для современного автосервиса</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {features.map((f) => (
             <div
               key={f.title}
-              className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md hover:-translate-y-0.5 transition-all"
+              className="bg-white border border-gray-200 rounded-xl p-6 sm:p-8 hover:shadow-md hover:-translate-y-0.5 transition-all"
             >
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg mb-3 ${f.color}`}>
                 {f.icon}
@@ -104,12 +104,12 @@ export const About = () => {
       </section>
 
       {/* Advantages */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-1">Почему выбирают нас</h2>
-        <p className="text-gray-500 mb-6">Наши преимущества перед другими системами</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="mb-14">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Почему выбирают нас</h2>
+        <p className="text-gray-500 mb-8 text-base sm:text-lg">Наши преимущества перед другими системами</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {advantages.map((a) => (
-            <div key={a.title} className="bg-white border border-gray-200 rounded-xl p-4 text-center">
+            <div key={a.title} className="bg-white border border-gray-200 rounded-xl p-6 text-center">
               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl mx-auto mb-3 ${a.color}`}>
                 {a.icon}
               </div>
@@ -122,12 +122,12 @@ export const About = () => {
 
       {/* Contact */}
       <section>
-        <div className="bg-gradient-to-br from-indigo-600 to-blue-500 rounded-2xl p-8 text-white text-center">
+        <div className="bg-gradient-to-br from-indigo-600 to-blue-500 rounded-2xl p-8 sm:p-10 lg:p-12 text-white text-center">
           <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3">
             <CustomerServiceOutlined />
           </div>
           <h2 className="text-2xl font-bold mb-2">Свяжитесь с нами</h2>
-          <p className="text-indigo-100 max-w-md mx-auto">
+          <p className="text-indigo-100 max-w-xl mx-auto text-base sm:text-lg">
             Если у вас есть вопросы или предложения, мы будем рады услышать от вас.
             Используйте систему для связи с нашей командой поддержки.
           </p>

@@ -64,11 +64,16 @@ export const ServiceForm: React.FC<ServiceFormProps> = ({
   }, [service, reset]);
 
   const onSubmit = async (data: ServiceFormData) => {
+    const payload = {
+      name: data.name,
+      description: data.description,
+      price: String(data.price),
+    };
     try {
       if (serviceId) {
-        await updateService({ id: serviceId, data }).unwrap();
+        await updateService({ id: serviceId, data: payload }).unwrap();
       } else {
-        await createService(data).unwrap();
+        await createService(payload).unwrap();
       }
       onSuccess?.();
       onClose();
@@ -79,15 +84,15 @@ export const ServiceForm: React.FC<ServiceFormProps> = ({
 
   if (isLoadingService) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-xl p-8 text-center text-gray-500">Загрузка...</div>
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 sm:p-6">
+        <div className="bg-white rounded-xl p-6 sm:p-8 text-center text-gray-500">Загрузка...</div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white rounded-xl p-8 w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 sm:p-6" onClick={onClose}>
+      <div className="bg-white rounded-xl p-6 sm:p-8 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto m-2.5" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-2xl font-bold text-gray-800 mb-6">
           {serviceId ? "Редактировать услугу" : "Добавить услугу"}
         </h2>

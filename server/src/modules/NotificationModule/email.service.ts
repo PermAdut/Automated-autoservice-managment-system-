@@ -78,7 +78,7 @@ export class EmailService {
         text: options.text,
       });
 
-      this.logger.log(`Email sent: ${info.messageId} → ${options.to}`);
+      this.logger.log(`Email sent: ${info.messageId} → ${Array.isArray(options.to) ? options.to.join(', ') : options.to}`);
       return { success: true, messageId: info.messageId };
     } catch (err) {
       this.logger.error(`Email failed: ${err}`);

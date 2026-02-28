@@ -51,11 +51,11 @@ export const DetailedUserComponent: React.FC = () => {
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000]"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4 sm:p-6"
       onClick={handleClose}
     >
       <div
-        className="bg-white rounded-xl p-6 max-w-[600px] w-[90%] max-h-[80vh] overflow-y-auto shadow-xl relative"
+        className="bg-white rounded-xl p-6 sm:p-8 max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-xl relative m-2.5"
         onClick={(e) => e.stopPropagation()}
       >
         <button

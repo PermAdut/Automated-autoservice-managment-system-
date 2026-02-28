@@ -298,9 +298,9 @@ async function seed() {
 
     // Create stores
     const storesData = [
-      { location: 'Склад Центральный' },
-      { location: 'Склад Северный' },
-      { location: 'Магазин на пр-т Победителей' },
+      { name: 'Склад Центральный', location: 'ул. Центральная, 1' },
+      { name: 'Склад Северный', location: 'ул. Северная, 15' },
+      { name: 'Магазин на пр-т Победителей', location: 'пр-т Победителей, 25' },
     ];
     const createdStores = await dbService.db
       .insert(stores)
@@ -424,7 +424,7 @@ async function seed() {
     const paymentsData: Array<{
       orderId: string;
       amount: string;
-      status: boolean;
+      status: 'paid' | 'pending' | 'failed' | 'refunded';
       paymentMethod: string;
       paymentDate: Date;
     }> = [];
@@ -457,7 +457,7 @@ async function seed() {
         paymentsData.push({
           orderId: order.id,
           amount: totalAmount.toString(),
-          status: i % 3 === 0 ? false : true, // Большинство оплачено
+          status: i % 3 === 0 ? 'pending' : 'paid', // Большинство оплачено
           paymentMethod: ['cash', 'card', 'online'][i % 3],
           paymentDate: new Date(
             order.createdAt.getTime() + 24 * 60 * 60 * 1000

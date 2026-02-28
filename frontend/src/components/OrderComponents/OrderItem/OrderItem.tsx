@@ -10,12 +10,12 @@ interface OrderItemProps {
   createdAt: string;
   updatedAt: string | null;
   completedAt: string | null;
-  services?: { id: string; name: string; description: string; price: number }[];
+  services?: { id: string; name: string; description: string; price: number | string }[];
   sparePart?: {
     id: string;
     name: string;
     partNumber: string;
-    price: number;
+    price: number | string;
     category?: { id: string; name: string; description?: string };
   }[];
 }
@@ -38,7 +38,7 @@ export const OrderItem: React.FC<OrderItemProps> = ({
     : "Сотрудник не назначен";
 
   return (
-    <div className="bg-white border-2 border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all">
+    <div className="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all" data-user-id={userId}>
       <div className="mb-4">
         <h2 className="text-xl font-semibold text-gray-800 m-0">
           Заказ #{id.slice(0, 8)}

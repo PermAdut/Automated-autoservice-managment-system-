@@ -17,6 +17,7 @@ import {
   PhoneOutlined,
   EnvironmentOutlined,
 } from "@ant-design/icons";
+import { PageLayout } from "../../layout/PageLayout";
 
 const SupplierList: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
@@ -136,26 +137,26 @@ const SupplierList: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="p-6 max-w-7xl mx-auto space-y-3">
+      <PageLayout className="space-y-3">
         <div className="h-8 w-56 bg-gray-200 rounded animate-pulse" />
         <div className="h-10 w-64 bg-gray-200 rounded animate-pulse" />
         <div className="h-64 bg-gray-200 rounded-xl animate-pulse" />
-      </div>
+      </PageLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
+      <PageLayout>
         <div className="text-center py-10 text-red-500 font-medium">
           Ошибка загрузки данных
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="p-6 pb-20 max-w-7xl mx-auto">
+    <PageLayout className="pb-20">
       <div className="flex items-center gap-2.5 mb-6">
         <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
           <ShopOutlined className="text-base" />
@@ -192,7 +193,7 @@ const SupplierList: React.FC = () => {
           supplierId={editingSupplier?.id ?? null}
         />
       )}
-    </div>
+    </PageLayout>
   );
 };
 

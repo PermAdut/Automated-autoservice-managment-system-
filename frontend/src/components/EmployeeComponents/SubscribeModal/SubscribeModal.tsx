@@ -52,14 +52,14 @@ export const SubscribeModal: React.FC<SubscribeModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex justify-center items-center z-50"
+      className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 p-4 sm:p-6"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl max-w-[500px] w-[90%] max-h-[90vh] overflow-y-auto shadow-2xl"
+        className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl m-2.5"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex justify-between items-center p-5 border-b border-gray-200">
+        <div className="flex justify-between items-center p-6 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-800">
             Подписка на рабочего
           </h2>
@@ -70,7 +70,7 @@ export const SubscribeModal: React.FC<SubscribeModalProps> = ({
             ×
           </button>
         </div>
-        <div className="p-5">
+        <div className="p-6">
           <p className="mb-4 text-gray-600 leading-relaxed">
             {isSubscribed
               ? `Вы подписаны на уведомления о доступности рабочего ${employeeName}.`
@@ -87,7 +87,7 @@ export const SubscribeModal: React.FC<SubscribeModalProps> = ({
             </div>
           )}
         </div>
-        <div className="flex justify-end gap-2.5 p-5 border-t border-gray-200">
+        <div className="flex justify-end gap-2.5 p-6 border-t border-gray-200">
           <button
             className={`px-5 py-2.5 border-none rounded-lg cursor-pointer text-base font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
               isSubscribed

@@ -66,14 +66,15 @@ const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
   const { data: services = [] } = useGetServicesQuery({ sortBy: "name", sortOrder: "asc" });
   const { data: spareParts = [] } = useGetSparePartsQuery({ sortBy: "name", sortOrder: "asc" });
 
-  const selectedUserId = order?.userId ?? currentUserId;
-  const { data: selectedUser } = useGetUserByIdQuery(selectedUserId!, {
+  const selectedUserId = order?.userId ?? currentUserId ?? "";
+  const { data: selectedUser } = useGetUserByIdQuery(selectedUserId, {
     skip: !selectedUserId || !currentUserId,
   });
 
   useEffect(() => {
     if (!order && selectedUser?.cars?.length && !watch("carId")) {
-      setValue("carId", selectedUser.cars[0].id);
+      const carId = selectedUser.cars[0]?.id;
+      if (carId) setValue("carId", carId);
     }
   }, [selectedUser, order, setValue, watch]);
 
@@ -90,7 +91,8 @@ const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
 
   useEffect(() => {
     if (!order && selectedUser?.cars?.length && !watch("carId")) {
-      setValue("carId", selectedUser.cars[0].id);
+      const carId = selectedUser.cars[0]?.id;
+      if (carId) setValue("carId", carId);
     }
   }, [selectedUser, order, setValue, watch]);
 
@@ -106,8 +108,8 @@ const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 sm:p-6">
+      <div className="bg-white rounded-xl p-6 sm:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl m-2.5">
         <h3 className="text-2xl font-bold text-gray-800 mb-6">
           {order ? "Редактировать заказ" : "Новый заказ"}
         </h3>

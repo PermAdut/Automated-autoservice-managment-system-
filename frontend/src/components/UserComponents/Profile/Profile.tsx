@@ -112,7 +112,7 @@ const Profile: React.FC = () => {
   if (!profile) return null;
 
   return (
-    <div className="max-w-[1000px] mx-auto p-4 md:p-8">
+    <div className="max-w-4xl mx-auto py-4 md:py-8">
       <div className="flex flex-col gap-4 mb-8 md:flex-row md:justify-between md:items-center">
         <h1 className="text-4xl font-bold text-gray-800 m-0">Мой профиль</h1>
         <div className="flex gap-3 flex-wrap">

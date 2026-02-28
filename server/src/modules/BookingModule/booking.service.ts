@@ -7,10 +7,7 @@ import { DatabaseService } from '../database/database.service';
 import {
   appointments,
   timeSlots,
-  users,
   cars,
-  services,
-  employees,
 } from '../database/schema';
 import { eq, and, gte, lte, desc } from 'drizzle-orm';
 import { CreateAppointmentDto, UpdateAppointmentDto } from './Dto/create-appointment.dto';
@@ -174,7 +171,13 @@ export class BookingService {
     workEnd = 18,
   ) {
     const targetDate = new Date(date);
-    const slots = [];
+    const slots: {
+      employeeId: string;
+      date: Date;
+      startTime: Date;
+      endTime: Date;
+      isBooked: boolean;
+    }[] = [];
 
     for (let hour = workStart; hour < workEnd; hour += slotDurationMinutes / 60) {
       const startTime = new Date(targetDate);

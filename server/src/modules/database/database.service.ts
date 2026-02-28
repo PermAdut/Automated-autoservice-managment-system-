@@ -92,6 +92,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleDestroy() {
+    await this.close();
+  }
+
+  async close() {
     await this.writePool.end();
     if (process.env.DB_READ_HOST) {
       await this.readPool.end();

@@ -4,7 +4,7 @@ import { HomeOutlined } from "@ant-design/icons";
 
 export default function Page404() {
   return (
-    <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-6">
+    <div className="flex flex-1 flex-col items-center justify-center text-center px-6 py-20">
       <div className="text-8xl font-black text-gray-100 leading-none select-none">
         404
       </div>

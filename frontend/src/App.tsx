@@ -34,10 +34,11 @@ function App() {
       <BrowserRouter>
         <TenantProvider>
           <ErrorBoundary>
-            <div className="flex flex-col min-h-screen bg-gray-50">
+            <div className="flex flex-col min-h-screen min-h-dvh bg-gray-50 w-full min-w-full">
               <Header />
-              <main className="flex-1 px-4 py-8 pb-[100px] max-w-[1400px] w-full mx-auto md:px-2 md:py-4 md:pb-[100px]">
-                <Routes>
+              <main className="flex-1 w-full min-w-full min-h-0 flex flex-col py-4 sm:py-5">
+                <div className="flex-1 min-h-0 flex flex-col w-full">
+                  <Routes>
                   {/* Public */}
                   <Route path="/" element={<MainPage />} />
                   <Route path="/about" element={<About />} />
@@ -153,6 +154,7 @@ function App() {
 
                   <Route path="*" element={<Page404 />} />
                 </Routes>
+                </div>
               </main>
               <Footer />
             </div>

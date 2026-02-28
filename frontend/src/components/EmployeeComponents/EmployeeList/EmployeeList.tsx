@@ -17,6 +17,7 @@ import {
   LeftOutlined,
   RightOutlined,
 } from "@ant-design/icons";
+import { PageLayout } from "../../layout/PageLayout";
 
 const EMPLOYEE_PER_PAGE = 6;
 
@@ -60,28 +61,28 @@ const EmployeeList: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
+      <PageLayout>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="h-64 bg-gray-200 rounded-xl animate-pulse" />
           ))}
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
+      <PageLayout>
         <div className="text-center py-10 text-red-500 font-medium">
           Ошибка загрузки данных
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="p-6 pb-20 max-w-7xl mx-auto">
+    <PageLayout className="pb-20 flex flex-col">
       <div className="flex items-center gap-2.5 mb-6">
         <div className="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center text-green-600">
           <TeamOutlined className="text-base" />
@@ -133,24 +134,25 @@ const EmployeeList: React.FC = () => {
       </div>
 
       {/* Grid */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
       {paginatedEmployees.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {paginatedEmployees.map((employee) => (
-            <div key={employee.id} className="flex flex-col gap-2">
+            <div key={employee.id} className="flex flex-col gap-2 min-w-0">
               <EmployeeItem
                 id={employee.id}
                 name={(employee as any).name}
                 surName={(employee as any).surName}
                 lastName={(employee as any).lastName}
-                position={employee.position}
+                position={employee.position ?? { id: "", name: "", description: "" }}
                 orders={employee.orders}
                 schedule={employee.schedule}
                 hireDate={employee.hireDate}
-                salary={employee.salary}
+                salary={typeof employee.salary === "string" ? parseFloat(employee.salary) || 0 : employee.salary}
                 showAdminInfo={isAdmin}
               />
               {isAdmin && (
-                <div className="flex gap-2 justify-end px-1">
+                <div className="flex gap-2 justify-end px-2 pt-2">
                   <Button
                     variant="outline"
                     size="sm"
@@ -179,6 +181,7 @@ const EmployeeList: React.FC = () => {
           Сотрудников нет
         </div>
       )}
+      </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
@@ -218,7 +221,7 @@ const EmployeeList: React.FC = () => {
           onSuccess={() => refetch()}
         />
       )}
-    </div>
+    </PageLayout>
   );
 };
 

@@ -4,7 +4,7 @@ import { LockOutlined, MailOutlined, GoogleOutlined } from "@ant-design/icons";
 import { useLoginMutation } from "../../api/baseApi";
 import { serverConfig } from "../../configs/serverConfig";
 import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+import { InputWithIcon } from "../ui/input-with-icon";
 import { Label } from "../ui/label";
 
 const Login = () => {
@@ -31,53 +31,43 @@ const Login = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-200px)] p-6">
-      <div className="bg-white rounded-2xl p-8 shadow-xl w-full max-w-md border border-gray-100 animate-[slideUp_0.3s_ease-out]">
+    <div className="flex flex-1 items-center justify-center py-12 px-6 sm:px-8 lg:px-12">
+      <div className="bg-white rounded-2xl p-8 sm:p-10 lg:p-12 shadow-xl w-full max-w-lg sm:max-w-xl border border-gray-100 animate-[slideUp_0.3s_ease-out] m-4">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 text-2xl mb-4">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 text-2xl mb-5">
             <LockOutlined />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">Вход в систему</h2>
-          <p className="text-sm text-gray-500 mt-1">Введите ваши данные для входа</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Вход в систему</h2>
+          <p className="text-sm text-gray-500 mt-2">Введите ваши данные для входа</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="email">Email</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                <MailOutlined />
-              </span>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="ivan@mail.com"
-                className="pl-9"
-              />
-            </div>
+            <InputWithIcon
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="ivan@mail.com"
+              icon={<MailOutlined />}
+            />
           </div>
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="password">Пароль</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                <LockOutlined />
-              </span>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="Минимум 6 символов"
-                minLength={6}
-                className="pl-9"
-              />
-            </div>
+            <InputWithIcon
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="Минимум 6 символов"
+              minLength={6}
+              icon={<LockOutlined />}
+            />
           </div>
 
           {error && (
@@ -86,12 +76,12 @@ const Login = () => {
             </div>
           )}
 
-          <Button type="submit" disabled={isLoading} size="lg" className="mt-1">
+          <Button type="submit" disabled={isLoading} size="lg" className="mt-2">
             {isLoading ? "Входим..." : "Войти"}
           </Button>
         </form>
 
-        <div className="flex items-center my-5">
+        <div className="flex items-center my-6">
           <div className="flex-1 border-b border-gray-200" />
           <span className="px-4 text-gray-400 text-xs font-medium">или</span>
           <div className="flex-1 border-b border-gray-200" />
@@ -108,7 +98,7 @@ const Login = () => {
           Войти через Google
         </Button>
 
-        <p className="mt-5 text-center text-gray-500 text-sm">
+        <p className="mt-6 text-center text-gray-500 text-sm">
           Ещё не зарегистрированы?{" "}
           <Link to="/register" className="text-indigo-600 font-semibold hover:underline">
             Создать аккаунт

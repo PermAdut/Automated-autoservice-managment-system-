@@ -29,6 +29,14 @@ export interface Order {
   }[];
 }
 
+export interface CreateOrderPayload {
+  userId: string;
+  carId: string;
+  employeeId?: string;
+  services?: { serviceId: string; quantity: number }[];
+  spareParts?: { sparePartId: string; quantity: number }[];
+}
+
 export const ordersApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getOrders: builder.query<
@@ -48,7 +56,7 @@ export const ordersApi = baseApi.injectEndpoints({
       query: (id) => `/orders/${id}`,
       providesTags: (_result, _error, id) => [{ type: apiTags.ORDER, id }],
     }),
-    createOrder: builder.mutation<Order, Partial<Order>>({
+    createOrder: builder.mutation<Order, CreateOrderPayload>({
       query: (body) => ({
         url: "/orders",
         method: "POST",
@@ -56,7 +64,7 @@ export const ordersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [apiTags.ORDERS],
     }),
-    updateOrder: builder.mutation<Order, { id: string; data: Partial<Order> }>({
+    updateOrder: builder.mutation<Order, { id: string; data: Partial<Order> | CreateOrderPayload }>({
       query: ({ id, data }) => ({
         url: `/orders/${id}`,
         method: "PUT",

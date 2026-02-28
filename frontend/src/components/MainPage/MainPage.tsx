@@ -174,9 +174,9 @@ const MainPage: React.FC = () => {
   // ── Landing (unauthenticated) ────────────────────────────────────────────
   if (!isAuthenticated) {
     return (
-      <div className="flex flex-col min-h-[calc(100vh-160px)] -mt-8 -mx-4">
+      <div className="flex flex-col w-full flex-1 min-h-0">
         {/* Hero */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-indigo-700 via-indigo-600 to-blue-500 text-white">
+        <section className="relative overflow-hidden w-full flex-shrink-0 bg-gradient-to-br from-indigo-700 via-indigo-600 to-blue-500 text-white">
           <div
             className="absolute inset-0 opacity-10"
             style={{
@@ -184,7 +184,7 @@ const MainPage: React.FC = () => {
               backgroundSize: "24px 24px",
             }}
           />
-          <div className="relative max-w-[1200px] mx-auto px-6 py-24 flex flex-col items-center text-center gap-6">
+          <div className="relative w-full max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-12 py-14 sm:py-20 lg:py-24 flex flex-col items-center text-center gap-6">
             <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-4 py-1.5 text-sm font-medium">
               <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block" />
               Мы работаем для вас
@@ -196,7 +196,7 @@ const MainPage: React.FC = () => {
             >
               {companyName}
             </h1>
-            <p className="text-xl text-indigo-100 max-w-xl leading-relaxed">{tagline}</p>
+            <p className="text-xl sm:text-2xl text-indigo-100 max-w-2xl leading-relaxed">{tagline}</p>
 
             {/* Contact chips */}
             {(phone || workingHours || address) && (
@@ -246,12 +246,12 @@ const MainPage: React.FC = () => {
 
         {/* Active features */}
         {features && (
-          <section className="bg-gray-50 py-16">
-            <div className="max-w-[1200px] mx-auto px-6">
-              <h2 className="text-center text-2xl font-bold text-gray-700 mb-8">
+          <section className="w-full flex-shrink-0 bg-gray-50 py-10 sm:py-12">
+            <div className="w-full max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-12">
+              <h2 className="text-center text-2xl font-bold text-gray-700 mb-6">
                 Возможности системы
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 {FEATURES_DISPLAY.filter(
                   (f) => (features as Record<string, boolean>)[f.key]
                 ).map((f) => (
@@ -268,18 +268,18 @@ const MainPage: React.FC = () => {
           </section>
         )}
 
-        {/* Why us */}
-        <section className="bg-white py-16 border-t border-gray-100">
-          <div className="max-w-[1200px] mx-auto px-6">
-            <h2 className="text-center text-2xl font-bold text-gray-700 mb-10">
+        {/* Why us — flex-1 fills remaining viewport */}
+        <section className="w-full flex-1 min-h-[min(40vh,400px)] bg-white py-12 sm:py-16 lg:py-20 border-t border-gray-100">
+          <div className="w-full max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-12">
+            <h2 className="text-center text-2xl sm:text-3xl font-bold text-gray-700 mb-8 sm:mb-10">
               Почему выбирают нас
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 text-center items-stretch">
               {WHY_US.map((item) => (
-                <div key={item.title} className="flex flex-col items-center gap-3">
+                <div key={item.title} className="flex flex-col items-center justify-center gap-4 p-6 sm:p-8 bg-gray-50/50 rounded-2xl min-h-[200px]">
                   <div className={item.color}>{item.icon}</div>
-                  <h3 className="text-base font-bold text-gray-800">{item.title}</h3>
-                  <p className="text-gray-500 text-sm leading-relaxed">{item.desc}</p>
+                  <h3 className="text-lg font-bold text-gray-800">{item.title}</h3>
+                  <p className="text-gray-500 text-sm sm:text-base leading-relaxed max-w-xs">{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -291,7 +291,7 @@ const MainPage: React.FC = () => {
 
   // ── Dashboard (authenticated) ────────────────────────────────────────────
   return (
-    <div className="max-w-[1200px] mx-auto px-2 py-6 min-h-[calc(100vh-160px)]">
+    <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 min-h-0 flex flex-col">
       {/* Welcome banner */}
       <div className="relative overflow-hidden bg-gradient-to-r from-indigo-600 to-blue-500 text-white rounded-2xl p-8 mb-8 shadow-md">
         <div
@@ -338,7 +338,7 @@ const MainPage: React.FC = () => {
       </div>
 
       {/* Quick access grid */}
-      <div>
+      <div className="flex-1 min-h-0">
         <h2 className="text-xs font-semibold text-gray-400 mb-4 uppercase tracking-widest">
           Быстрый доступ
         </h2>
@@ -346,10 +346,10 @@ const MainPage: React.FC = () => {
           {visibleCards.map((card) => (
             <Card
               key={card.route}
-              className="group cursor-pointer hover:shadow-md hover:border-indigo-300 hover:-translate-y-0.5 transition-all duration-200"
+              className="group cursor-pointer hover:shadow-md hover:border-indigo-300 hover:-translate-y-0.5 transition-all duration-200 flex flex-col min-w-0"
               onClick={() => navigate(card.route)}
             >
-              <div className="p-5">
+              <div className="p-5 flex flex-col flex-1">
                 <div
                   className={`inline-flex items-center justify-center w-10 h-10 rounded-xl text-lg mb-3 ${card.color}`}
                 >

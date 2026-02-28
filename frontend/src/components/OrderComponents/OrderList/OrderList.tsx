@@ -16,6 +16,7 @@ import {
   useUpdateOrderMutation,
   useDeleteOrderMutation,
   Order,
+  CreateOrderPayload,
 } from "../../../api/ordersApi";
 import { OrderItem } from "../OrderItem/OrderItem";
 import OrderForm from "../OrderForm/OrderForm";
@@ -23,9 +24,10 @@ import { getOrderStatusLabel } from "../../../utils/orderStatus";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store";
 import { Button } from "../../ui/button";
-import { Input } from "../../ui/input";
+import { InputWithIcon } from "../../ui/input-with-icon";
 import { Select } from "../../ui/select";
 import { Card } from "../../ui/card";
+import { PageLayout } from "../../layout/PageLayout";
 
 const ORDERS_PER_PAGE = 6;
 
@@ -82,7 +84,7 @@ const OrderList: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
+      <PageLayout>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {[...Array(6)].map((_, i) => (
             <div
@@ -91,17 +93,17 @@ const OrderList: React.FC = () => {
             />
           ))}
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
+      <PageLayout>
         <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center text-red-600">
           Ошибка загрузки заказов. Попробуйте обновить страницу.
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
@@ -112,7 +114,7 @@ const OrderList: React.FC = () => {
   );
 
   return (
-    <div className="p-4 pb-20 max-w-7xl mx-auto">
+    <PageLayout className="pb-20 flex flex-col">
       {/* Page header */}
       <div className="flex items-center justify-between gap-3 mb-6">
         <div className="flex items-center gap-2">
@@ -137,11 +139,8 @@ const OrderList: React.FC = () => {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-5 items-center">
-        <div className="relative min-w-[200px]">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-sm">
-            <SearchOutlined />
-          </span>
-          <Input
+        <div className="min-w-48 flex-1 sm:flex-none">
+          <InputWithIcon
             type="text"
             placeholder="Поиск по номеру / статусу"
             value={search}
@@ -149,13 +148,13 @@ const OrderList: React.FC = () => {
               setCurrentPage(1);
               setSearch(e.target.value);
             }}
-            className="pl-9"
+            icon={<SearchOutlined />}
           />
         </div>
         <Select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-          className="min-w-[130px]"
+          className="min-w-32"
         >
           <option value="createdAt">По дате</option>
           <option value="status">По статусу</option>
@@ -171,20 +170,19 @@ const OrderList: React.FC = () => {
         </Button>
       </div>
 
-      {/* Empty state */}
-      {paginatedOrders.length === 0 && (
-        <div className="text-center py-16 text-gray-400">
-          <FileTextOutlined style={{ fontSize: 48 }} className="mb-3 opacity-30" />
-          <p className="text-base font-medium">Заказы не найдены</p>
-          <p className="text-sm mt-1">Попробуйте изменить параметры поиска</p>
-        </div>
-      )}
-
-      {/* Orders grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Orders grid / empty state */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        {paginatedOrders.length === 0 ? (
+          <div className="text-center py-16 text-gray-400">
+            <FileTextOutlined style={{ fontSize: 48 }} className="mb-3 opacity-30" />
+            <p className="text-base font-medium">Заказы не найдены</p>
+            <p className="text-sm mt-1">Попробуйте изменить параметры поиска</p>
+          </div>
+        ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {paginatedOrders.map((order) => (
-          <Card key={order.id} className="flex flex-col gap-0 overflow-hidden">
-            <div className="p-4">
+          <Card key={order.id} className="flex flex-col gap-0 overflow-hidden min-w-0">
+            <div className="p-5 flex flex-col flex-1 min-w-0">
               <OrderItem
                 id={order.id}
                 userId={order.userId}
@@ -199,7 +197,7 @@ const OrderList: React.FC = () => {
               />
             </div>
             {isAdminOrManager && (
-              <div className="flex gap-2 px-4 py-3 border-t border-gray-100 bg-gray-50/50">
+              <div className="flex gap-2 px-5 py-4 border-t border-gray-100 bg-gray-50/50">
                 <Button
                   variant="outline"
                   size="sm"
@@ -232,6 +230,8 @@ const OrderList: React.FC = () => {
             )}
           </Card>
         ))}
+        </div>
+        )}
       </div>
 
       {/* Pagination */}
@@ -246,7 +246,7 @@ const OrderList: React.FC = () => {
             >
               <LeftOutlined />
             </Button>
-            <span className="text-sm font-medium text-gray-700 min-w-[60px] text-center">
+            <span className="text-sm font-medium text-gray-700 min-w-16 text-center">
               {currentPage} / {totalPages}
             </span>
             <Button
@@ -269,11 +269,18 @@ const OrderList: React.FC = () => {
             setEditingOrder(null);
           }}
           onSubmit={async (payload, id) => {
+            const orderPayload: CreateOrderPayload = {
+              userId: payload.userId,
+              carId: payload.carId,
+              employeeId: payload.employeeId || undefined,
+              services: payload.services,
+              spareParts: payload.spareParts,
+            };
             try {
               if (id) {
-                await updateOrder({ id, data: payload }).unwrap();
+                await updateOrder({ id, data: orderPayload }).unwrap();
               } else {
-                await createOrder(payload).unwrap();
+                await createOrder(orderPayload).unwrap();
               }
               setShowForm(false);
               setEditingOrder(null);
@@ -284,7 +291,7 @@ const OrderList: React.FC = () => {
           }}
         />
       )}
-    </div>
+    </PageLayout>
   );
 };
 

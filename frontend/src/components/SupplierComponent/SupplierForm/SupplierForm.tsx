@@ -59,8 +59,8 @@ const SupplierForm = ({ supplierId, initialData, onClose }: SupplierFormProps) =
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-8 w-full max-w-md shadow-2xl">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 sm:p-6">
+      <div className="bg-white rounded-xl p-6 sm:p-8 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto m-2.5">
         <h3 className="text-2xl font-bold text-gray-800 mb-6">
           {supplierId ? "Редактировать поставщика" : "Добавить поставщика"}
         </h3>

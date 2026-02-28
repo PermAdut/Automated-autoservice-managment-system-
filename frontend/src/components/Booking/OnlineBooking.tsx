@@ -1,6 +1,4 @@
-import { useState } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "../../store";
+import { useState, useEffect } from "react";
 import {
   useGetAvailableSlotsQuery,
   useCreateAppointmentMutation,
@@ -8,7 +6,8 @@ import {
   useCancelAppointmentMutation,
 } from "../../api/bookingApi";
 import { useGetEmployeesQuery } from "../../api/employeesApi";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { useGetMyProfileQuery } from "../../api/usersApi";
+import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Label } from "../ui/label";
@@ -41,7 +40,9 @@ export default function OnlineBooking() {
   const [selectedSlot, setSelectedSlot] = useState("");
   const [notes, setNotes] = useState("");
   const [successCode, setSuccessCode] = useState<string | null>(null);
+  const [selectedCarId, setSelectedCarId] = useState("");
 
+  const { data: profile } = useGetMyProfileQuery(undefined, { skip: !localStorage.getItem("access_token") });
   const { data: employees } = useGetEmployeesQuery({});
   const { data: slots, isLoading: slotsLoading } = useGetAvailableSlotsQuery(
     { employeeId: selectedEmployee, date: selectedDate },
@@ -51,12 +52,21 @@ export default function OnlineBooking() {
   const [createAppointment, { isLoading: creating }] = useCreateAppointmentMutation();
   const [cancelAppointment] = useCancelAppointmentMutation();
 
+  useEffect(() => {
+    if (profile?.cars?.length && !selectedCarId) {
+      const firstCar = profile.cars[0];
+      if (firstCar?.id) setSelectedCarId(firstCar.id);
+    }
+  }, [profile, selectedCarId]);
+
   const handleCreate = async () => {
-    if (!selectedSlot) return;
+    if (!selectedSlot || !selectedCarId) return;
     const slot = slots?.find((s) => s.id === selectedSlot);
     if (!slot) return;
     try {
       const result = await createAppointment({
+        carId: selectedCarId,
+        employeeId: selectedEmployee || undefined,
         timeSlotId: selectedSlot,
         scheduledAt: `${selectedDate}T${slot.startTime}`,
         notes: notes || undefined,
@@ -136,6 +146,28 @@ export default function OnlineBooking() {
                 >
                   Создать ещё одну запись
                 </Button>
+              </div>
+            )}
+
+            {/* Car */}
+            {profile?.cars?.length ? (
+              <div className="space-y-1.5">
+                <Label>Автомобиль *</Label>
+                <Select
+                  value={selectedCarId}
+                  onChange={(e) => setSelectedCarId(e.target.value)}
+                >
+                  <option value="">— Выберите авто —</option>
+                  {profile.cars.map((c) => (
+                    <option key={c.id ?? c.vin} value={c.id}>
+                      {c.brand} {c.model} (VIN: {c.vin})
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            ) : (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-800 text-sm">
+                Добавьте автомобиль в профиле, чтобы записаться.
               </div>
             )}
 
@@ -238,7 +270,7 @@ export default function OnlineBooking() {
             <Button
               className="w-full"
               onClick={handleCreate}
-              disabled={!selectedSlot || creating}
+              disabled={!selectedSlot || !selectedCarId || creating}
             >
               {creating ? "Создание записи..." : "Записаться"}
             </Button>

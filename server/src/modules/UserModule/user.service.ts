@@ -350,10 +350,8 @@ export class UserService {
         passport: passport
           ? {
               identityNumber: passport.identityNumber,
-              nationality: passport.nationality,
               birthDate: passport.birthDate.toISOString(),
               gender: passport.gender,
-              expirationDate: passport.expirationDate.toISOString(),
             }
           : undefined,
         subscriptions: userSubscriptions.map(s => ({
@@ -371,7 +369,7 @@ export class UserService {
         })),
         cars: userCars.map(c => ({
           id: c.id,
-          name: c.name,
+          name: `${c.brand} ${c.model}`,
           information: c.information || '',
           year: c.year.toString(),
           vin: c.vin,

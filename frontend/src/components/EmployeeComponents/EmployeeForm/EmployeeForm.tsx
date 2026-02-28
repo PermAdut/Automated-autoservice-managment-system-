@@ -87,20 +87,19 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({
   }, [employee, reset]);
 
   const onSubmit = async (data: EmployeeFormData) => {
+    const payload = {
+      ...data,
+      hireDate: data.hireDate || undefined,
+      salary: String(data.salary),
+    };
     try {
       if (employeeId) {
         await updateEmployee({
           id: employeeId,
-          data: {
-            ...data,
-            hireDate: data.hireDate || undefined,
-          },
+          data: payload,
         }).unwrap();
       } else {
-        await createEmployee({
-          ...data,
-          hireDate: data.hireDate || undefined,
-        }).unwrap();
+        await createEmployee(payload).unwrap();
       }
       onSuccess?.();
       onClose();
@@ -111,8 +110,8 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
   if (isLoadingEmployee || isLoadingPositions) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-xl p-8 text-center text-gray-500">
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 sm:p-6">
+        <div className="bg-white rounded-xl p-6 sm:p-8 text-center text-gray-500 m-2.5">
           Загрузка...
         </div>
       </div>
@@ -121,8 +120,8 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
   if (positionsError) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-xl p-8 text-center text-red-500">
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 sm:p-6">
+        <div className="bg-white rounded-xl p-6 sm:p-8 text-center text-red-500 m-2.5">
           Ошибка загрузки должностей.
         </div>
       </div>
@@ -130,9 +129,9 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 sm:p-6" onClick={onClose}>
       <div
-        className="bg-white rounded-xl p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl"
+        className="bg-white rounded-xl p-6 sm:p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl m-2.5"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-2xl font-bold text-gray-800 mb-6">

@@ -32,7 +32,7 @@ export class SmsService {
 
     try {
       const response = await fetch(url.toString());
-      const data = (await response.json()) as any;
+      const data = (await response.json());
 
       if (data.status === 'OK') {
         const firstPhone = Object.keys(data.sms)[0];
