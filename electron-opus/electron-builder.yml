@@ -1,0 +1,39 @@
+appId: com.autoservice.desktop
+productName: AutoService
+directories:
+  buildResources: resources
+  output: dist
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+asarUnpack:
+  - resources/**
+mac:
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    - NSDocumentsFolderUsageDescription: Application needs document access.
+  notarize: false
+  target:
+    - dmg
+    - zip
+dmg:
+  artifactName: ${name}-${version}.${ext}
+win:
+  target:
+    - nsis
+nsis:
+  artifactName: ${name}-${version}-setup.${ext}
+  shortcutName: ${productName}
+  uninstallDisplayName: ${productName}
+  createDesktopShortcut: always
+linux:
+  target:
+    - AppImage
+    - deb
+  maintainer: autoservice
+  category: Utility
+appImage:
+  artifactName: ${name}-${version}.${ext}
