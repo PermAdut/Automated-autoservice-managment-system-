@@ -24,6 +24,7 @@ import { UpdateEmployeeDto } from './Dto/update-employee.dto';
 import { CreateReviewDto } from './Dto/create-review.dto';
 import { Req } from '@nestjs/common';
 import { Request } from 'express';
+import type { AuthenticatedRequest } from '../AuthModule/types/auth.types';
 
 @Controller('api/v1.0/employee')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -31,9 +32,7 @@ export class EmployeeController {
   constructor(private readonly employeeService: EmployeeService) {}
 
   private getAuth(req?: Request) {
-    const authUser = (req as any)?.user as
-      | { userId?: string; roleName?: string }
-      | undefined;
+    const authUser = (req as AuthenticatedRequest | undefined)?.user;
     return { userId: authUser?.userId, role: authUser?.roleName };
   }
 
@@ -155,7 +154,7 @@ export class EmployeeController {
   async createReview(
     @Param('id', ParseUUIDPipe) employeeId: string,
     @Body() createReviewDto: Omit<CreateReviewDto, 'employeeId'>,
-    @Req() req: any
+    @Req() req: AuthenticatedRequest
   ) {
     const userId = req.user.userId;
     return await this.employeeService.createReview(userId, {

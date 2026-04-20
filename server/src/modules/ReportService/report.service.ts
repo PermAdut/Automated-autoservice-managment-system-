@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
+import PDFDocument from 'pdfkit';
 import { DatabaseService } from '../database/database.service';
 
 export interface ReportColumn {
@@ -376,5 +377,85 @@ export class ReportService {
       ],
       rows,
     };
+  }
+
+  // ── Export helpers ─────────────────────────────────────────────────────────
+
+  toCsv(report: ReportData): string {
+    const escape = (val: unknown): string => {
+      const s = (val == null ? '' : String(val)).replace(/"/g, '""');
+      return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s}"` : s;
+    };
+
+    const header = report.columns.map(c => escape(c.label)).join(',');
+    const body = report.rows
+      .map(row => report.columns.map(c => escape(row[c.key])).join(','))
+      .join('\n');
+
+    return `${header}\n${body}`;
+  }
+
+  async toPdf(report: ReportData): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      const doc = new PDFDocument({ margin: 40, size: 'A4', layout: 'landscape' });
+      const chunks: Buffer[] = [];
+
+      doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+
+      // Title
+      doc.fontSize(16).font('Helvetica-Bold').text(report.title, { align: 'center' });
+      doc.moveDown(0.5);
+      doc.fontSize(9).font('Helvetica').text(
+        `Сформирован: ${new Date().toLocaleString('ru-RU')}`,
+        { align: 'right' },
+      );
+      doc.moveDown(1);
+
+      const colWidth = Math.floor((doc.page.width - 80) / report.columns.length);
+      const rowHeight = 18;
+
+      const drawRow = (values: string[], isHeader: boolean) => {
+        const y = doc.y;
+        if (isHeader) doc.font('Helvetica-Bold').fontSize(8);
+        else doc.font('Helvetica').fontSize(7);
+
+        values.forEach((val, i) => {
+          const x = 40 + i * colWidth;
+          if (isHeader) {
+            doc.rect(x, y, colWidth, rowHeight).fillAndStroke('#4F46E5', '#4F46E5');
+            doc.fillColor('white');
+          } else {
+            doc.rect(x, y, colWidth, rowHeight).stroke('#E5E7EB');
+            doc.fillColor('black');
+          }
+          doc.text(String(val ?? '').slice(0, 40), x + 2, y + 4, {
+            width: colWidth - 4,
+            ellipsis: true,
+            lineBreak: false,
+          });
+        });
+        doc.moveDown(rowHeight / doc.currentLineHeight(true));
+      };
+
+      drawRow(report.columns.map(c => c.label), true);
+
+      report.rows.forEach((row, idx) => {
+        if (doc.y > doc.page.height - 60) {
+          doc.addPage();
+          drawRow(report.columns.map(c => c.label), true);
+        }
+        if (idx % 2 === 0) {
+          const y = doc.y;
+          doc.rect(40, y, doc.page.width - 80, rowHeight).fill('#F9FAFB');
+          doc.fillColor('black');
+          doc.y = y;
+        }
+        drawRow(report.columns.map(c => (row[c.key] == null ? '' : String(row[c.key]))), false);
+      });
+
+      doc.end();
+    });
   }
 }

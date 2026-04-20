@@ -37,7 +37,15 @@ export class BranchController {
   @UseGuards(RolesGuard)
   @Roles('admin')
   @ApiOperation({ summary: 'Create branch' })
-  create(@Body() body: any) {
+  create(@Body() body: {
+    name: string;
+    address: string;
+    city?: string;
+    phone?: string;
+    email?: string;
+    managerId?: string;
+    workingHours?: string;
+  }) {
     return this.branchService.create(body);
   }
 
@@ -45,7 +53,16 @@ export class BranchController {
   @UseGuards(RolesGuard)
   @Roles('admin', 'manager')
   @ApiOperation({ summary: 'Update branch' })
-  update(@Param('id') id: string, @Body() body: any) {
+  update(@Param('id') id: string, @Body() body: Partial<{
+    name: string;
+    address: string;
+    city: string;
+    phone: string;
+    email: string;
+    managerId: string;
+    workingHours: string;
+    isActive: boolean;
+  }>) {
     return this.branchService.update(id, body);
   }
 
@@ -87,7 +104,14 @@ export class BranchController {
   @UseGuards(RolesGuard)
   @Roles('admin', 'manager')
   @ApiOperation({ summary: 'Create store transfer' })
-  createTransfer(@Body() body: any) {
+  createTransfer(@Body() body: {
+    fromStoreId: string;
+    toStoreId: string;
+    sparePartId: string;
+    quantity: number;
+    initiatedById?: string;
+    notes?: string;
+  }) {
     return this.branchService.createTransfer(body);
   }
 

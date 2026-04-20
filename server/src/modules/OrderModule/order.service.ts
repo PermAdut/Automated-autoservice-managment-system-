@@ -15,7 +15,7 @@ import {
   spareParts,
   categories,
 } from '../database/schema';
-import { eq, like, desc, asc, or, and, sql } from 'drizzle-orm';
+import { eq, like, desc, asc, or, and, sql, type SQL } from 'drizzle-orm';
 
 @Injectable()
 export class OrderService {
@@ -28,10 +28,9 @@ export class OrderService {
     userId?: string
   ): Promise<OrderResponseDto[]> {
     try {
-      let query = this.databaseService.db.select().from(orders);
+      const query = this.databaseService.db.select().from(orders).$dynamic();
 
-      // Фильтруем по userId, если указан (для обычных пользователей)
-      const conditions: any[] = [];
+      const conditions: SQL[] = [];
       if (userId) {
         conditions.push(eq(orders.userId, userId));
       }
@@ -45,24 +44,22 @@ export class OrderService {
         ];
 
         if (conditions.length > 0) {
-          query = query.where(
-            and(...conditions, or(...searchConditions))
-          ) as any;
+          query.where(and(...conditions, or(...searchConditions)));
         } else {
-          query = query.where(or(...searchConditions)) as any;
+          query.where(or(...searchConditions));
         }
       } else if (conditions.length > 0) {
-        query = query.where(and(...conditions)) as any;
+        query.where(and(...conditions));
       }
 
       if (sortBy) {
         const orderBy = sortOrder === 'desc' ? desc : asc;
         if (sortBy === 'createdAt') {
-          query = query.orderBy(orderBy(orders.createdAt)) as any;
+          query.orderBy(orderBy(orders.createdAt));
         } else if (sortBy === 'status') {
-          query = query.orderBy(orderBy(orders.status)) as any;
+          query.orderBy(orderBy(orders.status));
         } else if (sortBy === 'id') {
-          query = query.orderBy(orderBy(orders.id)) as any;
+          query.orderBy(orderBy(orders.id));
         }
       }
       const ordersList = await query;

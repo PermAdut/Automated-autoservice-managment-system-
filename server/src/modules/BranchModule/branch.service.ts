@@ -12,11 +12,11 @@ export class BranchService {
   constructor(private readonly databaseService: DatabaseService) {}
 
   async findAll(activeOnly = true) {
-    let query = this.databaseService.db.select().from(branches);
+    const query = this.databaseService.db.select().from(branches).$dynamic();
     if (activeOnly) {
-      query = query.where(eq(branches.isActive, true)) as any;
+      query.where(eq(branches.isActive, true));
     }
-    return (query as any).orderBy(branches.name);
+    return query.orderBy(branches.name);
   }
 
   async findById(id: string) {
@@ -134,10 +134,10 @@ export class BranchService {
   }
 
   async getTransfers(fromStoreId?: string) {
-    let query = this.databaseService.db.select().from(storeTransfers);
+    const query = this.databaseService.db.select().from(storeTransfers).$dynamic();
     if (fromStoreId) {
-      query = query.where(eq(storeTransfers.fromStoreId, fromStoreId)) as any;
+      query.where(eq(storeTransfers.fromStoreId, fromStoreId));
     }
-    return (query as any).orderBy(desc(storeTransfers.createdAt));
+    return query.orderBy(desc(storeTransfers.createdAt));
   }
 }

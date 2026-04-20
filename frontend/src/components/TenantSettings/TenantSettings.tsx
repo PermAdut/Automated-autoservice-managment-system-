@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import {
   useGetTenantSettingsQuery,
   useUpdateTenantSettingsMutation,
+  type TenantSettings,
 } from "../../api/tenantApi";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
@@ -41,11 +42,11 @@ export default function TenantSettings() {
   const { data: settings, isLoading } = useGetTenantSettingsQuery();
   const [update, { isLoading: isSaving, isSuccess }] = useUpdateTenantSettingsMutation();
 
-  const [form, setForm] = useState<Record<string, string | boolean>>({});
+  const [form, setForm] = useState<Record<string, unknown>>({});
   const [activeTab, setActiveTab] = useState<"company" | "branding" | "features" | "integrations">("company");
 
   useEffect(() => {
-    if (settings) setForm(settings as any);
+    if (settings) setForm(settings as unknown as Record<string, unknown>);
   }, [settings]);
 
   const set = (key: string, value: string | boolean) =>
@@ -73,7 +74,7 @@ export default function TenantSettings() {
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Настройки системы</h1>
         </div>
-        <Button onClick={() => update(form as any)} disabled={isSaving}>
+        <Button onClick={() => update(form as unknown as Partial<TenantSettings>)} disabled={isSaving}>
           <SaveOutlined className="mr-1.5" />
           {isSaving ? "Сохранение..." : "Сохранить"}
         </Button>
@@ -208,9 +209,9 @@ export default function TenantSettings() {
                   value={(form.logoUrl as string) ?? ""}
                   onChange={(e) => set("logoUrl", e.target.value)}
                 />
-                {form.logoUrl && (
+                {typeof form.logoUrl === "string" && form.logoUrl && (
                   <img
-                    src={form.logoUrl as string}
+                    src={form.logoUrl}
                     alt="logo preview"
                     className="mt-2 h-12 object-contain rounded"
                     onError={(e) => (e.currentTarget.style.display = "none")}

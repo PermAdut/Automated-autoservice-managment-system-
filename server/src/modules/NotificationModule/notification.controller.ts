@@ -11,6 +11,7 @@ import { NotificationService } from './notification.service';
 import { JwtAuthGuard } from '../AuthModule/guards/jwt-auth.guard';
 import { RolesGuard } from '../AuthModule/guards/roles.guard';
 import { Roles } from '../AuthModule/decorators/roles.decorator';
+import type { AuthenticatedRequest } from '../AuthModule/types/auth.types';
 import {
   IsEnum,
   IsOptional,
@@ -86,8 +87,8 @@ export class NotificationController {
 
   @Get('my')
   @ApiOperation({ summary: 'Get current user notifications' })
-  getMyNotifications(@Request() req: any) {
-    return this.notificationService.findByUser(req.user.id);
+  getMyNotifications(@Request() req: AuthenticatedRequest) {
+    return this.notificationService.findByUser(req.user.userId);
   }
 
   @Get()
@@ -102,17 +103,17 @@ export class NotificationController {
   @UseGuards(RolesGuard)
   @Roles('admin', 'manager')
   @ApiOperation({ summary: 'Send SMS to a phone number' })
-  sendSms(@Request() req: any, @Body() dto: SendSmsDto) {
-    return this.notificationService.sendSms(req.user.id, dto.phone, dto.message);
+  sendSms(@Request() req: AuthenticatedRequest, @Body() dto: SendSmsDto) {
+    return this.notificationService.sendSms(req.user.userId, dto.phone, dto.message);
   }
 
   @Post('send')
   @UseGuards(RolesGuard)
   @Roles('admin', 'manager')
   @ApiOperation({ summary: 'Send notification from template' })
-  sendFromTemplate(@Request() req: any, @Body() dto: SendFromTemplateDto) {
+  sendFromTemplate(@Request() req: AuthenticatedRequest, @Body() dto: SendFromTemplateDto) {
     return this.notificationService.sendFromTemplate(
-      req.user.id,
+      req.user.userId,
       dto.templateName,
       dto.recipient,
       dto.variables,
@@ -137,15 +138,15 @@ export class NotificationController {
 
   @Get('channels')
   @ApiOperation({ summary: 'Get current user notification channels' })
-  getMyChannels(@Request() req: any) {
-    return this.notificationService.getUserChannels(req.user.id);
+  getMyChannels(@Request() req: AuthenticatedRequest) {
+    return this.notificationService.getUserChannels(req.user.userId);
   }
 
   @Post('channels')
   @ApiOperation({ summary: 'Add or update a notification channel' })
-  upsertChannel(@Request() req: any, @Body() dto: UpsertChannelDto) {
+  upsertChannel(@Request() req: AuthenticatedRequest, @Body() dto: UpsertChannelDto) {
     return this.notificationService.upsertChannel(
-      req.user.id,
+      req.user.userId,
       dto.channel,
       dto.address,
     );

@@ -29,6 +29,7 @@ import { StorageModule } from './modules/StorageModule/storage.module';
 import { RedisModule } from './modules/RedisModule/redis.module';
 import { QueueModule } from './modules/QueueModule/queue.module';
 import { GatewayModule } from './modules/GatewayModule/gateway.module';
+import { ScheduleOptimizationModule } from './modules/ScheduleModule/schedule.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { GatewayModule } from './modules/GatewayModule/gateway.module';
     RedisModule,
     QueueModule,
     GatewayModule,
+    ScheduleOptimizationModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [AppController],

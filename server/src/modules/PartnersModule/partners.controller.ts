@@ -25,7 +25,10 @@ export class PartnersController {
   @ApiOperation({ summary: 'List all partners' })
   @ApiQuery({ name: 'status', required: false })
   findAll(@Query('status') status?: string) {
-    return this.partnersService.findAll(status);
+    type PartnerStatus = 'active' | 'pending' | 'suspended' | 'inactive';
+    const validStatuses: PartnerStatus[] = ['active', 'pending', 'suspended', 'inactive'];
+    const typedStatus = validStatuses.includes(status as PartnerStatus) ? (status as PartnerStatus) : undefined;
+    return this.partnersService.findAll(typedStatus);
   }
 
   @Get(':id')
@@ -37,13 +40,31 @@ export class PartnersController {
   @Post()
   @Roles('admin')
   @ApiOperation({ summary: 'Create partner' })
-  create(@Body() body: any) {
+  create(@Body() body: {
+    name: string;
+    address?: string;
+    city?: string;
+    phone?: string;
+    email?: string;
+    website?: string;
+    apiUrl?: string;
+    description?: string;
+  }) {
     return this.partnersService.create(body);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update partner' })
-  update(@Param('id') id: string, @Body() body: any) {
+  update(@Param('id') id: string, @Body() body: Partial<{
+    name: string;
+    status: 'active' | 'pending' | 'suspended' | 'inactive';
+    address: string;
+    city: string;
+    phone: string;
+    email: string;
+    website: string;
+    apiUrl: string;
+  }>) {
     return this.partnersService.update(id, body);
   }
 
@@ -78,7 +99,13 @@ export class PartnersController {
 
   @Post('requests')
   @ApiOperation({ summary: 'Create spare part request between partners' })
-  createPartRequest(@Body() body: any) {
+  createPartRequest(@Body() body: {
+    fromPartnerId: string;
+    toPartnerId: string;
+    sparePartId: string;
+    quantity?: number;
+    notes?: string;
+  }) {
     return this.partnersService.createPartRequest(body);
   }
 
@@ -93,7 +120,13 @@ export class PartnersController {
 
   @Post('redirects')
   @ApiOperation({ summary: 'Create client redirect to another partner' })
-  createClientRedirect(@Body() body: any) {
+  createClientRedirect(@Body() body: {
+    userId: string;
+    fromPartnerId: string;
+    toPartnerId: string;
+    reason?: string;
+    serviceRequested?: string;
+  }) {
     return this.partnersService.createClientRedirect(body);
   }
 }

@@ -3,8 +3,9 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import PDFDocument from 'pdfkit';
 import { DatabaseService } from '../database/database.service';
-import { warranties, warrantyClaims } from '../database/schema';
+import { warranties, warrantyClaims, orders, users, cars } from '../database/schema';
 import { eq, and, desc, gte } from 'drizzle-orm';
 
 @Injectable()
@@ -121,11 +122,11 @@ export class WarrantyService {
   }
 
   async getClaims(warrantyId?: string) {
-    let query = this.databaseService.db.select().from(warrantyClaims);
+    const query = this.databaseService.db.select().from(warrantyClaims).$dynamic();
     if (warrantyId) {
-      query = query.where(eq(warrantyClaims.warrantyId, warrantyId)) as any;
+      query.where(eq(warrantyClaims.warrantyId, warrantyId));
     }
-    return (query as any).orderBy(desc(warrantyClaims.createdAt));
+    return query.orderBy(desc(warrantyClaims.createdAt));
   }
 
   async getUserClaims(userId: string) {
@@ -134,5 +135,87 @@ export class WarrantyService {
       .from(warrantyClaims)
       .where(eq(warrantyClaims.userId, userId))
       .orderBy(desc(warrantyClaims.createdAt));
+  }
+
+  async generateCertificatePdf(warrantyId: string): Promise<Buffer> {
+    const warranty = await this.findById(warrantyId);
+
+    // Fetch order + client + car info
+    const [orderData] = await this.databaseService.db
+      .select({
+        clientName: users.name,
+        clientSurName: users.surName,
+        clientPhone: users.phone,
+        clientEmail: users.email,
+        carBrand: cars.brand,
+        carModel: cars.model,
+        carYear: cars.year,
+        carVin: cars.vin,
+        licensePlate: cars.licensePlate,
+      })
+      .from(orders)
+      .leftJoin(users, eq(orders.userId, users.id))
+      .leftJoin(cars, eq(orders.carId, cars.id))
+      .where(eq(orders.id, warranty.orderId))
+      .limit(1);
+
+    return new Promise((resolve, reject) => {
+      const doc = new PDFDocument({ margin: 50, size: 'A4' });
+      const chunks: Buffer[] = [];
+
+      doc.on('data', (c: Buffer) => chunks.push(c));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+
+      // Header
+      doc.fontSize(20).font('Helvetica-Bold').text('ГАРАНТИЙНЫЙ ТАЛОН', { align: 'center' });
+      doc.moveDown(0.3);
+      doc.fontSize(11).font('Helvetica').text(`№ ${warrantyId.slice(0, 8).toUpperCase()}`, { align: 'center' });
+      doc.moveDown(1.5);
+
+      // Warranty info
+      const row = (label: string, value: string) => {
+        doc.fontSize(10).font('Helvetica-Bold').text(`${label}: `, { continued: true });
+        doc.font('Helvetica').text(value);
+      };
+
+      row('Дата выдачи', warranty.issuedAt.toLocaleDateString('ru-RU'));
+      row('Действует до', warranty.expiresAt.toLocaleDateString('ru-RU'));
+      row('Тип гарантии', warranty.type === 'work' ? 'Работы' : warranty.type === 'spare_part' ? 'Запчасти' : 'Комплексная');
+      row('Статус', warranty.status === 'active' ? 'Активна' : warranty.status);
+
+      if (warranty.description) {
+        row('Описание', warranty.description);
+      }
+
+      doc.moveDown(1);
+
+      if (orderData) {
+        doc.fontSize(12).font('Helvetica-Bold').text('Клиент и автомобиль');
+        doc.moveDown(0.3);
+        row('Клиент', `${orderData.clientName ?? ''} ${orderData.clientSurName ?? ''}`.trim());
+        if (orderData.clientPhone) row('Телефон', orderData.clientPhone);
+        if (orderData.clientEmail) row('Email', orderData.clientEmail);
+        doc.moveDown(0.5);
+        row('Автомобиль', `${orderData.carBrand ?? ''} ${orderData.carModel ?? ''} ${orderData.carYear ?? ''}`.trim());
+        if (orderData.carVin) row('VIN', orderData.carVin);
+        if (orderData.licensePlate) row('Гос. номер', orderData.licensePlate);
+      }
+
+      doc.moveDown(2);
+      doc.fontSize(9).font('Helvetica').fillColor('gray')
+        .text(
+          'Гарантия действительна при соблюдении условий эксплуатации и прохождении планового технического обслуживания в нашем сервисном центре.',
+          { align: 'justify' },
+        );
+
+      doc.moveDown(2);
+      doc.fontSize(10).fillColor('black');
+      doc.text('Подпись уполномоченного лица: ________________________', { align: 'left' });
+      doc.moveDown(0.5);
+      doc.text('М.П.', { align: 'left' });
+
+      doc.end();
+    });
   }
 }

@@ -2,20 +2,30 @@ import {
   Injectable,
   UnauthorizedException,
   BadRequestException,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import { DatabaseService } from '../database/database.service';
+import { RedisService } from '../RedisModule/redis.service';
 import { users, refreshTokens, roles, passports } from '../database/schema';
 import { eq } from 'drizzle-orm';
 import { RegisterDto } from './dto/register.dto';
+import type { ValidatedUser } from './types/auth.types';
+import type { Profile as GoogleProfile } from 'passport-google-oauth20';
+
+const LOGIN_FAIL_PREFIX = 'login_fail:';
+const MAX_ATTEMPTS = 5;
+const BLOCK_TTL = 60; // seconds
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
-    private readonly databaseService: DatabaseService
+    private readonly databaseService: DatabaseService,
+    private readonly redisService: RedisService,
   ) {}
 
   private async getDefaultRoleId() {
@@ -82,7 +92,20 @@ export class AuthService {
     return this.login(userWithoutPassword);
   }
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(email: string, password: string): Promise<ValidatedUser> {
+    const failKey = `${LOGIN_FAIL_PREFIX}${email}`;
+
+    // Check brute-force block
+    if (this.redisService.isAvailable()) {
+      const attempts = parseInt((await this.redisService.get(failKey)) ?? '0', 10);
+      if (attempts >= MAX_ATTEMPTS) {
+        throw new HttpException(
+          'Слишком много неудачных попыток. Подождите 1 минуту.',
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      }
+    }
+
     const user = await this.databaseService.db
       .select()
       .from(users)
@@ -90,6 +113,7 @@ export class AuthService {
       .limit(1);
 
     if (user.length === 0) {
+      await this.redisService.incr(failKey, BLOCK_TTL);
       throw new UnauthorizedException('Неверный email или пароль');
     }
 
@@ -107,25 +131,31 @@ export class AuthService {
       userData.passwordHash
     );
     if (!isPasswordValid) {
+      await this.redisService.incr(failKey, BLOCK_TTL);
       throw new UnauthorizedException('Неверный email или пароль');
     }
+
+    // Reset fail counter on success
+    await this.redisService.del(failKey);
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash: _pwd, ...result } = userData;
     return result;
   }
 
-  async login(user: any) {
+  async login(user: ValidatedUser) {
     const payload = { email: user.email, sub: user.id, roleId: user.roleId };
     const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
     const refreshToken = await this.generateRefreshToken(user.id);
 
     // Get role name
-    const role = await this.databaseService.db
-      .select()
-      .from(roles)
-      .where(eq(roles.id, user.roleId))
-      .limit(1);
+    const role = user.roleId
+      ? await this.databaseService.db
+          .select()
+          .from(roles)
+          .where(eq(roles.id, user.roleId))
+          .limit(1)
+      : [];
 
     return {
       access_token: accessToken,
@@ -207,8 +237,8 @@ export class AuthService {
       .where(eq(refreshTokens.token, token));
   }
 
-  async validateGoogleUser(profile: any) {
-    const email = profile.emails[0].value;
+  async validateGoogleUser(profile: GoogleProfile) {
+    const email = profile.emails?.[0]?.value ?? '';
     const googleId = profile.id;
 
     // Try to find user by OAuth ID first
@@ -251,8 +281,8 @@ export class AuthService {
       .values({
         email,
         login: email.split('@')[0] + '_' + googleId.slice(0, 8),
-        name: profile.name.givenName || 'User',
-        surName: profile.name.familyName || '',
+        name: profile.name?.givenName || 'User',
+        surName: profile.name?.familyName || '',
         phone: null,
         passwordHash: null, // OAuth users don't have password
         oauthProvider: 'google',
@@ -266,17 +296,19 @@ export class AuthService {
     return result;
   }
 
-  async googleLogin(user: any) {
+  async googleLogin(user: ValidatedUser) {
     const payload = { email: user.email, sub: user.id, roleId: user.roleId };
     const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
     const refreshToken = await this.generateRefreshToken(user.id);
 
     // Get role name
-    const role = await this.databaseService.db
-      .select()
-      .from(roles)
-      .where(eq(roles.id, user.roleId))
-      .limit(1);
+    const role = user.roleId
+      ? await this.databaseService.db
+          .select()
+          .from(roles)
+          .where(eq(roles.id, user.roleId))
+          .limit(1)
+      : [];
 
     return {
       access_token: accessToken,

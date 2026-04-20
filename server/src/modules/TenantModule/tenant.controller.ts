@@ -13,6 +13,7 @@ import { JwtAuthGuard } from '../AuthModule/guards/jwt-auth.guard';
 import { RolesGuard } from '../AuthModule/guards/roles.guard';
 import { Roles } from '../AuthModule/decorators/roles.decorator';
 import { Public } from '../AuthModule/decorators/public.decorator';
+import type { tenantSettings } from '../database/schema';
 
 @ApiTags('Tenant')
 @Controller('tenant')
@@ -42,7 +43,7 @@ export class TenantController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @ApiOperation({ summary: 'Update tenant settings (admin)' })
-  updateSettings(@Body() body: any) {
+  updateSettings(@Body() body: Partial<typeof tenantSettings.$inferInsert>) {
     return this.tenantService.updateSettings(body);
   }
 
@@ -73,7 +74,12 @@ export class TenantController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @ApiOperation({ summary: 'Create or update custom page (admin)' })
-  upsertPage(@Body() body: any) {
+  upsertPage(@Body() body: {
+    slug: string;
+    title: string;
+    content: string;
+    isPublished?: boolean;
+  }) {
     return this.tenantService.upsertPage(body);
   }
 }

@@ -9,6 +9,7 @@ import {
 import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
+import { corsOriginCallback } from '../../cors-origin.callback';
 
 export interface WsClient extends Socket {
   data: {
@@ -40,7 +41,7 @@ export interface WsClient extends Socket {
 @WebSocketGateway({
   namespace: 'events',
   cors: {
-    origin: process.env.FRONTEND_URL || '*',
+    origin: corsOriginCallback,
     credentials: true,
   },
   transports: ['websocket', 'polling'],
@@ -59,7 +60,7 @@ export class EventsGateway
     // JWT auth middleware — runs before handleConnection
     server.use((socket: WsClient, next) => {
       const token =
-        (socket.handshake.auth as any)?.token ||
+        (socket.handshake.auth as Record<string, string> | undefined)?.token ||
         (socket.handshake.query?.token as string);
 
       if (!token) {

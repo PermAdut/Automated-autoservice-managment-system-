@@ -45,7 +45,7 @@ const StorageForm = ({ stock, onClose, onSubmit }: StorageFormProps) => {
     resolver: zodResolver(stockSchema),
     defaultValues: {
       sparePartId: stock?.sparePart?.id ?? "",
-      storeId: (stock as any)?.store_id ?? (stock as any)?.storeId ?? "",
+      storeId: stock?.store_id ?? "",
       price:
         typeof stock?.sparePart?.price === "string"
           ? parseFloat(stock?.sparePart?.price)
@@ -58,7 +58,7 @@ const StorageForm = ({ stock, onClose, onSubmit }: StorageFormProps) => {
   useEffect(() => {
     reset({
       sparePartId: stock?.sparePart?.id ?? "",
-      storeId: (stock as any)?.store_id ?? (stock as any)?.storeId ?? "",
+      storeId: stock?.store_id ?? "",
       price:
         typeof stock?.sparePart?.price === "string"
           ? parseFloat(stock?.sparePart?.price)

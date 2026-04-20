@@ -13,6 +13,7 @@ import { PromotionsService } from './promotions.service';
 import { JwtAuthGuard } from '../AuthModule/guards/jwt-auth.guard';
 import { RolesGuard } from '../AuthModule/guards/roles.guard';
 import { Roles } from '../AuthModule/decorators/roles.decorator';
+import type { AuthenticatedRequest } from '../AuthModule/types/auth.types';
 
 @ApiTags('Promotions')
 @UseGuards(JwtAuthGuard)
@@ -38,7 +39,17 @@ export class PromotionsController {
   @UseGuards(RolesGuard)
   @Roles('admin')
   @ApiOperation({ summary: 'Create discount' })
-  createDiscount(@Body() body: any) {
+  createDiscount(@Body() body: {
+    code?: string;
+    name: string;
+    description?: string;
+    type: 'percent' | 'fixed' | 'free_service';
+    value: string;
+    minOrderAmount?: string;
+    maxUsageCount?: number;
+    startDate?: string;
+    endDate?: string;
+  }) {
     return this.promotionsService.createDiscount(body);
   }
 
@@ -46,7 +57,13 @@ export class PromotionsController {
   @UseGuards(RolesGuard)
   @Roles('admin')
   @ApiOperation({ summary: 'Update discount' })
-  updateDiscount(@Param('id') id: string, @Body() body: any) {
+  updateDiscount(@Param('id') id: string, @Body() body: Partial<{
+    isActive: boolean;
+    maxUsageCount: number;
+    endDate: string;
+    name: string;
+    description: string;
+  }>) {
     return this.promotionsService.updateDiscount(id, body);
   }
 
@@ -66,14 +83,14 @@ export class PromotionsController {
 
   @Get('loyalty/my')
   @ApiOperation({ summary: 'Get current user loyalty program info' })
-  getMyLoyalty(@Request() req: any) {
-    return this.promotionsService.getLoyaltyByUser(req.user.id);
+  getMyLoyalty(@Request() req: AuthenticatedRequest) {
+    return this.promotionsService.getLoyaltyByUser(req.user.userId);
   }
 
   @Get('loyalty/my/transactions')
   @ApiOperation({ summary: 'Get current user loyalty transactions' })
-  getMyTransactions(@Request() req: any) {
-    return this.promotionsService.getLoyaltyTransactions(req.user.id);
+  getMyTransactions(@Request() req: AuthenticatedRequest) {
+    return this.promotionsService.getLoyaltyTransactions(req.user.userId);
   }
 
   @Post('loyalty/add-points')
@@ -102,11 +119,11 @@ export class PromotionsController {
   @Post('loyalty/spend-points')
   @ApiOperation({ summary: 'Spend loyalty points (current user)' })
   spendPoints(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
     @Body() body: { points: number; orderId?: string; description?: string },
   ) {
     return this.promotionsService.spendPoints(
-      req.user.id,
+      req.user.userId,
       body.points,
       body.orderId,
       body.description,

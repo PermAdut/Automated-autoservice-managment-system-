@@ -81,12 +81,13 @@ export const EmployeeItem: React.FC<EmployeeItemProps> = ({
       const result = await subscribe(id).unwrap();
       console.log("Subscribe result:", result);
       await refetchSubscription();
-    } catch (error: any) {
+    } catch (error: unknown) {
       setLocalSubscriptionStatus(null);
       console.error("Failed to subscribe:", error);
+      const err = error as { data?: { message?: string }; message?: string };
       const errorMessage =
-        error?.data?.message ||
-        error?.message ||
+        err?.data?.message ||
+        err?.message ||
         "Не удалось подписаться. Попробуйте позже.";
       alert(errorMessage);
     }
@@ -98,12 +99,13 @@ export const EmployeeItem: React.FC<EmployeeItemProps> = ({
       const result = await unsubscribe(id).unwrap();
       console.log("Unsubscribe result:", result);
       await refetchSubscription();
-    } catch (error: any) {
+    } catch (error: unknown) {
       setLocalSubscriptionStatus(null);
       console.error("Failed to unsubscribe:", error);
+      const err = error as { data?: { message?: string }; message?: string };
       const errorMessage =
-        error?.data?.message ||
-        error?.message ||
+        err?.data?.message ||
+        err?.message ||
         "Не удалось отписаться. Попробуйте позже.";
       alert(errorMessage);
     }

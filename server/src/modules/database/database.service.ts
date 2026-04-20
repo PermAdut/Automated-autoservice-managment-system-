@@ -106,7 +106,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     return this.writePool.connect();
   }
 
-  async query(text: string, params?: any[]) {
+  async query(text: string, params?: unknown[]) {
     return this.writePool.query(text, params);
   }
 }

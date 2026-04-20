@@ -18,12 +18,12 @@ export class PartnersService {
   constructor(private readonly databaseService: DatabaseService) {}
 
   // Partners CRUD
-  async findAll(status?: string) {
-    let query = this.databaseService.db.select().from(partners);
+  async findAll(status?: 'active' | 'pending' | 'suspended' | 'inactive') {
+    const query = this.databaseService.db.select().from(partners).$dynamic();
     if (status) {
-      query = query.where(eq(partners.status, status as any)) as any;
+      query.where(eq(partners.status, status));
     }
-    return (query as any).orderBy(desc(partners.createdAt));
+    return query.orderBy(desc(partners.createdAt));
   }
 
   async findById(id: string) {

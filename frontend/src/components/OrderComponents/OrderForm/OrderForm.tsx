@@ -131,7 +131,7 @@ const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
               <label className="text-sm font-semibold text-gray-600">Автомобиль *</label>
               <select {...register("carId")} className={inputBase}>
                 <option value="">Выберите авто</option>
-                {selectedUser?.cars?.map((c: any) => (
+                {selectedUser?.cars?.map((c) => (
                   <option key={c.id} value={c.id}>{c.brand} {c.model} (VIN: {c.vin})</option>
                 ))}
               </select>
@@ -142,7 +142,7 @@ const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
               <select {...register("employeeId")} className={inputBase}>
                 <option value="">Выберите сотрудника</option>
                 {Array.isArray(employees) &&
-                  employees.map((e: any) => (
+                  employees.map((e) => (
                     <option key={e.id} value={e.id}>{e.name}</option>
                   ))}
               </select>

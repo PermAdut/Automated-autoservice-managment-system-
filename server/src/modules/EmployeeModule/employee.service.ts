@@ -30,7 +30,7 @@ export class EmployeeService {
     sortOrder: 'asc' | 'desc' = 'asc'
   ): Promise<EmployeeResponse[]> {
     try {
-      let query = this.databaseService.db
+      const query = this.databaseService.db
         .select({
           id: employees.id,
           name: employees.name,
@@ -41,10 +41,11 @@ export class EmployeeService {
           salary: employees.salary,
         })
         .from(employees)
-        .leftJoin(positions, eq(positions.id, employees.positionId));
+        .leftJoin(positions, eq(positions.id, employees.positionId))
+        .$dynamic();
 
       if (search) {
-        query = query.where(
+        query.where(
           or(
             ilike(employees.name, `%${search}%`),
             ilike(employees.surName, `%${search}%`),
@@ -53,27 +54,17 @@ export class EmployeeService {
             sql`CAST(${employees.id} AS TEXT) LIKE ${`%${search}%`}`,
             sql`CAST(${employees.salary} AS TEXT) LIKE ${`%${search}%`}`
           )
-        ) as any;
+        );
       }
 
       if (sortBy === 'name') {
-        query = query.orderBy(
-          sortOrder === 'asc' ? asc(employees.name) : desc(employees.name)
-        ) as any;
+        query.orderBy(sortOrder === 'asc' ? asc(employees.name) : desc(employees.name));
       } else if (sortBy === 'salary') {
-        query = query.orderBy(
-          sortOrder === 'asc' ? asc(employees.salary) : desc(employees.salary)
-        ) as any;
+        query.orderBy(sortOrder === 'asc' ? asc(employees.salary) : desc(employees.salary));
       } else if (sortBy === 'hireDate') {
-        query = query.orderBy(
-          sortOrder === 'asc'
-            ? asc(employees.hireDate)
-            : desc(employees.hireDate)
-        ) as any;
+        query.orderBy(sortOrder === 'asc' ? asc(employees.hireDate) : desc(employees.hireDate));
       } else if (sortBy === 'id') {
-        query = query.orderBy(
-          sortOrder === 'asc' ? asc(employees.id) : desc(employees.id)
-        ) as any;
+        query.orderBy(sortOrder === 'asc' ? asc(employees.id) : desc(employees.id));
       }
 
       const employeesList = await query;

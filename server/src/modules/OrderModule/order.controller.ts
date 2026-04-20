@@ -20,6 +20,7 @@ import { JwtAuthGuard } from '../AuthModule/guards/jwt-auth.guard';
 import { RolesGuard } from '../AuthModule/guards/roles.guard';
 import { Roles } from '../AuthModule/decorators/roles.decorator';
 import { CreateOrderDto, UpdateOrderDto } from './Dto/create-order.dto';
+import type { AuthenticatedRequest } from '../AuthModule/types/auth.types';
 
 @Controller('api/v1.0/orders')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -27,9 +28,7 @@ export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   private getAuth(req?: Request) {
-    const authUser = (req as any)?.user as
-      | { userId?: string; roleName?: string }
-      | undefined;
+    const authUser = (req as AuthenticatedRequest | undefined)?.user;
     return {
       userId: authUser?.userId,
       role: authUser?.roleName,

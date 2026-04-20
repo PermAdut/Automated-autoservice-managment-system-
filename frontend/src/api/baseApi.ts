@@ -1,9 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type {
   BaseQueryFn,
   FetchArgs,
   FetchBaseQueryError,
+  FetchBaseQueryMeta,
+  QueryReturnValue,
 } from "@reduxjs/toolkit/query";
 import { serverConfig } from "../configs/serverConfig";
 import {
@@ -117,7 +118,7 @@ export const baseApi = createApi({
           );
         }
 
-        return result as any;
+        return result as QueryReturnValue<AuthResponse, FetchBaseQueryError, FetchBaseQueryMeta>;
       },
     }),
     register: builder.mutation<
@@ -156,7 +157,7 @@ export const baseApi = createApi({
           );
         }
 
-        return result as any;
+        return result as QueryReturnValue<AuthResponse, FetchBaseQueryError, FetchBaseQueryMeta>;
       },
     }),
     refreshToken: builder.mutation<
@@ -172,7 +173,7 @@ export const baseApi = createApi({
           },
           _api,
           _extraOptions
-        )) as any;
+        )) as QueryReturnValue<{ access_token: string }, FetchBaseQueryError, FetchBaseQueryMeta>;
       },
     }),
     logout: builder.mutation<{ message: string }, { refresh_token: string }>({
@@ -187,7 +188,7 @@ export const baseApi = createApi({
           _extraOptions
         );
         (_api.dispatch as AppDispatch)(logout());
-        return result as any;
+        return result as QueryReturnValue<{ message: string }, FetchBaseQueryError, FetchBaseQueryMeta>;
       },
     }),
     googleAuth: builder.query<void, void>({
@@ -198,7 +199,7 @@ export const baseApi = createApi({
           },
           _api,
           _extraOptions
-        )) as any;
+        )) as QueryReturnValue<void, FetchBaseQueryError, FetchBaseQueryMeta>;
       },
     }),
   }),

@@ -28,7 +28,7 @@ export class SpareService {
     sortOrder: 'asc' | 'desc' = 'asc'
   ): Promise<SparePartStockResponseDto[]> {
     try {
-      let query = this.databaseService.db
+      const query = this.databaseService.db
         .select({
           store_id: stores.id,
           location: stores.location,
@@ -44,10 +44,11 @@ export class SpareService {
         .from(sparePartStore)
         .innerJoin(spareParts, eq(sparePartStore.sparePartId, spareParts.id))
         .innerJoin(categories, eq(spareParts.categoryId, categories.id))
-        .innerJoin(stores, eq(sparePartStore.storeId, stores.id));
+        .innerJoin(stores, eq(sparePartStore.storeId, stores.id))
+        .$dynamic();
 
       if (search) {
-        query = query.where(
+        query.where(
           or(
             ilike(spareParts.name, `%${search}%`),
             ilike(spareParts.partNumber, `%${search}%`),
@@ -55,21 +56,18 @@ export class SpareService {
             sql`CAST(${spareParts.id} AS TEXT) LIKE ${`%${search}%`}`,
             sql`CAST(${sparePartStore.quantity} AS TEXT) LIKE ${`%${search}%`}`
           )
-        ) as any;
+        );
       }
 
+      const orderFn = sortOrder === 'desc' ? desc : asc;
       if (sortBy === 'name') {
-        const orderBy = sortOrder === 'desc' ? desc : asc;
-        query = query.orderBy(orderBy(spareParts.name)) as any;
+        query.orderBy(orderFn(spareParts.name));
       } else if (sortBy === 'quantity') {
-        const orderBy = sortOrder === 'desc' ? desc : asc;
-        query = query.orderBy(orderBy(sparePartStore.quantity)) as any;
+        query.orderBy(orderFn(sparePartStore.quantity));
       } else if (sortBy === 'price') {
-        const orderBy = sortOrder === 'desc' ? desc : asc;
-        query = query.orderBy(orderBy(spareParts.price)) as any;
+        query.orderBy(orderFn(spareParts.price));
       } else if (sortBy === 'id') {
-        const orderBy = sortOrder === 'desc' ? desc : asc;
-        query = query.orderBy(orderBy(spareParts.id)) as any;
+        query.orderBy(orderFn(spareParts.id));
       }
 
       const result = await query;

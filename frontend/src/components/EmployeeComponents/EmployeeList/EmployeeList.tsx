@@ -141,9 +141,9 @@ const EmployeeList: React.FC = () => {
             <div key={employee.id} className="flex flex-col gap-2 min-w-0">
               <EmployeeItem
                 id={employee.id}
-                name={(employee as any).name}
-                surName={(employee as any).surName}
-                lastName={(employee as any).lastName}
+                name={employee.name}
+                surName={employee.surName}
+                lastName={employee.lastName}
                 position={employee.position ?? { id: "", name: "", description: "" }}
                 orders={employee.orders}
                 schedule={employee.schedule}

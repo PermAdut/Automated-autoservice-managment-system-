@@ -163,7 +163,7 @@ export class UserService {
     sortBy: 'name' | undefined = 'name',
     sortOrder: 'asc' | 'desc' = 'asc'
   ): Promise<UserResponseDto[]> {
-    let query = this.databaseService.db
+    const query = this.databaseService.db
       .select({
         id: users.id,
         name: users.name,
@@ -176,22 +176,23 @@ export class UserService {
         updatedAt: users.updatedAt,
       })
       .from(users)
-      .leftJoin(roles, eq(users.roleId, roles.id));
+      .leftJoin(roles, eq(users.roleId, roles.id))
+      .$dynamic();
 
     if (search) {
-      query = query.where(
+      query.where(
         or(
           like(users.name, `%${search}%`),
           like(users.surName, `%${search}%`),
           like(users.email, `%${search}%`),
           like(users.phone, `%${search}%`)
         )
-      ) as any;
+      );
     }
 
     if (sortBy === 'name') {
       const orderBy = sortOrder === 'desc' ? desc(users.name) : asc(users.name);
-      query = query.orderBy(orderBy) as any;
+      query.orderBy(orderBy);
     }
 
     const usersList = await query;

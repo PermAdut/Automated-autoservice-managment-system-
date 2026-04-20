@@ -94,10 +94,10 @@ export class BookingService {
       .orderBy(desc(appointments.scheduledAt));
   }
 
-  async findAll(status?: string) {
-    let query = this.databaseService.db.select().from(appointments);
+  async findAll(status?: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show') {
+    const query = this.databaseService.db.select().from(appointments).$dynamic();
     if (status) {
-      query = query.where(eq(appointments.status, status as any)) as any;
+      query.where(eq(appointments.status, status));
     }
     return query.orderBy(desc(appointments.scheduledAt));
   }
@@ -122,7 +122,7 @@ export class BookingService {
         ...(dto.employeeId && { employeeId: dto.employeeId }),
         ...(dto.timeSlotId && { timeSlotId: dto.timeSlotId }),
         ...(dto.scheduledAt && { scheduledAt: new Date(dto.scheduledAt) }),
-        ...(dto.status && { status: dto.status as any }),
+        ...(dto.status && { status: dto.status }),
         ...(dto.notes !== undefined && { notes: dto.notes }),
         updatedAt: new Date(),
       })

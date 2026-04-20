@@ -1,7 +1,68 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGetMyProfileQuery, useUpdateMyProfileMutation, UpdateCarDto } from "../../../api/usersApi";
+import { useGetMyVehiclesQuery } from "../../../api/vehiclesApi";
+import { useGetRemindersQuery, useCompleteReminderMutation } from "../../../api/diagnosticsApi";
 import { useFieldArray, useForm } from "react-hook-form";
+
+const reminderTypeLabels: Record<string, string> = {
+  oil_change: "Замена масла",
+  tire_rotation: "Ротация шин",
+  brake_service: "Тормоза",
+  scheduled_maintenance: "Плановое ТО",
+  timing_belt: "Ремень ГРМ",
+  other: "Другое",
+};
+
+const MaintenanceRecommendations: React.FC = () => {
+  const { data: vehicles = [] } = useGetMyVehiclesQuery();
+  const { data: reminders = [], isLoading } = useGetRemindersQuery({});
+  const [completeReminder] = useCompleteReminderMutation();
+
+  const pending = reminders.filter(r => !r.isCompleted);
+
+  if (isLoading || pending.length === 0) return null;
+
+  return (
+    <div className="bg-white rounded-lg p-6 shadow-sm mt-6">
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-xl">🔧</span>
+        <h2 className="text-xl font-semibold text-gray-700 m-0">Рекомендации по ТО</h2>
+        <span className="ml-auto px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
+          {pending.length}
+        </span>
+      </div>
+      <div className="space-y-3">
+        {pending.slice(0, 5).map(r => {
+          const car = vehicles.find(v => v.id === r.carId);
+          return (
+            <div key={r.id} className="flex items-center justify-between gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100">
+              <div className="flex-1">
+                <p className="font-medium text-gray-800 text-sm">{reminderTypeLabels[r.type] ?? r.type}</p>
+                {car && <p className="text-xs text-gray-500">{car.brand} {car.model}</p>}
+                {r.description && <p className="text-xs text-amber-700 mt-0.5">{r.description}</p>}
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {r.dueDate && (
+                  <span className="text-xs text-gray-400">{new Date(r.dueDate).toLocaleDateString("ru-RU")}</span>
+                )}
+                <button
+                  onClick={() => completeReminder(r.id)}
+                  className="px-3 py-1 text-xs font-medium bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Выполнено
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {pending.length > 5 && (
+        <p className="text-xs text-gray-400 mt-2">+ ещё {pending.length - 5} напоминаний</p>
+      )}
+    </div>
+  );
+};
 
 interface ProfileFormData {
   name: string;
@@ -146,7 +207,9 @@ const Profile: React.FC = () => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg p-8 shadow-sm">
+      <MaintenanceRecommendations />
+
+      <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg p-8 shadow-sm mt-6">
         <div className="mb-8">
           <h2 className="text-2xl font-semibold text-gray-700 mb-4">Основная информация</h2>
           <div className="grid gap-4 grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(250px,1fr))]">

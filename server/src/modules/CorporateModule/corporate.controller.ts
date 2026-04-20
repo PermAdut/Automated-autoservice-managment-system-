@@ -36,13 +36,32 @@ export class CorporateController {
   @Post('companies')
   @Roles('admin')
   @ApiOperation({ summary: 'Create company' })
-  create(@Body() body: any) {
+  create(@Body() body: {
+    name: string;
+    inn?: string;
+    address?: string;
+    city?: string;
+    contactPerson?: string;
+    phone?: string;
+    email?: string;
+    managerUserId?: string;
+  }) {
     return this.corporateService.create(body);
   }
 
   @Patch('companies/:id')
   @ApiOperation({ summary: 'Update company' })
-  update(@Param('id') id: string, @Body() body: any) {
+  update(@Param('id') id: string, @Body() body: Partial<{
+    name: string;
+    inn: string;
+    address: string;
+    city: string;
+    contactPerson: string;
+    phone: string;
+    email: string;
+    managerUserId: string;
+    isActive: boolean;
+  }>) {
     return this.corporateService.update(id, body);
   }
 
@@ -54,7 +73,15 @@ export class CorporateController {
 
   @Post('companies/:id/contracts')
   @ApiOperation({ summary: 'Create contract for company' })
-  createContract(@Param('id') id: string, @Body() body: any) {
+  createContract(@Param('id') id: string, @Body() body: {
+    contractNumber?: string;
+    discountPercent?: string;
+    creditLimit?: string;
+    paymentTermDays?: string;
+    startDate: string;
+    endDate: string;
+    notes?: string;
+  }) {
     return this.corporateService.createContract({ ...body, companyId: id });
   }
 

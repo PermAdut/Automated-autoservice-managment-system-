@@ -42,6 +42,16 @@ export interface TenantSettings extends TenantBranding {
 
 // Separate API for tenant — uses root URL (not /api/v1.0 prefix)
 // since tenant endpoints don't require auth for public branding
+export interface TenantPage {
+  id: string;
+  slug: string;
+  title: string;
+  content: string;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const tenantApi = createApi({
   reducerPath: "tenantApi",
   baseQuery: fetchBaseQuery({ baseUrl: `${serverConfig.url}` }),
@@ -81,11 +91,11 @@ export const tenantApi = createApi({
       }),
       invalidatesTags: ["TenantSettings"],
     }),
-    getTenantPages: builder.query<any[], void>({
+    getTenantPages: builder.query<TenantPage[], void>({
       query: () => "/tenant/pages",
       providesTags: ["TenantPages"],
     }),
-    getTenantPage: builder.query<any, string>({
+    getTenantPage: builder.query<TenantPage, string>({
       query: (slug) => `/tenant/pages/${slug}`,
     }),
   }),

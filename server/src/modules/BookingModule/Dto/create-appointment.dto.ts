@@ -57,7 +57,7 @@ export class UpdateAppointmentDto {
   })
   @IsOptional()
   @IsString()
-  status?: string;
+  status?: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
 
   @ApiPropertyOptional()
   @IsOptional()

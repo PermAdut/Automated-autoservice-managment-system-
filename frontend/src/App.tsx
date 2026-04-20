@@ -1,12 +1,13 @@
 import { Route, Routes } from "react-router";
 import { Provider } from "react-redux";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, HashRouter } from "react-router-dom";
 import { store } from "./store";
 import { TenantProvider } from "./components/TenantProvider/TenantProvider";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import Header from "./components/Header/Header";
 import Footer from "./components/Footer/Footer";
+import { OfflineStatusBar } from "./components/OfflineStatusBar/OfflineStatusBar";
 
 // Pages
 import MainPage from "./components/MainPage/MainPage.tsx";
@@ -27,14 +28,28 @@ import AnalyticsDashboard from "./components/Analytics/AnalyticsDashboard.tsx";
 import SetupWizard from "./components/Setup/SetupWizard.tsx";
 import OnlineBooking from "./components/Booking/OnlineBooking.tsx";
 import TenantSettings from "./components/TenantSettings/TenantSettings.tsx";
+// New pages
+import VehiclesPage from "./components/VehicleComponents/VehiclesPage.tsx";
+import DiagnosticsPage from "./components/DiagnosticsComponents/DiagnosticsPage.tsx";
+import WarrantyPage from "./components/WarrantyComponents/WarrantyPage.tsx";
+import LoyaltyPage from "./components/LoyaltyComponent/LoyaltyPage.tsx";
+import BranchesPage from "./components/BranchComponents/BranchesPage.tsx";
+import CorporatePage from "./components/CorporateComponents/CorporatePage.tsx";
+import SchedulePage from "./components/GanttChart/SchedulePage.tsx";
+
+const Router =
+  typeof window !== "undefined" && window.location.protocol === "file:"
+    ? HashRouter
+    : BrowserRouter;
 
 function App() {
   return (
     <Provider store={store}>
-      <BrowserRouter>
+      <Router>
         <TenantProvider>
           <ErrorBoundary>
             <div className="flex flex-col min-h-screen min-h-dvh bg-gray-50 w-full min-w-full">
+              <OfflineStatusBar />
               <Header />
               <main className="flex-1 w-full min-w-full min-h-0 flex flex-col py-4 sm:py-5">
                 <div className="flex-1 min-h-0 flex flex-col w-full">
@@ -152,6 +167,66 @@ function App() {
                     }
                   />
 
+                  {/* New pages — all authenticated users */}
+                  <Route
+                    path="/vehicles"
+                    element={
+                      <ProtectedRoute allowedRoles={["customer", "admin", "manager"]}>
+                        <VehiclesPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/diagnostics"
+                    element={
+                      <ProtectedRoute allowedRoles={["customer", "admin", "manager"]}>
+                        <DiagnosticsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/warranty"
+                    element={
+                      <ProtectedRoute allowedRoles={["customer", "admin", "manager"]}>
+                        <WarrantyPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/loyalty"
+                    element={
+                      <ProtectedRoute allowedRoles={["customer", "admin", "manager"]}>
+                        <LoyaltyPage />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Admin / Manager only */}
+                  <Route
+                    path="/branches"
+                    element={
+                      <ProtectedRoute allowedRoles={["admin", "manager"]}>
+                        <BranchesPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/corporate"
+                    element={
+                      <ProtectedRoute allowedRoles={["admin", "manager"]}>
+                        <CorporatePage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/schedule"
+                    element={
+                      <ProtectedRoute allowedRoles={["admin", "manager"]}>
+                        <SchedulePage />
+                      </ProtectedRoute>
+                    }
+                  />
+
                   <Route path="*" element={<Page404 />} />
                 </Routes>
                 </div>
@@ -160,7 +235,7 @@ function App() {
             </div>
           </ErrorBoundary>
         </TenantProvider>
-      </BrowserRouter>
+      </Router>
     </Provider>
   );
 }

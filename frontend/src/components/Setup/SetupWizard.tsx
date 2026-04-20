@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUpdateTenantSettingsMutation, useCompleteSetupMutation } from "../../api/tenantApi";
+import { useUpdateTenantSettingsMutation, useCompleteSetupMutation, type TenantSettings } from "../../api/tenantApi";
 
 const STEPS = [
   { id: 1, title: "Компания", description: "Название и контакты" },
@@ -73,7 +73,7 @@ export default function SetupWizard() {
       return;
     }
     // Step 3 → save + complete
-    await updateSettings(form as any);
+    await updateSettings(form as unknown as Partial<TenantSettings>);
     await completeSetup();
     setStep(4);
   };

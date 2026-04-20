@@ -7,13 +7,16 @@ import {
   Post,
   Query,
   Request,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { WarrantyService } from './warranty.service';
 import { JwtAuthGuard } from '../AuthModule/guards/jwt-auth.guard';
 import { RolesGuard } from '../AuthModule/guards/roles.guard';
 import { Roles } from '../AuthModule/decorators/roles.decorator';
+import type { AuthenticatedRequest } from '../AuthModule/types/auth.types';
 
 @ApiTags('Warranty')
 @UseGuards(JwtAuthGuard)
@@ -45,7 +48,13 @@ export class WarrantyController {
   @UseGuards(RolesGuard)
   @Roles('admin', 'manager')
   @ApiOperation({ summary: 'Issue warranty for an order' })
-  create(@Body() body: any) {
+  create(@Body() body: {
+    orderId: string;
+    sparePartId?: string;
+    type: 'work' | 'spare_part' | 'complex';
+    description?: string;
+    durationMonths: number;
+  }) {
     return this.warrantyService.create(body);
   }
 
@@ -62,8 +71,8 @@ export class WarrantyController {
 
   @Get('claims/my')
   @ApiOperation({ summary: 'Get warranty claims for current user' })
-  getMyClaims(@Request() req: any) {
-    return this.warrantyService.getUserClaims(req.user.id);
+  getMyClaims(@Request() req: AuthenticatedRequest) {
+    return this.warrantyService.getUserClaims(req.user.userId);
   }
 
   @Get('claims')
@@ -76,10 +85,13 @@ export class WarrantyController {
 
   @Post('claims')
   @ApiOperation({ summary: 'File a warranty claim' })
-  createClaim(@Request() req: any, @Body() body: any) {
+  createClaim(
+    @Request() req: AuthenticatedRequest,
+    @Body() body: { warrantyId: string; description: string },
+  ) {
     return this.warrantyService.createClaim({
       ...body,
-      userId: req.user.id,
+      userId: req.user.userId,
     });
   }
 
@@ -96,5 +108,17 @@ export class WarrantyController {
     },
   ) {
     return this.warrantyService.updateClaimStatus(id, body.status, body.resolution);
+  }
+
+  @Get(':id/certificate')
+  @ApiOperation({ summary: 'Download warranty certificate as PDF' })
+  async downloadCertificate(@Param('id') id: string, @Res() res: Response) {
+    const pdf = await this.warrantyService.generateCertificatePdf(id);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="warranty-${id.slice(0, 8)}.pdf"`,
+    );
+    res.send(pdf);
   }
 }

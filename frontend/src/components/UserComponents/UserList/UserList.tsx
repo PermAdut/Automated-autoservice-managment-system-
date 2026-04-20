@@ -94,10 +94,10 @@ function UserRowActions({ row }: { row: UserRow }) {
           onClose={() => setIsEditOpen(false)}
           onSave={async (data) => {
             try {
-              const { role, ...rest } = data as any;
+              const { role, ...rest } = data;
               await updateUser({
                 id: row.id,
-                data: { ...rest, roleId: (role as any)?.id ?? (data as any)?.roleId },
+                data: { ...rest, roleId: role?.id ?? data.roleId },
               }).unwrap();
             } catch (err) {
               console.error("Failed to update user:", err);

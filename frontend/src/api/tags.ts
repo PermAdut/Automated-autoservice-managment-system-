@@ -13,4 +13,11 @@ export const apiTags = {
   SPARE_PART: "SparePart",
   POSITIONS: "Positions",
   Booking: "Booking",
+  Vehicle: "Vehicle",
+  Diagnostic: "Diagnostic",
+  Warranty: "Warranty",
+  Loyalty: "Loyalty",
+  Branch: "Branch",
+  Corporate: "Corporate",
+  Schedule: "Schedule",
 } as const;

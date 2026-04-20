@@ -71,9 +71,9 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({
   useEffect(() => {
     if (employee) {
       reset({
-        name: (employee as any).name ?? "",
-        surName: (employee as any).surName ?? "",
-        lastName: (employee as any).lastName ?? "",
+        name: employee.name ?? "",
+        surName: employee.surName ?? "",
+        lastName: employee.lastName ?? "",
         positionId: employee.positionId,
         hireDate: employee.hireDate
           ? new Date(employee.hireDate).toISOString().split("T")[0]

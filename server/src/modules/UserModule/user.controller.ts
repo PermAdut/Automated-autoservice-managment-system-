@@ -23,6 +23,7 @@ import { RolesGuard } from '../AuthModule/guards/roles.guard';
 import { Roles } from '../AuthModule/decorators/roles.decorator';
 import { Public } from '../AuthModule/decorators/public.decorator';
 import { Req } from '@nestjs/common';
+import type { AuthenticatedRequest } from '../AuthModule/types/auth.types';
 
 @Controller('api/v1.0/users')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -101,7 +102,7 @@ export class UserController {
 
   @HttpCode(200)
   @Get('profile/me')
-  async getMyProfile(@Req() req: any) {
+  async getMyProfile(@Req() req: AuthenticatedRequest) {
     const userId = req.user?.userId;
     if (!userId) {
       throw new BadRequestException('User not authenticated');
@@ -111,7 +112,7 @@ export class UserController {
 
   @HttpCode(200)
   @Put('profile/me')
-  async updateMyProfile(@Req() req: any, @Body() profile: UpdateProfileDto) {
+  async updateMyProfile(@Req() req: AuthenticatedRequest, @Body() profile: UpdateProfileDto) {
     const userId = req.user?.userId;
     if (!userId) {
       throw new BadRequestException('User not authenticated');

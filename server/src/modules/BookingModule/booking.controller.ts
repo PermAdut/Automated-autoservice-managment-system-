@@ -15,6 +15,7 @@ import { CreateAppointmentDto, UpdateAppointmentDto } from './Dto/create-appoint
 import { JwtAuthGuard } from '../AuthModule/guards/jwt-auth.guard';
 import { RolesGuard } from '../AuthModule/guards/roles.guard';
 import { Roles } from '../AuthModule/decorators/roles.decorator';
+import type { AuthenticatedRequest } from '../AuthModule/types/auth.types';
 
 @ApiTags('Booking')
 @UseGuards(JwtAuthGuard)
@@ -59,16 +60,16 @@ export class BookingController {
   @Post()
   @ApiOperation({ summary: 'Create online appointment' })
   createAppointment(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
     @Body() dto: CreateAppointmentDto,
   ) {
-    return this.bookingService.createAppointment(req.user.id, dto);
+    return this.bookingService.createAppointment(req.user.userId, dto);
   }
 
   @Get('my')
   @ApiOperation({ summary: 'Get current user appointments' })
-  getMyAppointments(@Request() req: any) {
-    return this.bookingService.findByUser(req.user.id);
+  getMyAppointments(@Request() req: AuthenticatedRequest) {
+    return this.bookingService.findByUser(req.user.userId);
   }
 
   @Get()
@@ -77,7 +78,10 @@ export class BookingController {
   @ApiOperation({ summary: 'Get all appointments (admin/manager)' })
   @ApiQuery({ name: 'status', required: false })
   findAll(@Query('status') status?: string) {
-    return this.bookingService.findAll(status);
+    type AppointmentStatus = 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
+    const validStatuses: AppointmentStatus[] = ['pending', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show'];
+    const typedStatus = validStatuses.includes(status as AppointmentStatus) ? (status as AppointmentStatus) : undefined;
+    return this.bookingService.findAll(typedStatus);
   }
 
   @Get(':id')
@@ -96,7 +100,7 @@ export class BookingController {
 
   @Patch(':id/cancel')
   @ApiOperation({ summary: 'Cancel appointment' })
-  cancel(@Param('id') id: string, @Request() req: any) {
-    return this.bookingService.cancel(id, req.user.id);
+  cancel(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
+    return this.bookingService.cancel(id, req.user.userId);
   }
 }

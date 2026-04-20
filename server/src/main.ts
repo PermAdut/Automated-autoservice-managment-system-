@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { config } from 'dotenv';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { corsOriginCallback } from './cors-origin.callback';
 
 config();
 
@@ -31,10 +32,9 @@ async function bootstrap() {
     }),
   );
 
-  // CORS — restrict to frontend origin in production
-  const corsOrigin = process.env.FRONTEND_URL || process.env.CORS_ORIGIN || '*';
+  // CORS — explicit origins via FRONTEND_URL / CORS_ORIGIN; Electron file:// uses null origin
   app.enableCors({
-    origin: corsOrigin,
+    origin: corsOriginCallback,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     credentials: true,

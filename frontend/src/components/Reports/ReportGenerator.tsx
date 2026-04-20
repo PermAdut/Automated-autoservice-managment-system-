@@ -19,7 +19,13 @@ import {
   StarOutlined,
   FundOutlined,
   LoadingOutlined,
+  DownloadOutlined,
+  FilePdfOutlined,
 } from "@ant-design/icons";
+import { serverConfig } from "../../configs/serverConfig";
+
+const getExportUrl = (type: string, format: "csv" | "pdf") =>
+  `${serverConfig.url}/api/v1.0/reports/${type}/${format}`;
 
 const reportTypes = [
   { type: "orders", label: "Заказы клиентов", icon: <FileTextOutlined />, color: "bg-indigo-50 text-indigo-600" },
@@ -138,6 +144,27 @@ const ReportGenerator: React.FC = () => {
       {data && !isLoading && (
         <Card>
           <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+              <span className="text-sm text-gray-500">{data.rows.length} строк</span>
+              <div className="flex gap-2">
+                <a
+                  href={getExportUrl(originalArgs!, "csv")}
+                  download
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700 no-underline transition-colors"
+                >
+                  <DownloadOutlined />
+                  CSV
+                </a>
+                <a
+                  href={getExportUrl(originalArgs!, "pdf")}
+                  download
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 no-underline transition-colors"
+                >
+                  <FilePdfOutlined />
+                  PDF
+                </a>
+              </div>
+            </div>
             <ReportTable data={data} />
           </CardContent>
         </Card>

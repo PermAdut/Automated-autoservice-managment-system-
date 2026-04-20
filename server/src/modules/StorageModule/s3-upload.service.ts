@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { S3FileCategory } from './dto/presign-url.dto';
+import type { S3Client } from '@aws-sdk/client-s3';
 
 export interface PresignResult {
   uploadUrl: string;
@@ -34,7 +35,7 @@ export class S3UploadService {
   private readonly logger = new Logger(S3UploadService.name);
 
   // Lazy-loaded SDK clients to avoid startup failure when SDK is not installed
-  private s3Client: any = null;
+  private s3Client: S3Client | null = null;
   private readonly bucket = process.env.AWS_S3_BUCKET;
   private readonly region = process.env.AWS_REGION || 'us-east-1';
   private readonly cdnDomain = process.env.AWS_CLOUDFRONT_DOMAIN;

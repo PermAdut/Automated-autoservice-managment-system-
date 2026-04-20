@@ -71,8 +71,13 @@ export class PromotionsService {
       description: string;
     }>,
   ) {
-    const payload: any = { ...data };
-    if (data.endDate) payload.endDate = new Date(data.endDate);
+    const payload: Partial<{ isActive: boolean; maxUsageCount: number; endDate: Date; name: string; description: string }> = {
+      ...(data.isActive !== undefined && { isActive: data.isActive }),
+      ...(data.maxUsageCount !== undefined && { maxUsageCount: data.maxUsageCount }),
+      ...(data.name !== undefined && { name: data.name }),
+      ...(data.description !== undefined && { description: data.description }),
+      ...(data.endDate !== undefined && { endDate: new Date(data.endDate) }),
+    };
 
     const [updated] = await this.databaseService.db
       .update(discounts)
