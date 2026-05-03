@@ -52,7 +52,7 @@ export class AuthService {
       .where(eq(users.email, dto.email))
       .limit(1);
     if (existing.length > 0) {
-      throw new BadRequestException('Email already in use');
+      throw new BadRequestException('Email уже используется');
     }
 
     const existingLogin = await this.databaseService.db
@@ -61,7 +61,7 @@ export class AuthService {
       .where(eq(users.login, dto.login))
       .limit(1);
     if (existingLogin.length > 0) {
-      throw new BadRequestException('Login already in use');
+      throw new BadRequestException('Логин уже используется');
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
