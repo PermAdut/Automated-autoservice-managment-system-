@@ -1,0 +1,5213 @@
+{
+  "id": "b2a0ca9f-e4d0-4f1d-9a07-e06c2d30ded7",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "autoservice.Passport": {
+      "name": "Passport",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "userId": {
+          "name": "userId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "identityNumber": {
+          "name": "identityNumber",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "birthDate": {
+          "name": "birthDate",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gender": {
+          "name": "gender",
+          "type": "gender",
+          "typeSchema": "autoservice",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Passport_userId_Users_id_fk": {
+          "name": "Passport_userId_Users_id_fk",
+          "tableFrom": "Passport",
+          "tableTo": "Users",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.RefreshTokens": {
+      "name": "RefreshTokens",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "userId": {
+          "name": "userId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token": {
+          "name": "token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expiresAt": {
+          "name": "expiresAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "refresh_token_idx": {
+          "name": "refresh_token_idx",
+          "columns": [
+            {
+              "expression": "token",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "refresh_user_idx": {
+          "name": "refresh_user_idx",
+          "columns": [
+            {
+              "expression": "userId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "RefreshTokens_userId_Users_id_fk": {
+          "name": "RefreshTokens_userId_Users_id_fk",
+          "tableFrom": "RefreshTokens",
+          "tableTo": "Users",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "RefreshTokens_token_unique": {
+          "name": "RefreshTokens_token_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "token"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.Role": {
+      "name": "Role",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "role_name_idx": {
+          "name": "role_name_idx",
+          "columns": [
+            {
+              "expression": "name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "Role_name_unique": {
+          "name": "Role_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.Users": {
+      "name": "Users",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "roleId": {
+          "name": "roleId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "login": {
+          "name": "login",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "surName": {
+          "name": "surName",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "passwordHash": {
+          "name": "passwordHash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "oauthProvider": {
+          "name": "oauthProvider",
+          "type": "oauth_provider",
+          "typeSchema": "autoservice",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'local'"
+        },
+        "oauthId": {
+          "name": "oauthId",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "user_email_idx": {
+          "name": "user_email_idx",
+          "columns": [
+            {
+              "expression": "email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "user_role_idx": {
+          "name": "user_role_idx",
+          "columns": [
+            {
+              "expression": "roleId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "user_oauth_idx": {
+          "name": "user_oauth_idx",
+          "columns": [
+            {
+              "expression": "oauthId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "Users_roleId_Role_id_fk": {
+          "name": "Users_roleId_Role_id_fk",
+          "tableFrom": "Users",
+          "tableTo": "Role",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "roleId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "email_unique": {
+          "name": "email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        },
+        "login_unique": {
+          "name": "login_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "login"
+          ]
+        },
+        "phone_unique": {
+          "name": "phone_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "phone"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.Employees": {
+      "name": "Employees",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "userId": {
+          "name": "userId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "surName": {
+          "name": "surName",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lastName": {
+          "name": "lastName",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "positionId": {
+          "name": "positionId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hireDate": {
+          "name": "hireDate",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "salary": {
+          "name": "salary",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Employees_userId_Users_id_fk": {
+          "name": "Employees_userId_Users_id_fk",
+          "tableFrom": "Employees",
+          "tableTo": "Users",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "Employees_positionId_Position_id_fk": {
+          "name": "Employees_positionId_Position_id_fk",
+          "tableFrom": "Employees",
+          "tableTo": "Position",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "positionId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.Position": {
+      "name": "Position",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.WorkSchedule": {
+      "name": "WorkSchedule",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "employeeId": {
+          "name": "employeeId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "startTime": {
+          "name": "startTime",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "endTime": {
+          "name": "endTime",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "isAvailable": {
+          "name": "isAvailable",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "WorkSchedule_employeeId_Employees_id_fk": {
+          "name": "WorkSchedule_employeeId_Employees_id_fk",
+          "tableFrom": "WorkSchedule",
+          "tableTo": "Employees",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "employeeId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.Categories": {
+      "name": "Categories",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.Invoices": {
+      "name": "Invoices",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "positionForBuyingId": {
+          "name": "positionForBuyingId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount": {
+          "name": "amount",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "invoiceDate": {
+          "name": "invoiceDate",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Invoices_positionForBuyingId_PositionsForBuying_id_fk": {
+          "name": "Invoices_positionForBuyingId_PositionsForBuying_id_fk",
+          "tableFrom": "Invoices",
+          "tableTo": "PositionsForBuying",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "positionForBuyingId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.PositionsForBuying": {
+      "name": "PositionsForBuying",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "supplierId": {
+          "name": "supplierId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deliveryDate": {
+          "name": "deliveryDate",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "PositionsForBuying_supplierId_Suppliers_id_fk": {
+          "name": "PositionsForBuying_supplierId_Suppliers_id_fk",
+          "tableFrom": "PositionsForBuying",
+          "tableTo": "Suppliers",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "supplierId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.SparePart_Store": {
+      "name": "SparePart_Store",
+      "schema": "autoservice",
+      "columns": {
+        "sparePartId": {
+          "name": "sparePartId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "storeId": {
+          "name": "storeId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 1
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "SparePart_Store_sparePartId_SparePart_id_fk": {
+          "name": "SparePart_Store_sparePartId_SparePart_id_fk",
+          "tableFrom": "SparePart_Store",
+          "tableTo": "SparePart",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "sparePartId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "SparePart_Store_storeId_Store_id_fk": {
+          "name": "SparePart_Store_storeId_Store_id_fk",
+          "tableFrom": "SparePart_Store",
+          "tableTo": "Store",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "storeId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "SparePart_Store_sparePartId_storeId_pk": {
+          "name": "SparePart_Store_sparePartId_storeId_pk",
+          "columns": [
+            "sparePartId",
+            "storeId"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.SparePart": {
+      "name": "SparePart",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "partNumber": {
+          "name": "partNumber",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price": {
+          "name": "price",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "categoryId": {
+          "name": "categoryId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "SparePart_categoryId_Categories_id_fk": {
+          "name": "SparePart_categoryId_Categories_id_fk",
+          "tableFrom": "SparePart",
+          "tableTo": "Categories",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "categoryId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.Store": {
+      "name": "Store",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "location": {
+          "name": "location",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "workingHours": {
+          "name": "workingHours",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.Suppliers": {
+      "name": "Suppliers",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contact": {
+          "name": "contact",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "address": {
+          "name": "address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.ServiceCategories": {
+      "name": "ServiceCategories",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "parentId": {
+          "name": "parentId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "isActive": {
+          "name": "isActive",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ServiceCategories_name_unique": {
+          "name": "ServiceCategories_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.Services": {
+      "name": "Services",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "categoryId": {
+          "name": "categoryId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "price": {
+          "name": "price",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "durationMinutes": {
+          "name": "durationMinutes",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "isActive": {
+          "name": "isActive",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Services_categoryId_ServiceCategories_id_fk": {
+          "name": "Services_categoryId_ServiceCategories_id_fk",
+          "tableFrom": "Services",
+          "tableTo": "ServiceCategories",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "categoryId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.Cars": {
+      "name": "Cars",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "userId": {
+          "name": "userId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "brand": {
+          "name": "brand",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "model": {
+          "name": "model",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "information": {
+          "name": "information",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "year": {
+          "name": "year",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vin": {
+          "name": "vin",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "licensePlate": {
+          "name": "licensePlate",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Cars_userId_Users_id_fk": {
+          "name": "Cars_userId_Users_id_fk",
+          "tableFrom": "Cars",
+          "tableTo": "Users",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.Reviews": {
+      "name": "Reviews",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "userId": {
+          "name": "userId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "employeeId": {
+          "name": "employeeId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rate": {
+          "name": "rate",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deletedAt": {
+          "name": "deletedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Reviews_userId_Users_id_fk": {
+          "name": "Reviews_userId_Users_id_fk",
+          "tableFrom": "Reviews",
+          "tableTo": "Users",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "Reviews_employeeId_Employees_id_fk": {
+          "name": "Reviews_employeeId_Employees_id_fk",
+          "tableFrom": "Reviews",
+          "tableTo": "Employees",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "employeeId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.Subscriptions": {
+      "name": "Subscriptions",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "userId": {
+          "name": "userId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "employeeId": {
+          "name": "employeeId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "subscriptionDescription": {
+          "name": "subscriptionDescription",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "subscriptionName": {
+          "name": "subscriptionName",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dateStart": {
+          "name": "dateStart",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "dateEnd": {
+          "name": "dateEnd",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Subscriptions_userId_Users_id_fk": {
+          "name": "Subscriptions_userId_Users_id_fk",
+          "tableFrom": "Subscriptions",
+          "tableTo": "Users",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "Subscriptions_employeeId_Employees_id_fk": {
+          "name": "Subscriptions_employeeId_Employees_id_fk",
+          "tableFrom": "Subscriptions",
+          "tableTo": "Employees",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "employeeId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.Orders": {
+      "name": "Orders",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "userId": {
+          "name": "userId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "carId": {
+          "name": "carId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "employeeId": {
+          "name": "employeeId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "completedAt": {
+          "name": "completedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "order_user_idx": {
+          "name": "order_user_idx",
+          "columns": [
+            {
+              "expression": "userId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "order_status_idx": {
+          "name": "order_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "order_created_at_idx": {
+          "name": "order_created_at_idx",
+          "columns": [
+            {
+              "expression": "createdAt",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "Orders_userId_Users_id_fk": {
+          "name": "Orders_userId_Users_id_fk",
+          "tableFrom": "Orders",
+          "tableTo": "Users",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "Orders_carId_Cars_id_fk": {
+          "name": "Orders_carId_Cars_id_fk",
+          "tableFrom": "Orders",
+          "tableTo": "Cars",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "carId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "Orders_employeeId_Employees_id_fk": {
+          "name": "Orders_employeeId_Employees_id_fk",
+          "tableFrom": "Orders",
+          "tableTo": "Employees",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "employeeId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.Payment": {
+      "name": "Payment",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "orderId": {
+          "name": "orderId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount": {
+          "name": "amount",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "payment_status",
+          "typeSchema": "autoservice",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "paymentDate": {
+          "name": "paymentDate",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "paymentMethod": {
+          "name": "paymentMethod",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Payment_orderId_Orders_id_fk": {
+          "name": "Payment_orderId_Orders_id_fk",
+          "tableFrom": "Payment",
+          "tableTo": "Orders",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "orderId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.Services_Orders": {
+      "name": "Services_Orders",
+      "schema": "autoservice",
+      "columns": {
+        "servicesId": {
+          "name": "servicesId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "orderId": {
+          "name": "orderId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Services_Orders_servicesId_Services_id_fk": {
+          "name": "Services_Orders_servicesId_Services_id_fk",
+          "tableFrom": "Services_Orders",
+          "tableTo": "Services",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "servicesId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "Services_Orders_orderId_Orders_id_fk": {
+          "name": "Services_Orders_orderId_Orders_id_fk",
+          "tableFrom": "Services_Orders",
+          "tableTo": "Orders",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "orderId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Services_Orders_servicesId_orderId_pk": {
+          "name": "Services_Orders_servicesId_orderId_pk",
+          "columns": [
+            "servicesId",
+            "orderId"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.SparePart_Orders": {
+      "name": "SparePart_Orders",
+      "schema": "autoservice",
+      "columns": {
+        "sparePartId": {
+          "name": "sparePartId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ordersId": {
+          "name": "ordersId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 1
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "SparePart_Orders_sparePartId_SparePart_id_fk": {
+          "name": "SparePart_Orders_sparePartId_SparePart_id_fk",
+          "tableFrom": "SparePart_Orders",
+          "tableTo": "SparePart",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "sparePartId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "SparePart_Orders_ordersId_Orders_id_fk": {
+          "name": "SparePart_Orders_ordersId_Orders_id_fk",
+          "tableFrom": "SparePart_Orders",
+          "tableTo": "Orders",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "ordersId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "SparePart_Orders_sparePartId_ordersId_pk": {
+          "name": "SparePart_Orders_sparePartId_ordersId_pk",
+          "columns": [
+            "sparePartId",
+            "ordersId"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.Appointments": {
+      "name": "Appointments",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "userId": {
+          "name": "userId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "carId": {
+          "name": "carId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "serviceId": {
+          "name": "serviceId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "employeeId": {
+          "name": "employeeId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "timeSlotId": {
+          "name": "timeSlotId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "appointment_status",
+          "typeSchema": "autoservice",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "scheduledAt": {
+          "name": "scheduledAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "confirmationCode": {
+          "name": "confirmationCode",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "appointment_user_idx": {
+          "name": "appointment_user_idx",
+          "columns": [
+            {
+              "expression": "userId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "appointment_status_idx": {
+          "name": "appointment_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "appointment_scheduled_at_idx": {
+          "name": "appointment_scheduled_at_idx",
+          "columns": [
+            {
+              "expression": "scheduledAt",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "Appointments_userId_Users_id_fk": {
+          "name": "Appointments_userId_Users_id_fk",
+          "tableFrom": "Appointments",
+          "tableTo": "Users",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "Appointments_carId_Cars_id_fk": {
+          "name": "Appointments_carId_Cars_id_fk",
+          "tableFrom": "Appointments",
+          "tableTo": "Cars",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "carId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "Appointments_serviceId_Services_id_fk": {
+          "name": "Appointments_serviceId_Services_id_fk",
+          "tableFrom": "Appointments",
+          "tableTo": "Services",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "serviceId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "Appointments_employeeId_Employees_id_fk": {
+          "name": "Appointments_employeeId_Employees_id_fk",
+          "tableFrom": "Appointments",
+          "tableTo": "Employees",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "employeeId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "Appointments_timeSlotId_TimeSlots_id_fk": {
+          "name": "Appointments_timeSlotId_TimeSlots_id_fk",
+          "tableFrom": "Appointments",
+          "tableTo": "TimeSlots",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "timeSlotId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.TimeSlots": {
+      "name": "TimeSlots",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "employeeId": {
+          "name": "employeeId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date": {
+          "name": "date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "startTime": {
+          "name": "startTime",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "endTime": {
+          "name": "endTime",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "isBooked": {
+          "name": "isBooked",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {
+        "timeslot_employee_date_idx": {
+          "name": "timeslot_employee_date_idx",
+          "columns": [
+            {
+              "expression": "employeeId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "timeslot_date_idx": {
+          "name": "timeslot_date_idx",
+          "columns": [
+            {
+              "expression": "date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "TimeSlots_employeeId_Employees_id_fk": {
+          "name": "TimeSlots_employeeId_Employees_id_fk",
+          "tableFrom": "TimeSlots",
+          "tableTo": "Employees",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "employeeId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.NotificationChannels": {
+      "name": "NotificationChannels",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "userId": {
+          "name": "userId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "channel": {
+          "name": "channel",
+          "type": "notification_channel",
+          "typeSchema": "autoservice",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "address": {
+          "name": "address",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "isVerified": {
+          "name": "isVerified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "isEnabled": {
+          "name": "isEnabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "NotificationChannels_userId_Users_id_fk": {
+          "name": "NotificationChannels_userId_Users_id_fk",
+          "tableFrom": "NotificationChannels",
+          "tableTo": "Users",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.NotificationTemplates": {
+      "name": "NotificationTemplates",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "channel": {
+          "name": "channel",
+          "type": "notification_channel",
+          "typeSchema": "autoservice",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subject": {
+          "name": "subject",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "variables": {
+          "name": "variables",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "isActive": {
+          "name": "isActive",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "NotificationTemplates_name_unique": {
+          "name": "NotificationTemplates_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.Notifications": {
+      "name": "Notifications",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "userId": {
+          "name": "userId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "templateId": {
+          "name": "templateId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "channel": {
+          "name": "channel",
+          "type": "notification_channel",
+          "typeSchema": "autoservice",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "notification_status",
+          "typeSchema": "autoservice",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "subject": {
+          "name": "subject",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "recipient": {
+          "name": "recipient",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sentAt": {
+          "name": "sentAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "errorMessage": {
+          "name": "errorMessage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "notification_user_idx": {
+          "name": "notification_user_idx",
+          "columns": [
+            {
+              "expression": "userId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "notification_status_idx": {
+          "name": "notification_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "notification_created_at_idx": {
+          "name": "notification_created_at_idx",
+          "columns": [
+            {
+              "expression": "createdAt",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "Notifications_userId_Users_id_fk": {
+          "name": "Notifications_userId_Users_id_fk",
+          "tableFrom": "Notifications",
+          "tableTo": "Users",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "Notifications_templateId_NotificationTemplates_id_fk": {
+          "name": "Notifications_templateId_NotificationTemplates_id_fk",
+          "tableFrom": "Notifications",
+          "tableTo": "NotificationTemplates",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "templateId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.DiagnosticCodesCatalog": {
+      "name": "DiagnosticCodesCatalog",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "code": {
+          "name": "code",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descriptionRu": {
+          "name": "descriptionRu",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "severity": {
+          "name": "severity",
+          "type": "dtc_severity",
+          "typeSchema": "autoservice",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'medium'"
+        },
+        "system": {
+          "name": "system",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "possibleCauses": {
+          "name": "possibleCauses",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "possibleFixes": {
+          "name": "possibleFixes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "dtc_code_idx": {
+          "name": "dtc_code_idx",
+          "columns": [
+            {
+              "expression": "code",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "DiagnosticCodesCatalog_code_unique": {
+          "name": "DiagnosticCodesCatalog_code_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "code"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.DiagnosticResults": {
+      "name": "DiagnosticResults",
+      "schema": "autoservice",
+      "columns": {
+        "sessionId": {
+          "name": "sessionId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "codeId": {
+          "name": "codeId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "DiagnosticResults_sessionId_DiagnosticSessions_id_fk": {
+          "name": "DiagnosticResults_sessionId_DiagnosticSessions_id_fk",
+          "tableFrom": "DiagnosticResults",
+          "tableTo": "DiagnosticSessions",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "sessionId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "DiagnosticResults_codeId_DiagnosticCodesCatalog_id_fk": {
+          "name": "DiagnosticResults_codeId_DiagnosticCodesCatalog_id_fk",
+          "tableFrom": "DiagnosticResults",
+          "tableTo": "DiagnosticCodesCatalog",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "codeId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "DiagnosticResults_sessionId_codeId_pk": {
+          "name": "DiagnosticResults_sessionId_codeId_pk",
+          "columns": [
+            "sessionId",
+            "codeId"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.DiagnosticSessions": {
+      "name": "DiagnosticSessions",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "carId": {
+          "name": "carId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "employeeId": {
+          "name": "employeeId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "orderId": {
+          "name": "orderId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mileage": {
+          "name": "mileage",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rawData": {
+          "name": "rawData",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "diag_session_car_idx": {
+          "name": "diag_session_car_idx",
+          "columns": [
+            {
+              "expression": "carId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "diag_session_created_at_idx": {
+          "name": "diag_session_created_at_idx",
+          "columns": [
+            {
+              "expression": "createdAt",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "DiagnosticSessions_carId_Cars_id_fk": {
+          "name": "DiagnosticSessions_carId_Cars_id_fk",
+          "tableFrom": "DiagnosticSessions",
+          "tableTo": "Cars",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "carId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "DiagnosticSessions_employeeId_Employees_id_fk": {
+          "name": "DiagnosticSessions_employeeId_Employees_id_fk",
+          "tableFrom": "DiagnosticSessions",
+          "tableTo": "Employees",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "employeeId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.MaintenanceReminders": {
+      "name": "MaintenanceReminders",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "userId": {
+          "name": "userId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "carId": {
+          "name": "carId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "reminder_type",
+          "typeSchema": "autoservice",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dueDate": {
+          "name": "dueDate",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dueMileage": {
+          "name": "dueMileage",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "isSent": {
+          "name": "isSent",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "isCompleted": {
+          "name": "isCompleted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "reminder_user_idx": {
+          "name": "reminder_user_idx",
+          "columns": [
+            {
+              "expression": "userId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "reminder_car_idx": {
+          "name": "reminder_car_idx",
+          "columns": [
+            {
+              "expression": "carId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "reminder_due_date_idx": {
+          "name": "reminder_due_date_idx",
+          "columns": [
+            {
+              "expression": "dueDate",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "MaintenanceReminders_userId_Users_id_fk": {
+          "name": "MaintenanceReminders_userId_Users_id_fk",
+          "tableFrom": "MaintenanceReminders",
+          "tableTo": "Users",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "MaintenanceReminders_carId_Cars_id_fk": {
+          "name": "MaintenanceReminders_carId_Cars_id_fk",
+          "tableFrom": "MaintenanceReminders",
+          "tableTo": "Cars",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "carId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.PartnerApiKeys": {
+      "name": "PartnerApiKeys",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "partnerId": {
+          "name": "partnerId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "keyHash": {
+          "name": "keyHash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scopes": {
+          "name": "scopes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "expiresAt": {
+          "name": "expiresAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lastUsedAt": {
+          "name": "lastUsedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "isActive": {
+          "name": "isActive",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "partner_api_key_idx": {
+          "name": "partner_api_key_idx",
+          "columns": [
+            {
+              "expression": "keyHash",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "partner_api_partner_idx": {
+          "name": "partner_api_partner_idx",
+          "columns": [
+            {
+              "expression": "partnerId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "PartnerApiKeys_partnerId_Partners_id_fk": {
+          "name": "PartnerApiKeys_partnerId_Partners_id_fk",
+          "tableFrom": "PartnerApiKeys",
+          "tableTo": "Partners",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "partnerId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "PartnerApiKeys_keyHash_unique": {
+          "name": "PartnerApiKeys_keyHash_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "keyHash"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.PartnerClientRedirects": {
+      "name": "PartnerClientRedirects",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "userId": {
+          "name": "userId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fromPartnerId": {
+          "name": "fromPartnerId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "toPartnerId": {
+          "name": "toPartnerId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason": {
+          "name": "reason",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "serviceRequested": {
+          "name": "serviceRequested",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "accepted": {
+          "name": "accepted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "redirect_user_idx": {
+          "name": "redirect_user_idx",
+          "columns": [
+            {
+              "expression": "userId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "PartnerClientRedirects_userId_Users_id_fk": {
+          "name": "PartnerClientRedirects_userId_Users_id_fk",
+          "tableFrom": "PartnerClientRedirects",
+          "tableTo": "Users",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "PartnerClientRedirects_fromPartnerId_Partners_id_fk": {
+          "name": "PartnerClientRedirects_fromPartnerId_Partners_id_fk",
+          "tableFrom": "PartnerClientRedirects",
+          "tableTo": "Partners",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "fromPartnerId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "PartnerClientRedirects_toPartnerId_Partners_id_fk": {
+          "name": "PartnerClientRedirects_toPartnerId_Partners_id_fk",
+          "tableFrom": "PartnerClientRedirects",
+          "tableTo": "Partners",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "toPartnerId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.PartnerSparePartRequests": {
+      "name": "PartnerSparePartRequests",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "fromPartnerId": {
+          "name": "fromPartnerId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "toPartnerId": {
+          "name": "toPartnerId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sparePartId": {
+          "name": "sparePartId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "status": {
+          "name": "status",
+          "type": "part_request_status",
+          "typeSchema": "autoservice",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "requestedAt": {
+          "name": "requestedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "resolvedAt": {
+          "name": "resolvedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "part_req_from_idx": {
+          "name": "part_req_from_idx",
+          "columns": [
+            {
+              "expression": "fromPartnerId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "part_req_status_idx": {
+          "name": "part_req_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "PartnerSparePartRequests_fromPartnerId_Partners_id_fk": {
+          "name": "PartnerSparePartRequests_fromPartnerId_Partners_id_fk",
+          "tableFrom": "PartnerSparePartRequests",
+          "tableTo": "Partners",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "fromPartnerId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "PartnerSparePartRequests_toPartnerId_Partners_id_fk": {
+          "name": "PartnerSparePartRequests_toPartnerId_Partners_id_fk",
+          "tableFrom": "PartnerSparePartRequests",
+          "tableTo": "Partners",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "toPartnerId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "PartnerSparePartRequests_sparePartId_SparePart_id_fk": {
+          "name": "PartnerSparePartRequests_sparePartId_SparePart_id_fk",
+          "tableFrom": "PartnerSparePartRequests",
+          "tableTo": "SparePart",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "sparePartId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.Partners": {
+      "name": "Partners",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "address": {
+          "name": "address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "city": {
+          "name": "city",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "website": {
+          "name": "website",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "apiUrl": {
+          "name": "apiUrl",
+          "type": "varchar(300)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "partner_status",
+          "typeSchema": "autoservice",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "partner_status_idx": {
+          "name": "partner_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "partner_city_idx": {
+          "name": "partner_city_idx",
+          "columns": [
+            {
+              "expression": "city",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.BranchEmployees": {
+      "name": "BranchEmployees",
+      "schema": "autoservice",
+      "columns": {
+        "branchId": {
+          "name": "branchId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "employeeId": {
+          "name": "employeeId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "assignedAt": {
+          "name": "assignedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "isPrimary": {
+          "name": "isPrimary",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "BranchEmployees_branchId_Branches_id_fk": {
+          "name": "BranchEmployees_branchId_Branches_id_fk",
+          "tableFrom": "BranchEmployees",
+          "tableTo": "Branches",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "branchId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "BranchEmployees_employeeId_Employees_id_fk": {
+          "name": "BranchEmployees_employeeId_Employees_id_fk",
+          "tableFrom": "BranchEmployees",
+          "tableTo": "Employees",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "employeeId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "BranchEmployees_branchId_employeeId_pk": {
+          "name": "BranchEmployees_branchId_employeeId_pk",
+          "columns": [
+            "branchId",
+            "employeeId"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.Branches": {
+      "name": "Branches",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "address": {
+          "name": "address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "city": {
+          "name": "city",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "managerId": {
+          "name": "managerId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "workingHours": {
+          "name": "workingHours",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "isActive": {
+          "name": "isActive",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "branch_city_idx": {
+          "name": "branch_city_idx",
+          "columns": [
+            {
+              "expression": "city",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "branch_active_idx": {
+          "name": "branch_active_idx",
+          "columns": [
+            {
+              "expression": "isActive",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "Branches_managerId_Users_id_fk": {
+          "name": "Branches_managerId_Users_id_fk",
+          "tableFrom": "Branches",
+          "tableTo": "Users",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "managerId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.StoreTransfers": {
+      "name": "StoreTransfers",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "fromStoreId": {
+          "name": "fromStoreId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "toStoreId": {
+          "name": "toStoreId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sparePartId": {
+          "name": "sparePartId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "transfer_status",
+          "typeSchema": "autoservice",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "initiatedById": {
+          "name": "initiatedById",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "completedAt": {
+          "name": "completedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "transfer_from_store_idx": {
+          "name": "transfer_from_store_idx",
+          "columns": [
+            {
+              "expression": "fromStoreId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "transfer_status_idx": {
+          "name": "transfer_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "StoreTransfers_fromStoreId_Store_id_fk": {
+          "name": "StoreTransfers_fromStoreId_Store_id_fk",
+          "tableFrom": "StoreTransfers",
+          "tableTo": "Store",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "fromStoreId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "StoreTransfers_toStoreId_Store_id_fk": {
+          "name": "StoreTransfers_toStoreId_Store_id_fk",
+          "tableFrom": "StoreTransfers",
+          "tableTo": "Store",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "toStoreId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "StoreTransfers_sparePartId_SparePart_id_fk": {
+          "name": "StoreTransfers_sparePartId_SparePart_id_fk",
+          "tableFrom": "StoreTransfers",
+          "tableTo": "SparePart",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "sparePartId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "StoreTransfers_initiatedById_Users_id_fk": {
+          "name": "StoreTransfers_initiatedById_Users_id_fk",
+          "tableFrom": "StoreTransfers",
+          "tableTo": "Users",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "initiatedById"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.Warranties": {
+      "name": "Warranties",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "orderId": {
+          "name": "orderId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sparePartId": {
+          "name": "sparePartId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type": {
+          "name": "type",
+          "type": "warranty_type",
+          "typeSchema": "autoservice",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "warranty_status",
+          "typeSchema": "autoservice",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "durationMonths": {
+          "name": "durationMonths",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "issuedAt": {
+          "name": "issuedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "expiresAt": {
+          "name": "expiresAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "warranty_order_idx": {
+          "name": "warranty_order_idx",
+          "columns": [
+            {
+              "expression": "orderId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "warranty_status_idx": {
+          "name": "warranty_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "warranty_expires_at_idx": {
+          "name": "warranty_expires_at_idx",
+          "columns": [
+            {
+              "expression": "expiresAt",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "Warranties_orderId_Orders_id_fk": {
+          "name": "Warranties_orderId_Orders_id_fk",
+          "tableFrom": "Warranties",
+          "tableTo": "Orders",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "orderId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "Warranties_sparePartId_SparePart_id_fk": {
+          "name": "Warranties_sparePartId_SparePart_id_fk",
+          "tableFrom": "Warranties",
+          "tableTo": "SparePart",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "sparePartId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.WarrantyClaims": {
+      "name": "WarrantyClaims",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "warrantyId": {
+          "name": "warrantyId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "warranty_claim_status",
+          "typeSchema": "autoservice",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'open'"
+        },
+        "resolution": {
+          "name": "resolution",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "resolvedAt": {
+          "name": "resolvedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "claim_warranty_idx": {
+          "name": "claim_warranty_idx",
+          "columns": [
+            {
+              "expression": "warrantyId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "claim_user_idx": {
+          "name": "claim_user_idx",
+          "columns": [
+            {
+              "expression": "userId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "claim_status_idx": {
+          "name": "claim_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "WarrantyClaims_warrantyId_Warranties_id_fk": {
+          "name": "WarrantyClaims_warrantyId_Warranties_id_fk",
+          "tableFrom": "WarrantyClaims",
+          "tableTo": "Warranties",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "warrantyId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "WarrantyClaims_userId_Users_id_fk": {
+          "name": "WarrantyClaims_userId_Users_id_fk",
+          "tableFrom": "WarrantyClaims",
+          "tableTo": "Users",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.Companies": {
+      "name": "Companies",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "inn": {
+          "name": "inn",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "address": {
+          "name": "address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "city": {
+          "name": "city",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contactPerson": {
+          "name": "contactPerson",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "managerUserId": {
+          "name": "managerUserId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "isActive": {
+          "name": "isActive",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "company_inn_idx": {
+          "name": "company_inn_idx",
+          "columns": [
+            {
+              "expression": "inn",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "company_city_idx": {
+          "name": "company_city_idx",
+          "columns": [
+            {
+              "expression": "city",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "Companies_managerUserId_Users_id_fk": {
+          "name": "Companies_managerUserId_Users_id_fk",
+          "tableFrom": "Companies",
+          "tableTo": "Users",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "managerUserId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.CompanyCars": {
+      "name": "CompanyCars",
+      "schema": "autoservice",
+      "columns": {
+        "companyId": {
+          "name": "companyId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "carId": {
+          "name": "carId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "assignedAt": {
+          "name": "assignedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "notes": {
+          "name": "notes",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "CompanyCars_companyId_Companies_id_fk": {
+          "name": "CompanyCars_companyId_Companies_id_fk",
+          "tableFrom": "CompanyCars",
+          "tableTo": "Companies",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "companyId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "CompanyCars_carId_Cars_id_fk": {
+          "name": "CompanyCars_carId_Cars_id_fk",
+          "tableFrom": "CompanyCars",
+          "tableTo": "Cars",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "carId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "CompanyCars_companyId_carId_pk": {
+          "name": "CompanyCars_companyId_carId_pk",
+          "columns": [
+            "companyId",
+            "carId"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.CompanyContracts": {
+      "name": "CompanyContracts",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "companyId": {
+          "name": "companyId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contractNumber": {
+          "name": "contractNumber",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "contract_status",
+          "typeSchema": "autoservice",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'draft'"
+        },
+        "discountPercent": {
+          "name": "discountPercent",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "creditLimit": {
+          "name": "creditLimit",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "paymentTermDays": {
+          "name": "paymentTermDays",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "startDate": {
+          "name": "startDate",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "endDate": {
+          "name": "endDate",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "contract_company_idx": {
+          "name": "contract_company_idx",
+          "columns": [
+            {
+              "expression": "companyId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "contract_status_idx": {
+          "name": "contract_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "contract_end_date_idx": {
+          "name": "contract_end_date_idx",
+          "columns": [
+            {
+              "expression": "endDate",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "CompanyContracts_companyId_Companies_id_fk": {
+          "name": "CompanyContracts_companyId_Companies_id_fk",
+          "tableFrom": "CompanyContracts",
+          "tableTo": "Companies",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "companyId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.Discounts": {
+      "name": "Discounts",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "code": {
+          "name": "code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type": {
+          "name": "type",
+          "type": "discount_type",
+          "typeSchema": "autoservice",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "minOrderAmount": {
+          "name": "minOrderAmount",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "maxUsageCount": {
+          "name": "maxUsageCount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "usedCount": {
+          "name": "usedCount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "isActive": {
+          "name": "isActive",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "startDate": {
+          "name": "startDate",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "endDate": {
+          "name": "endDate",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "discount_code_idx": {
+          "name": "discount_code_idx",
+          "columns": [
+            {
+              "expression": "code",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "discount_active_idx": {
+          "name": "discount_active_idx",
+          "columns": [
+            {
+              "expression": "isActive",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "discount_end_date_idx": {
+          "name": "discount_end_date_idx",
+          "columns": [
+            {
+              "expression": "endDate",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "Discounts_code_unique": {
+          "name": "Discounts_code_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "code"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.LoyaltyPrograms": {
+      "name": "LoyaltyPrograms",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "userId": {
+          "name": "userId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "points": {
+          "name": "points",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "tier": {
+          "name": "tier",
+          "type": "loyalty_tier",
+          "typeSchema": "autoservice",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'bronze'"
+        },
+        "totalEarned": {
+          "name": "totalEarned",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "totalSpent": {
+          "name": "totalSpent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "loyalty_user_idx": {
+          "name": "loyalty_user_idx",
+          "columns": [
+            {
+              "expression": "userId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "loyalty_tier_idx": {
+          "name": "loyalty_tier_idx",
+          "columns": [
+            {
+              "expression": "tier",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "LoyaltyPrograms_userId_Users_id_fk": {
+          "name": "LoyaltyPrograms_userId_Users_id_fk",
+          "tableFrom": "LoyaltyPrograms",
+          "tableTo": "Users",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "LoyaltyPrograms_userId_unique": {
+          "name": "LoyaltyPrograms_userId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "userId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.LoyaltyTransactions": {
+      "name": "LoyaltyTransactions",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "programId": {
+          "name": "programId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "orderId": {
+          "name": "orderId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type": {
+          "name": "type",
+          "type": "loyalty_tx_type",
+          "typeSchema": "autoservice",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "points": {
+          "name": "points",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "loyalty_tx_program_idx": {
+          "name": "loyalty_tx_program_idx",
+          "columns": [
+            {
+              "expression": "programId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "loyalty_tx_created_at_idx": {
+          "name": "loyalty_tx_created_at_idx",
+          "columns": [
+            {
+              "expression": "createdAt",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "LoyaltyTransactions_programId_LoyaltyPrograms_id_fk": {
+          "name": "LoyaltyTransactions_programId_LoyaltyPrograms_id_fk",
+          "tableFrom": "LoyaltyTransactions",
+          "tableTo": "LoyaltyPrograms",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "programId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "LoyaltyTransactions_orderId_Orders_id_fk": {
+          "name": "LoyaltyTransactions_orderId_Orders_id_fk",
+          "tableFrom": "LoyaltyTransactions",
+          "tableTo": "Orders",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "orderId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.OrderDiscounts": {
+      "name": "OrderDiscounts",
+      "schema": "autoservice",
+      "columns": {
+        "orderId": {
+          "name": "orderId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "discountId": {
+          "name": "discountId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "appliedAmount": {
+          "name": "appliedAmount",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "appliedAt": {
+          "name": "appliedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "OrderDiscounts_orderId_Orders_id_fk": {
+          "name": "OrderDiscounts_orderId_Orders_id_fk",
+          "tableFrom": "OrderDiscounts",
+          "tableTo": "Orders",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "orderId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "OrderDiscounts_discountId_Discounts_id_fk": {
+          "name": "OrderDiscounts_discountId_Discounts_id_fk",
+          "tableFrom": "OrderDiscounts",
+          "tableTo": "Discounts",
+          "schemaTo": "autoservice",
+          "columnsFrom": [
+            "discountId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "OrderDiscounts_orderId_discountId_pk": {
+          "name": "OrderDiscounts_orderId_discountId_pk",
+          "columns": [
+            "orderId",
+            "discountId"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.TenantPages": {
+      "name": "TenantPages",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "isPublished": {
+          "name": "isPublished",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "TenantPages_slug_unique": {
+          "name": "TenantPages_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "slug"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "autoservice.TenantSettings": {
+      "name": "TenantSettings",
+      "schema": "autoservice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "companyName": {
+          "name": "companyName",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'AutoService'"
+        },
+        "tagline": {
+          "name": "tagline",
+          "type": "varchar(300)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "logoUrl": {
+          "name": "logoUrl",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "faviconUrl": {
+          "name": "faviconUrl",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "primaryColor": {
+          "name": "primaryColor",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'#4f46e5'"
+        },
+        "secondaryColor": {
+          "name": "secondaryColor",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'#0ea5e9'"
+        },
+        "accentColor": {
+          "name": "accentColor",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'#10b981'"
+        },
+        "fontFamily": {
+          "name": "fontFamily",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'Inter'"
+        },
+        "address": {
+          "name": "address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "city": {
+          "name": "city",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "country": {
+          "name": "country",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'RU'"
+        },
+        "postalCode": {
+          "name": "postalCode",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "website": {
+          "name": "website",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mapCoordinates": {
+          "name": "mapCoordinates",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "workingHours": {
+          "name": "workingHours",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'Пн-Сб: 9:00-19:00'"
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'RUB'"
+        },
+        "timezone": {
+          "name": "timezone",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'Europe/Moscow'"
+        },
+        "language": {
+          "name": "language",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'ru'"
+        },
+        "featureOnlineBooking": {
+          "name": "featureOnlineBooking",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "featureVinDecoder": {
+          "name": "featureVinDecoder",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "featureLoyaltyProgram": {
+          "name": "featureLoyaltyProgram",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "featurePartnerNetwork": {
+          "name": "featurePartnerNetwork",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "featureMultiBranch": {
+          "name": "featureMultiBranch",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "featureCorporateClients": {
+          "name": "featureCorporateClients",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "featureSmsNotifications": {
+          "name": "featureSmsNotifications",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "featureEmailNotifications": {
+          "name": "featureEmailNotifications",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "maxEmployees": {
+          "name": "maxEmployees",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 50
+        },
+        "maxStorageItems": {
+          "name": "maxStorageItems",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 1000
+        },
+        "integrationConfig": {
+          "name": "integrationConfig",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "isSetupComplete": {
+          "name": "isSetupComplete",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "setupCompletedAt": {
+          "name": "setupCompletedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "autoservice.gender": {
+      "name": "gender",
+      "schema": "autoservice",
+      "values": [
+        "M",
+        "F"
+      ]
+    },
+    "autoservice.oauth_provider": {
+      "name": "oauth_provider",
+      "schema": "autoservice",
+      "values": [
+        "google",
+        "local"
+      ]
+    },
+    "autoservice.payment_status": {
+      "name": "payment_status",
+      "schema": "autoservice",
+      "values": [
+        "pending",
+        "paid",
+        "failed",
+        "refunded"
+      ]
+    },
+    "autoservice.appointment_status": {
+      "name": "appointment_status",
+      "schema": "autoservice",
+      "values": [
+        "pending",
+        "confirmed",
+        "in_progress",
+        "completed",
+        "cancelled",
+        "no_show"
+      ]
+    },
+    "autoservice.notification_channel": {
+      "name": "notification_channel",
+      "schema": "autoservice",
+      "values": [
+        "email",
+        "sms",
+        "push"
+      ]
+    },
+    "autoservice.notification_status": {
+      "name": "notification_status",
+      "schema": "autoservice",
+      "values": [
+        "pending",
+        "sent",
+        "failed",
+        "delivered"
+      ]
+    },
+    "autoservice.dtc_severity": {
+      "name": "dtc_severity",
+      "schema": "autoservice",
+      "values": [
+        "info",
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ]
+    },
+    "autoservice.reminder_type": {
+      "name": "reminder_type",
+      "schema": "autoservice",
+      "values": [
+        "oil_change",
+        "tire_rotation",
+        "brake_service",
+        "scheduled_maintenance",
+        "timing_belt",
+        "other"
+      ]
+    },
+    "autoservice.part_request_status": {
+      "name": "part_request_status",
+      "schema": "autoservice",
+      "values": [
+        "pending",
+        "approved",
+        "rejected",
+        "transferred",
+        "cancelled"
+      ]
+    },
+    "autoservice.partner_status": {
+      "name": "partner_status",
+      "schema": "autoservice",
+      "values": [
+        "active",
+        "pending",
+        "suspended",
+        "inactive"
+      ]
+    },
+    "autoservice.transfer_status": {
+      "name": "transfer_status",
+      "schema": "autoservice",
+      "values": [
+        "pending",
+        "in_transit",
+        "completed",
+        "cancelled"
+      ]
+    },
+    "autoservice.warranty_claim_status": {
+      "name": "warranty_claim_status",
+      "schema": "autoservice",
+      "values": [
+        "open",
+        "under_review",
+        "approved",
+        "rejected",
+        "resolved"
+      ]
+    },
+    "autoservice.warranty_status": {
+      "name": "warranty_status",
+      "schema": "autoservice",
+      "values": [
+        "active",
+        "expired",
+        "claimed",
+        "voided"
+      ]
+    },
+    "autoservice.warranty_type": {
+      "name": "warranty_type",
+      "schema": "autoservice",
+      "values": [
+        "work",
+        "spare_part",
+        "complex"
+      ]
+    },
+    "autoservice.contract_status": {
+      "name": "contract_status",
+      "schema": "autoservice",
+      "values": [
+        "draft",
+        "active",
+        "suspended",
+        "expired",
+        "terminated"
+      ]
+    },
+    "autoservice.discount_type": {
+      "name": "discount_type",
+      "schema": "autoservice",
+      "values": [
+        "percent",
+        "fixed",
+        "free_service"
+      ]
+    },
+    "autoservice.loyalty_tier": {
+      "name": "loyalty_tier",
+      "schema": "autoservice",
+      "values": [
+        "bronze",
+        "silver",
+        "gold",
+        "platinum"
+      ]
+    },
+    "autoservice.loyalty_tx_type": {
+      "name": "loyalty_tx_type",
+      "schema": "autoservice",
+      "values": [
+        "earn",
+        "spend",
+        "bonus",
+        "expire",
+        "adjustment"
+      ]
+    }
+  },
+  "schemas": {
+    "autoservice": "autoservice"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

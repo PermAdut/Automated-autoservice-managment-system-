@@ -9,6 +9,8 @@ import {
   BarChartOutlined,
   AppstoreOutlined,
   WarningOutlined,
+  TeamOutlined,
+  TrophyOutlined,
 } from "@ant-design/icons";
 import {
   useGetDashboardKpiQuery,
@@ -16,6 +18,7 @@ import {
   useGetRevenueByMonthQuery,
   useGetTopServicesQuery,
   useGetLowStockQuery,
+  useGetTopEmployeesQuery,
 } from "../../api/analyticsApi";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
@@ -90,7 +93,8 @@ export default function AnalyticsDashboard() {
   const { data: kpi, isLoading: kpiLoading } = useGetDashboardKpiQuery(period);
   const { data: byStatus } = useGetOrdersByStatusQuery();
   const { data: revenue } = useGetRevenueByMonthQuery();
-  const { data: topServices } = useGetTopServicesQuery();
+  const { data: topServices } = useGetTopServicesQuery(10);
+  const { data: topEmployees } = useGetTopEmployeesQuery(10);
   const { data: lowStock } = useGetLowStockQuery();
 
   return (
@@ -321,6 +325,104 @@ export default function AnalyticsDashboard() {
               <div className="py-4 text-center">
                 <p className="text-green-600 text-sm font-medium">Все позиции в норме ✓</p>
               </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <TrophyOutlined className="text-amber-500" />
+              Топ мастеров по выработке
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {topEmployees?.length ? (
+              <div className="divide-y divide-gray-100">
+                {topEmployees.slice(0, 10).map((e, i) => {
+                  const maxOrders = Math.max(...topEmployees.map((x) => x.orderCount));
+                  const pct = maxOrders > 0 ? (e.orderCount / maxOrders) * 100 : 0;
+                  return (
+                    <div key={e.employeeId} className="flex items-center gap-3 py-2.5">
+                      <span
+                        className={cn(
+                          "text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0",
+                          i === 0 ? "bg-amber-100 text-amber-700"
+                          : i === 1 ? "bg-gray-200 text-gray-600"
+                          : i === 2 ? "bg-orange-100 text-orange-600"
+                          : "bg-gray-50 text-gray-400"
+                        )}
+                      >
+                        {i + 1}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium text-gray-800 truncate">{e.name}</span>
+                          <span className="text-xs text-gray-400 font-medium tabular-nums ml-2 shrink-0">
+                            {e.orderCount} зак.
+                          </span>
+                        </div>
+                        <div className="bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                          <div
+                            className="h-full bg-indigo-400 rounded-full transition-all duration-500"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                      {e.avgRating > 0 && (
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          <StarOutlined className="text-amber-400" style={{ fontSize: 11 }} />
+                          <span className="text-xs text-gray-500 tabular-nums">{Number(e.avgRating).toFixed(1)}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-gray-400 text-sm py-4 text-center">Нет данных</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <TeamOutlined className="text-indigo-500" />
+              Загрузка постов — ближайшие записи
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {byStatus?.length ? (
+              <div className="space-y-3">
+                {byStatus.map((item) => {
+                  const cfg = statusConfig[item.status];
+                  const total = byStatus.reduce((s, x) => s + Number(x.count), 0);
+                  const pct = total > 0 ? (Number(item.count) / total) * 100 : 0;
+                  return (
+                    <div key={item.status}>
+                      <div className="flex items-center justify-between mb-1">
+                        <Badge variant={cfg?.variant ?? "secondary"}>
+                          {cfg?.label ?? item.status}
+                        </Badge>
+                        <span className="font-semibold text-gray-900 tabular-nums text-sm">
+                          {item.count} ({Math.round(pct)}%)
+                        </span>
+                      </div>
+                      <div className="bg-gray-100 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-indigo-500 transition-all duration-500"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-gray-400 text-sm py-4 text-center">Нет данных</p>
             )}
           </CardContent>
         </Card>

@@ -122,7 +122,7 @@ export const About = () => {
 
       {/* Contact */}
       <section>
-        <div className="bg-gradient-to-br from-indigo-600 to-blue-500 rounded-2xl p-8 sm:p-10 lg:p-12 text-white text-center">
+        <div className="bg-linear-to-br from-indigo-600 to-blue-500 rounded-2xl p-8 sm:p-10 lg:p-12 text-white text-center">
           <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3">
             <CustomerServiceOutlined />
           </div>

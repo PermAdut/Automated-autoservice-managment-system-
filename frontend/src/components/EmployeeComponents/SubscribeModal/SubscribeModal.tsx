@@ -92,7 +92,7 @@ export const SubscribeModal: React.FC<SubscribeModalProps> = ({
             className={`px-5 py-2.5 border-none rounded-lg cursor-pointer text-base font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
               isSubscribed
                 ? "bg-error text-white hover:bg-red-700"
-                : "bg-gradient-to-br from-primary to-primary-dark text-white hover:opacity-90"
+                : "bg-linear-to-br from-primary to-primary-dark text-white hover:opacity-90"
             }`}
             onClick={isSubscribed ? handleUnsubscribe : handleSubscribe}
             disabled={isLoading}

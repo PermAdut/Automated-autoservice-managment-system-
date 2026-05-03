@@ -176,7 +176,7 @@ const MainPage: React.FC = () => {
     return (
       <div className="flex flex-col w-full flex-1 min-h-0">
         {/* Hero */}
-        <section className="relative overflow-hidden w-full flex-shrink-0 bg-gradient-to-br from-indigo-700 via-indigo-600 to-blue-500 text-white">
+        <section className="relative overflow-hidden w-full flex-shrink-0 bg-linear-to-br from-indigo-700 via-indigo-600 to-blue-500 text-white">
           <div
             className="absolute inset-0 opacity-10"
             style={{
@@ -293,7 +293,7 @@ const MainPage: React.FC = () => {
   return (
     <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 min-h-0 flex flex-col">
       {/* Welcome banner */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-indigo-600 to-blue-500 text-white rounded-2xl p-8 mb-8 shadow-md">
+      <div className="relative overflow-hidden bg-linear-to-r from-indigo-600 to-blue-500 text-white rounded-2xl p-8 mb-8 shadow-md">
         <div
           className="absolute inset-0 opacity-10"
           style={{

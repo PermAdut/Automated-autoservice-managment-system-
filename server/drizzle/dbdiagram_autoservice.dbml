@@ -1,0 +1,754 @@
+// autoservice (логически) — все имена без префикса схемы: dbdiagram.io не поддерживает nested schema.
+// Сгенерировано scripts/sql_to_dbml.py из dbdiagram_autoservice.sql
+
+Enum gender {
+  M
+  F
+}
+
+Enum oauth_provider {
+  google
+  local
+}
+
+Enum payment_status {
+  pending
+  paid
+  failed
+  refunded
+}
+
+Enum appointment_status {
+  pending
+  confirmed
+  in_progress
+  completed
+  cancelled
+  no_show
+}
+
+Enum notification_channel {
+  email
+  sms
+  push
+}
+
+Enum notification_status {
+  pending
+  sent
+  failed
+  delivered
+}
+
+Enum dtc_severity {
+  info
+  low
+  medium
+  high
+  critical
+}
+
+Enum reminder_type {
+  oil_change
+  tire_rotation
+  brake_service
+  scheduled_maintenance
+  timing_belt
+  other
+}
+
+Enum part_request_status {
+  pending
+  approved
+  rejected
+  transferred
+  cancelled
+}
+
+Enum partner_status {
+  active
+  pending
+  suspended
+  inactive
+}
+
+Enum transfer_status {
+  pending
+  in_transit
+  completed
+  cancelled
+}
+
+Enum warranty_claim_status {
+  open
+  under_review
+  approved
+  rejected
+  resolved
+}
+
+Enum warranty_status {
+  active
+  expired
+  claimed
+  voided
+}
+
+Enum warranty_type {
+  work
+  spare_part
+  complex
+}
+
+Enum contract_status {
+  draft
+  active
+  suspended
+  expired
+  terminated
+}
+
+Enum discount_type {
+  percent
+  fixed
+  free_service
+}
+
+Enum loyalty_tier {
+  bronze
+  silver
+  gold
+  platinum
+}
+
+Enum loyalty_tx_type {
+  earn
+  spend
+  bonus
+  expire
+  adjustment
+}
+
+Table Passport {
+  id uuid [pk]
+  "userId" uuid [not null]
+  "identityNumber" varchar [not null]
+  "birthDate" timestamp [not null]
+  gender gender [not null]
+}
+
+Table RefreshTokens {
+  id uuid [pk]
+  "userId" uuid [not null]
+  token text [not null]
+  "expiresAt" timestamp [not null]
+  "createdAt" timestamp [not null]
+}
+
+Table Role {
+  id uuid [pk]
+  "name" varchar [not null]
+}
+
+Table Users {
+  id uuid [pk]
+  "roleId" uuid [not null]
+  "login" varchar [not null]
+  "name" varchar [not null]
+  "surName" varchar [not null]
+  email varchar(100) [not null]
+  phone varchar(20)
+  "passwordHash" text
+  "oauthProvider" oauth_provider
+  "oauthId" varchar
+  "createdAt" timestamp [not null]
+  "updatedAt" timestamp
+}
+
+Table Employees {
+  id uuid [pk]
+  "userId" uuid
+  "name" varchar(100) [not null]
+  "surName" varchar(100) [not null]
+  "lastName" varchar(100)
+  "positionId" uuid [not null]
+  "hireDate" timestamp [not null]
+  salary numeric [not null]
+}
+
+Table Position {
+  id uuid [pk]
+  "name" varchar [not null]
+  description varchar
+}
+
+Table WorkSchedule {
+  id uuid [pk]
+  "employeeId" uuid [not null]
+  "startTime" timestamp [not null]
+  "endTime" timestamp [not null]
+  "isAvailable" boolean [not null]
+}
+
+Table Categories {
+  id uuid [pk]
+  "name" varchar(50) [not null]
+  description text
+}
+
+Table Invoices {
+  id uuid [pk]
+  "positionForBuyingId" uuid [not null]
+  amount numeric [not null]
+  "invoiceDate" timestamp [not null]
+  "status" varchar(20) [not null]
+}
+
+Table PositionsForBuying {
+  id uuid [pk]
+  "supplierId" uuid [not null]
+  quantity bigint [not null]
+  "deliveryDate" timestamp [not null]
+  "status" varchar(20) [not null]
+}
+
+Table SparePart_Store {
+  "sparePartId" uuid [not null]
+  "storeId" uuid [not null]
+  quantity bigint
+
+  Indexes {
+    ("sparePartId", "storeId") [pk]
+  }
+}
+
+Table SparePart {
+  id uuid [pk]
+  "name" varchar [not null]
+  "partNumber" varchar [not null]
+  price numeric [not null]
+  "categoryId" uuid [not null]
+}
+
+Table Store {
+  id uuid [pk]
+  "name" varchar(100) [not null]
+  location varchar(200) [not null]
+  phone varchar(20)
+  "workingHours" varchar(100)
+}
+
+Table Suppliers {
+  id uuid [pk]
+  "name" varchar(100) [not null]
+  contact varchar(100)
+  address text
+}
+
+Table ServiceCategories {
+  id uuid [pk]
+  "name" varchar(100) [not null]
+  description text
+  "parentId" uuid
+  "isActive" boolean [not null]
+}
+
+Table Services {
+  id uuid [pk]
+  "categoryId" uuid
+  "name" varchar [not null]
+  description varchar
+  price numeric [not null]
+  "durationMinutes" numeric
+  "isActive" boolean [not null]
+}
+
+Table Cars {
+  id uuid [pk]
+  "userId" uuid [not null]
+  brand varchar [not null]
+  model varchar [not null]
+  information text
+  "year" bigint [not null]
+  vin varchar [not null]
+  "licensePlate" varchar
+}
+
+Table Reviews {
+  id uuid [pk]
+  "userId" uuid [not null]
+  "employeeId" uuid
+  description text
+  rate bigint [not null]
+  "createdAt" timestamp [not null]
+  "updatedAt" timestamp
+  "deletedAt" timestamp
+}
+
+Table Subscriptions {
+  id uuid [pk]
+  "userId" uuid [not null]
+  "employeeId" uuid
+  "subscriptionDescription" text
+  "subscriptionName" varchar [not null]
+  "dateStart" timestamp [not null]
+  "dateEnd" timestamp [not null]
+}
+
+Table Orders {
+  id uuid [pk]
+  "userId" uuid [not null]
+  "carId" uuid [not null]
+  "employeeId" uuid
+  "status" varchar(20)
+  "createdAt" timestamp [not null]
+  "updatedAt" timestamp
+  "completedAt" timestamp
+}
+
+Table Payment {
+  id uuid [pk]
+  "orderId" uuid [not null]
+  amount numeric [not null]
+  "status" payment_status [not null]
+  "paymentDate" timestamp [not null]
+  "paymentMethod" varchar(50) [not null]
+}
+
+Table Services_Orders {
+  "servicesId" uuid [not null]
+  "orderId" uuid [not null]
+  quantity bigint [not null]
+
+  Indexes {
+    ("servicesId", "orderId") [pk]
+  }
+}
+
+Table SparePart_Orders {
+  "sparePartId" uuid [not null]
+  "ordersId" uuid [not null]
+  quantity bigint
+
+  Indexes {
+    ("sparePartId", "ordersId") [pk]
+  }
+}
+
+Table Appointments {
+  id uuid [pk]
+  "userId" uuid [not null]
+  "carId" uuid [not null]
+  "serviceId" uuid
+  "employeeId" uuid
+  "timeSlotId" uuid
+  "status" appointment_status [not null]
+  "scheduledAt" timestamp [not null]
+  notes text
+  "confirmationCode" varchar(20)
+  "createdAt" timestamp [not null]
+  "updatedAt" timestamp
+}
+
+Table TimeSlots {
+  id uuid [pk]
+  "employeeId" uuid [not null]
+  "date" timestamp [not null]
+  "startTime" timestamp [not null]
+  "endTime" timestamp [not null]
+  "isBooked" boolean [not null]
+}
+
+Table NotificationChannels {
+  id uuid [pk]
+  "userId" uuid [not null]
+  channel notification_channel [not null]
+  address varchar(200) [not null]
+  "isVerified" boolean [not null]
+  "isEnabled" boolean [not null]
+  "createdAt" timestamp [not null]
+}
+
+Table NotificationTemplates {
+  id uuid [pk]
+  "name" varchar(100) [not null]
+  channel notification_channel [not null]
+  subject varchar(200)
+  body text [not null]
+  variables text
+  "isActive" boolean [not null]
+  "createdAt" timestamp [not null]
+}
+
+Table Notifications {
+  id uuid [pk]
+  "userId" uuid [not null]
+  "templateId" uuid
+  channel notification_channel [not null]
+  "status" notification_status [not null]
+  subject varchar(200)
+  body text [not null]
+  recipient varchar(200) [not null]
+  "sentAt" timestamp
+  "errorMessage" text
+  "createdAt" timestamp [not null]
+}
+
+Table DiagnosticCodesCatalog {
+  id uuid [pk]
+  code varchar(10) [not null]
+  description varchar(500) [not null]
+  "descriptionRu" varchar(500)
+  severity dtc_severity [not null]
+  system varchar(100)
+  "possibleCauses" text
+  "possibleFixes" text
+}
+
+Table DiagnosticResults {
+  "sessionId" uuid [not null]
+  "codeId" uuid [not null]
+  "status" varchar(20) [not null]
+  notes text
+
+  Indexes {
+    ("sessionId", "codeId") [pk]
+  }
+}
+
+Table DiagnosticSessions {
+  id uuid [pk]
+  "carId" uuid [not null]
+  "employeeId" uuid
+  "orderId" uuid
+  mileage integer
+  notes text
+  "rawData" text
+  "createdAt" timestamp [not null]
+}
+
+Table MaintenanceReminders {
+  id uuid [pk]
+  "userId" uuid [not null]
+  "carId" uuid [not null]
+  "type" reminder_type [not null]
+  description varchar(500)
+  "dueDate" timestamp
+  "dueMileage" integer
+  "isSent" boolean [not null]
+  "isCompleted" boolean [not null]
+  "createdAt" timestamp [not null]
+}
+
+Table PartnerApiKeys {
+  id uuid [pk]
+  "partnerId" uuid [not null]
+  "keyHash" text [not null]
+  "name" varchar(100)
+  scopes text
+  "expiresAt" timestamp
+  "lastUsedAt" timestamp
+  "isActive" boolean [not null]
+  "createdAt" timestamp [not null]
+}
+
+Table PartnerClientRedirects {
+  id uuid [pk]
+  "userId" uuid [not null]
+  "fromPartnerId" uuid [not null]
+  "toPartnerId" uuid [not null]
+  reason varchar(500)
+  "serviceRequested" varchar(200)
+  accepted boolean
+  "createdAt" timestamp [not null]
+}
+
+Table PartnerSparePartRequests {
+  id uuid [pk]
+  "fromPartnerId" uuid [not null]
+  "toPartnerId" uuid [not null]
+  "sparePartId" uuid [not null]
+  quantity integer [not null]
+  "status" part_request_status [not null]
+  notes text
+  "requestedAt" timestamp [not null]
+  "resolvedAt" timestamp
+}
+
+Table Partners {
+  id uuid [pk]
+  "name" varchar(200) [not null]
+  address text
+  city varchar(100)
+  phone varchar(20)
+  email varchar(100)
+  website varchar(200)
+  "apiUrl" varchar(300)
+  "status" partner_status [not null]
+  description text
+  "createdAt" timestamp [not null]
+}
+
+Table BranchEmployees {
+  "branchId" uuid [not null]
+  "employeeId" uuid [not null]
+  "assignedAt" timestamp [not null]
+  "isPrimary" boolean [not null]
+
+  Indexes {
+    ("branchId", "employeeId") [pk]
+  }
+}
+
+Table Branches {
+  id uuid [pk]
+  "name" varchar(200) [not null]
+  address text [not null]
+  city varchar(100)
+  phone varchar(20)
+  email varchar(100)
+  "managerId" uuid
+  "workingHours" varchar(100)
+  "isActive" boolean [not null]
+  "createdAt" timestamp [not null]
+}
+
+Table StoreTransfers {
+  id uuid [pk]
+  "fromStoreId" uuid [not null]
+  "toStoreId" uuid [not null]
+  "sparePartId" uuid [not null]
+  quantity integer [not null]
+  "status" transfer_status [not null]
+  "initiatedById" uuid
+  notes text
+  "createdAt" timestamp [not null]
+  "completedAt" timestamp
+}
+
+Table Warranties {
+  id uuid [pk]
+  "orderId" uuid [not null]
+  "sparePartId" uuid
+  "type" warranty_type [not null]
+  "status" warranty_status [not null]
+  description text
+  "durationMonths" integer [not null]
+  "issuedAt" timestamp [not null]
+  "expiresAt" timestamp [not null]
+}
+
+Table WarrantyClaims {
+  id uuid [pk]
+  "warrantyId" uuid [not null]
+  "userId" uuid [not null]
+  description text [not null]
+  "status" warranty_claim_status [not null]
+  resolution text
+  "createdAt" timestamp [not null]
+  "resolvedAt" timestamp
+}
+
+Table Companies {
+  id uuid [pk]
+  "name" varchar(200) [not null]
+  inn varchar(20)
+  address text
+  city varchar(100)
+  "contactPerson" varchar(200)
+  phone varchar(20)
+  email varchar(100)
+  "managerUserId" uuid
+  "isActive" boolean [not null]
+  "createdAt" timestamp [not null]
+}
+
+Table CompanyCars {
+  "companyId" uuid [not null]
+  "carId" uuid [not null]
+  "assignedAt" timestamp [not null]
+  notes varchar(500)
+
+  Indexes {
+    ("companyId", "carId") [pk]
+  }
+}
+
+Table CompanyContracts {
+  id uuid [pk]
+  "companyId" uuid [not null]
+  "contractNumber" varchar(50)
+  "status" contract_status [not null]
+  "discountPercent" decimal(5,2) [not null]
+  "creditLimit" decimal(12,2)
+  "paymentTermDays" numeric
+  "startDate" timestamp [not null]
+  "endDate" timestamp [not null]
+  notes text
+  "createdAt" timestamp [not null]
+}
+
+Table Discounts {
+  id uuid [pk]
+  code varchar(50)
+  "name" varchar(200) [not null]
+  description text
+  "type" discount_type [not null]
+  value decimal(10,2) [not null]
+  "minOrderAmount" decimal(10,2)
+  "maxUsageCount" integer
+  "usedCount" integer [not null]
+  "isActive" boolean [not null]
+  "startDate" timestamp
+  "endDate" timestamp
+  "createdAt" timestamp [not null]
+}
+
+Table LoyaltyPrograms {
+  id uuid [pk]
+  "userId" uuid [not null]
+  points integer [not null]
+  tier loyalty_tier [not null]
+  "totalEarned" integer [not null]
+  "totalSpent" integer [not null]
+  "updatedAt" timestamp [not null]
+}
+
+Table LoyaltyTransactions {
+  id uuid [pk]
+  "programId" uuid [not null]
+  "orderId" uuid
+  "type" loyalty_tx_type [not null]
+  points integer [not null]
+  description varchar(500)
+  "createdAt" timestamp [not null]
+}
+
+Table OrderDiscounts {
+  "orderId" uuid [not null]
+  "discountId" uuid [not null]
+  "appliedAmount" decimal(10,2) [not null]
+  "appliedAt" timestamp [not null]
+
+  Indexes {
+    ("orderId", "discountId") [pk]
+  }
+}
+
+Table TenantPages {
+  id uuid [pk]
+  slug varchar(100) [not null]
+  title varchar(200) [not null]
+  content text [not null]
+  "isPublished" boolean [not null]
+  "createdAt" timestamp [not null]
+  "updatedAt" timestamp [not null]
+}
+
+Table TenantSettings {
+  id uuid [pk]
+  "companyName" varchar(200) [not null]
+  tagline varchar(300)
+  description text
+  "logoUrl" varchar(500)
+  "faviconUrl" varchar(500)
+  "primaryColor" varchar(20)
+  "secondaryColor" varchar(20)
+  "accentColor" varchar(20)
+  "fontFamily" varchar(100)
+  address text
+  city varchar(100)
+  country varchar(100)
+  "postalCode" varchar(20)
+  phone varchar(30)
+  email varchar(100)
+  website varchar(200)
+  "mapCoordinates" varchar(100)
+  "workingHours" varchar(200)
+  currency varchar(10)
+  timezone varchar(50)
+  language varchar(10)
+  "featureOnlineBooking" boolean [not null]
+  "featureVinDecoder" boolean [not null]
+  "featureLoyaltyProgram" boolean [not null]
+  "featurePartnerNetwork" boolean [not null]
+  "featureMultiBranch" boolean [not null]
+  "featureCorporateClients" boolean [not null]
+  "featureSmsNotifications" boolean [not null]
+  "featureEmailNotifications" boolean [not null]
+  "maxEmployees" integer
+  "maxStorageItems" integer
+  "integrationConfig" jsonb
+  "isSetupComplete" boolean [not null]
+  "setupCompletedAt" timestamp
+  "createdAt" timestamp [not null]
+  "updatedAt" timestamp [not null]
+}
+
+Ref: Passport."userId" > Users.id
+Ref: RefreshTokens."userId" > Users.id
+Ref: Users."roleId" > Role.id
+Ref: Employees."userId" > Users.id
+Ref: Employees."positionId" > Position.id
+Ref: WorkSchedule."employeeId" > Employees.id
+Ref: Invoices."positionForBuyingId" > PositionsForBuying.id
+Ref: PositionsForBuying."supplierId" > Suppliers.id
+Ref: SparePart_Store."sparePartId" > SparePart.id
+Ref: SparePart_Store."storeId" > Store.id
+Ref: SparePart."categoryId" > Categories.id
+Ref: Services."categoryId" > ServiceCategories.id
+Ref: Cars."userId" > Users.id
+Ref: Reviews."userId" > Users.id
+Ref: Reviews."employeeId" > Employees.id
+Ref: Subscriptions."userId" > Users.id
+Ref: Subscriptions."employeeId" > Employees.id
+Ref: Orders."userId" > Users.id
+Ref: Orders."carId" > Cars.id
+Ref: Orders."employeeId" > Employees.id
+Ref: Payment."orderId" > Orders.id
+Ref: Services_Orders."servicesId" > Services.id
+Ref: Services_Orders."orderId" > Orders.id
+Ref: SparePart_Orders."sparePartId" > SparePart.id
+Ref: SparePart_Orders."ordersId" > Orders.id
+Ref: Appointments."userId" > Users.id
+Ref: Appointments."carId" > Cars.id
+Ref: Appointments."serviceId" > Services.id
+Ref: Appointments."employeeId" > Employees.id
+Ref: Appointments."timeSlotId" > TimeSlots.id
+Ref: TimeSlots."employeeId" > Employees.id
+Ref: NotificationChannels."userId" > Users.id
+Ref: Notifications."userId" > Users.id
+Ref: Notifications."templateId" > NotificationTemplates.id
+Ref: DiagnosticResults."sessionId" > DiagnosticSessions.id
+Ref: DiagnosticResults."codeId" > DiagnosticCodesCatalog.id
+Ref: DiagnosticSessions."carId" > Cars.id
+Ref: DiagnosticSessions."employeeId" > Employees.id
+Ref: MaintenanceReminders."userId" > Users.id
+Ref: MaintenanceReminders."carId" > Cars.id
+Ref: PartnerApiKeys."partnerId" > Partners.id
+Ref: PartnerClientRedirects."userId" > Users.id
+Ref: PartnerClientRedirects."fromPartnerId" > Partners.id
+Ref: PartnerClientRedirects."toPartnerId" > Partners.id
+Ref: PartnerSparePartRequests."fromPartnerId" > Partners.id
+Ref: PartnerSparePartRequests."toPartnerId" > Partners.id
+Ref: PartnerSparePartRequests."sparePartId" > SparePart.id
+Ref: BranchEmployees."branchId" > Branches.id
+Ref: BranchEmployees."employeeId" > Employees.id
+Ref: Branches."managerId" > Users.id
+Ref: StoreTransfers."fromStoreId" > Store.id
+Ref: StoreTransfers."toStoreId" > Store.id
+Ref: StoreTransfers."sparePartId" > SparePart.id
+Ref: StoreTransfers."initiatedById" > Users.id
+Ref: Warranties."orderId" > Orders.id
+Ref: Warranties."sparePartId" > SparePart.id
+Ref: WarrantyClaims."warrantyId" > Warranties.id
+Ref: WarrantyClaims."userId" > Users.id
+Ref: Companies."managerUserId" > Users.id
+Ref: CompanyCars."companyId" > Companies.id
+Ref: CompanyCars."carId" > Cars.id
+Ref: CompanyContracts."companyId" > Companies.id
+Ref: LoyaltyPrograms."userId" > Users.id
+Ref: LoyaltyTransactions."programId" > LoyaltyPrograms.id
+Ref: LoyaltyTransactions."orderId" > Orders.id
+Ref: OrderDiscounts."orderId" > Orders.id
+Ref: OrderDiscounts."discountId" > Discounts.id

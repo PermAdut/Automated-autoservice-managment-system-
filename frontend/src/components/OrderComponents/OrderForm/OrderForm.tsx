@@ -238,7 +238,7 @@ const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
             <button type="button" className="px-6 py-3 bg-gray-500 text-white rounded-lg font-semibold transition-all hover:bg-gray-600" onClick={onClose}>
               Отмена
             </button>
-            <button type="submit" className="px-6 py-3 bg-gradient-to-br from-primary to-primary-dark text-white rounded-lg font-semibold transition-all hover:-translate-y-0.5 hover:shadow-lg">
+            <button type="submit" className="px-6 py-3 bg-linear-to-br from-primary to-primary-dark text-white rounded-lg font-semibold transition-all hover:-translate-y-0.5 hover:shadow-lg">
               Сохранить
             </button>
           </div>

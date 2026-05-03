@@ -1,8 +1,6 @@
 # ==============================================================================
 # Development overrides — automatically merged with docker-compose.yml
 # ==============================================================================
-# This file exposes ports for local development tools (pgAdmin, RedisInsight).
-# Do NOT expose these ports in production.
 
 name: autoservice
 
@@ -23,7 +21,7 @@ services:
     build:
       target: development
     volumes:
-      - ./server/src:/app/src   # hot reload source mapping
+      - ./server/src:/app/src
     environment:
       NODE_ENV: development
     command: ["npm", "run", "start:dev"]
@@ -36,18 +34,3 @@ services:
     environment:
       NODE_ENV: development
     command: ["npx", "ts-node", "-r", "tsconfig-paths/register", "src/worker.ts"]
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend/src:/app/src
-    environment:
-      VITE_API_URL: http://localhost:3000
-
-  nginx:
-    profiles:
-      - prod   # nginx only in prod profile; dev uses direct ports

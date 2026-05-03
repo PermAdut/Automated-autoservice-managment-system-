@@ -84,7 +84,7 @@ export default function SetupWizard() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-2xl overflow-hidden">
         {/* Progress header */}
-        <div className="bg-gradient-to-r from-indigo-600 to-blue-500 px-8 py-6">
+        <div className="bg-linear-to-r from-indigo-600 to-blue-500 px-8 py-6">
           <h1 className="text-white text-xl font-bold mb-4">Первоначальная настройка</h1>
           <div className="flex gap-2">
             {STEPS.map((s) => (

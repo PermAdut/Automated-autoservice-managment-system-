@@ -113,7 +113,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
             <div className="mt-4">
               <button
                 type="submit"
-                className="px-5 py-2.5 border-none rounded-lg cursor-pointer text-base font-semibold transition-colors bg-gradient-to-br from-primary to-primary-dark text-white hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="px-5 py-2.5 border-none rounded-lg cursor-pointer text-base font-semibold transition-colors bg-linear-to-br from-primary to-primary-dark text-white hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
                 disabled={isCreating}
               >
                 {isCreating ? "Отправка..." : "Добавить отзыв"}

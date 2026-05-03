@@ -189,7 +189,7 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({
             </button>
             <button
               type="submit"
-              className="px-6 py-3 bg-gradient-to-br from-primary to-primary-dark text-white rounded-lg font-semibold transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+              className="px-6 py-3 bg-linear-to-br from-primary to-primary-dark text-white rounded-lg font-semibold transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
               disabled={isCreating || isUpdating}
             >
               {isCreating || isUpdating ? "Сохранение..." : employeeId ? "Сохранить" : "Создать"}

@@ -21,6 +21,7 @@ import { DetailedUserComponent } from "./components/UserComponents/UserDetailed/
 import EmployeeList from "./components/EmployeeComponents/EmployeeList/EmployeeList.tsx";
 import OrderList from "./components/OrderComponents/OrderList/OrderList.tsx";
 import Storage from "./components/StorageComponents/Storage.tsx";
+import CatalogPage from "./components/StorageComponents/ServicesComponent/CatalogPage.tsx";
 import SupplierList from "./components/SupplierComponent/SupplierList/SupplierList.tsx";
 import ReportGenerator from "./components/Reports/ReportGenerator.tsx";
 import Page404 from "./components/Page404/Page404";
@@ -57,6 +58,7 @@ function App() {
                   {/* Public */}
                   <Route path="/" element={<MainPage />} />
                   <Route path="/about" element={<About />} />
+                  <Route path="/catalog" element={<CatalogPage />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
