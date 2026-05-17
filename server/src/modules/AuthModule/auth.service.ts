@@ -89,7 +89,7 @@ export class AuthService {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash: _pwd, ...userWithoutPassword } = createdUser;
-    return this.login({ ...userWithoutPassword, tenantId: (createdUser as any).tenantId ?? null });
+    return this.login(userWithoutPassword);
   }
 
   async validateUser(email: string, password: string): Promise<ValidatedUser> {
@@ -140,16 +140,11 @@ export class AuthService {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash: _pwd, ...result } = userData;
-    return { ...result, tenantId: (userData as any).tenantId ?? null };
+    return result;
   }
 
   async login(user: ValidatedUser) {
-    const payload = {
-      email: user.email,
-      sub: user.id,
-      roleId: user.roleId,
-      tenantId: (user as any).tenantId ?? '',
-    };
+    const payload = { email: user.email, sub: user.id, roleId: user.roleId };
     const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
     const refreshToken = await this.generateRefreshToken(user.id);
 
@@ -214,7 +209,6 @@ export class AuthService {
       email: userData.email,
       sub: userData.id,
       roleId: userData.roleId,
-      tenantId: (userData as any).tenantId ?? '',
     };
     const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
 
@@ -303,12 +297,7 @@ export class AuthService {
   }
 
   async googleLogin(user: ValidatedUser) {
-    const payload = {
-      email: user.email,
-      sub: user.id,
-      roleId: user.roleId,
-      tenantId: (user as any).tenantId ?? '',
-    };
+    const payload = { email: user.email, sub: user.id, roleId: user.roleId };
     const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
     const refreshToken = await this.generateRefreshToken(user.id);
 
