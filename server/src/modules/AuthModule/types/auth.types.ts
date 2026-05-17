@@ -5,6 +5,7 @@ export interface JwtPayload {
   sub: string;
   email: string;
   roleId: string;
+  tenantId: string;
   iat?: number;
   exp?: number;
 }
@@ -14,6 +15,7 @@ export interface JwtUser {
   userId: string;
   email: string;
   roleId: string;
+  tenantId: string;
   roleName?: string;
   id?: string;
 }
@@ -31,5 +33,6 @@ export interface ValidatedUser {
   surName: string | null;
   phone: string | null;
   roleId: string | null;
+  tenantId: string | null;
   login: string;
 }
