@@ -89,7 +89,7 @@ export class AuthService {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash: _pwd, ...userWithoutPassword } = createdUser;
-    return this.login(userWithoutPassword);
+    return this.login({ ...userWithoutPassword, tenantId: (createdUser as any).tenantId ?? null });
   }
 
   async validateUser(email: string, password: string): Promise<ValidatedUser> {
@@ -140,7 +140,7 @@ export class AuthService {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash: _pwd, ...result } = userData;
-    return result;
+    return { ...result, tenantId: (userData as any).tenantId ?? null };
   }
 
   async login(user: ValidatedUser) {
