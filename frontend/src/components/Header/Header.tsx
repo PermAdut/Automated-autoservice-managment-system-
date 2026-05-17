@@ -145,7 +145,7 @@ const Header = () => {
 
   return (
     <header className="w-full min-w-full bg-linear-to-r from-indigo-700 via-indigo-600 to-blue-500 shadow-md sticky top-0 z-50">
-      <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-4">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-4">
         <button
           onClick={() => navigate("/")}
           className="text-white font-extrabold text-2xl tracking-tight [text-shadow:0_2px_4px_rgba(0,0,0,0.15)] hover:opacity-90 transition-opacity shrink-0 cursor-pointer bg-transparent border-none p-0"
