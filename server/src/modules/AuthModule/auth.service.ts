@@ -144,7 +144,12 @@ export class AuthService {
   }
 
   async login(user: ValidatedUser) {
-    const payload = { email: user.email, sub: user.id, roleId: user.roleId };
+    const payload = {
+      email: user.email,
+      sub: user.id,
+      roleId: user.roleId,
+      tenantId: (user as any).tenantId ?? '',
+    };
     const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
     const refreshToken = await this.generateRefreshToken(user.id);
 
@@ -209,6 +214,7 @@ export class AuthService {
       email: userData.email,
       sub: userData.id,
       roleId: userData.roleId,
+      tenantId: (userData as any).tenantId ?? '',
     };
     const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
 
@@ -297,7 +303,12 @@ export class AuthService {
   }
 
   async googleLogin(user: ValidatedUser) {
-    const payload = { email: user.email, sub: user.id, roleId: user.roleId };
+    const payload = {
+      email: user.email,
+      sub: user.id,
+      roleId: user.roleId,
+      tenantId: (user as any).tenantId ?? '',
+    };
     const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
     const refreshToken = await this.generateRefreshToken(user.id);
 
