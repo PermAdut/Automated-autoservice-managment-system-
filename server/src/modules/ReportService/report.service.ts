@@ -213,7 +213,7 @@ export class ReportService {
       JOIN autoservice."Services_Orders" so ON s.id = so."servicesId"
       JOIN autoservice."Orders" o ON so."orderId" = o.id
       JOIN autoservice."Payment" pmt ON pmt."orderId" = o.id
-      WHERE pmt.status = TRUE
+      WHERE pmt.status = 'paid'
       GROUP BY s.id, s.name, s.description
     `);
 

@@ -24,6 +24,8 @@ services:
       - ./server/src:/app/src
     environment:
       NODE_ENV: development
+      DB_HOST: postgres
+      DB_PORT: 5432
     command: ["npm", "run", "start:dev"]
 
   worker:
@@ -33,4 +35,6 @@ services:
       - ./server/src:/app/src
     environment:
       NODE_ENV: development
+      DB_HOST: postgres
+      DB_PORT: 5432
     command: ["npx", "ts-node", "-r", "tsconfig-paths/register", "src/worker.ts"]

@@ -9,6 +9,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { schema } from '../pgSchema';
 import { cars, orders, reviews, subscriptions } from '../schema';
+import { tenantSettings } from './tenant.model';
 
 export const genderEnum = schema.enum('gender', ['M', 'F']);
 export const oauthProviderEnum = schema.enum('oauth_provider', [
@@ -44,6 +45,7 @@ export const users = schema.table(
     oauthId: varchar('oauthId'),
     createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
     updatedAt: timestamp('updatedAt', { mode: 'date' }),
+    tenantId: uuid('tenantId').references(() => tenantSettings.id),
   },
   table => ({
     emailUnique: unique('email_unique').on(table.email),
@@ -65,6 +67,7 @@ export const refreshTokens = schema.table(
     token: text('token').notNull().unique(),
     expiresAt: timestamp('expiresAt', { mode: 'date' }).notNull(),
     createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
+    tenantId: uuid('tenantId').references(() => tenantSettings.id),
   },
   table => ({
     tokenIdx: index('refresh_token_idx').on(table.token),
@@ -80,6 +83,7 @@ export const passports = schema.table('Passport', {
   identityNumber: varchar('identityNumber').notNull(),
   birthDate: timestamp('birthDate', { mode: 'date' }).notNull(),
   gender: genderEnum('gender').notNull(),
+  tenantId: uuid('tenantId').references(() => tenantSettings.id),
 });
 
 export const usersRelations = relations(users, ({ one, many }) => ({

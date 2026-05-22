@@ -17,7 +17,7 @@ import { Roles } from '../AuthModule/decorators/roles.decorator';
 
 @ApiTags('Storage')
 @UseGuards(JwtAuthGuard)
-@Controller('storage')
+@Controller('api/v1.0/storage')
 export class StorageController {
   constructor(private readonly s3: S3UploadService) {}
 
@@ -49,7 +49,7 @@ export class StorageController {
    * Deletes a file from S3 by its key.
    * Admin/manager only — prevents users from deleting arbitrary files.
    */
-  @Delete(':key(*)')
+  @Delete('*key')
   @UseGuards(RolesGuard)
   @Roles('admin', 'manager')
   @ApiOperation({ summary: 'Delete a file from S3 by key (admin/manager)' })

@@ -16,7 +16,7 @@ import { Roles } from '../AuthModule/decorators/roles.decorator';
 @ApiTags('Schedule')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin', 'manager')
-@Controller('schedule')
+@Controller('api/v1.0/schedule')
 export class ScheduleController {
   constructor(private readonly scheduleService: ScheduleOptimizationService) {}
 

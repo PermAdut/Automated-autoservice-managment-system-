@@ -2,6 +2,7 @@ import { relations } from 'drizzle-orm';
 import { bigint, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { schema } from '../pgSchema';
 import { employees, orders, users } from '../schema';
+import { tenantSettings } from './tenant.model';
 
 export const cars = schema.table('Cars', {
   id: uuid('id').defaultRandom().primaryKey(),

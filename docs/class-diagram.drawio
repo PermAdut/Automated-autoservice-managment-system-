@@ -1,0 +1,684 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="A1 – Services Full" id="a1">
+    <mxGraphModel dx="1200" dy="800" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2384" pageHeight="1684" math="0" shadow="0" background="none">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- ===== ROW 1: INFRASTRUCTURE (y=40) ===== -->
+
+        <!-- DatabaseService x=40 -->
+        <mxCell id="2" value="DatabaseService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="240" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="3" value="- writePool: Pool&#xa;- db: DrizzleDB" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="2">
+          <mxGeometry y="30" width="240" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="4" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="2">
+          <mxGeometry y="66" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="5" value="+ constructor()&#xa;+ onModuleInit(): void&#xa;+ onModuleDestroy(): void&#xa;+ query(sql, params?): Result&#xa;+ getClient(): PoolClient" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="2">
+          <mxGeometry y="74" width="240" height="84" as="geometry"/>
+        </mxCell>
+
+        <!-- RedisService x=320 -->
+        <mxCell id="6" value="RedisService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="320" y="40" width="240" height="225" as="geometry"/>
+        </mxCell>
+        <mxCell id="7" value="- client: Redis | null" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="6">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="8" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="6">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="9" value="+ constructor()&#xa;+ onModuleInit(): void&#xa;+ isAvailable(): boolean&#xa;+ get(key): string | null&#xa;+ set(key, val, ttl?): void&#xa;+ del(key): void&#xa;+ getJSON&lt;T&gt;(key): T | null&#xa;+ setJSON&lt;T&gt;(key, val, ttl?): void&#xa;+ blacklistToken(token, ttl): void&#xa;+ isTokenBlacklisted(token): boolean&#xa;+ publish(channel, data): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="6">
+          <mxGeometry y="58" width="240" height="167" as="geometry"/>
+        </mxCell>
+
+        <!-- MigrationsService x=600 -->
+        <mxCell id="10" value="MigrationsService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="600" y="40" width="240" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="11" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="10">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="12" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="10">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="13" value="+ constructor(db: DatabaseService)&#xa;+ runMigrations(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="10">
+          <mxGeometry y="58" width="240" height="36" as="geometry"/>
+        </mxCell>
+
+        <!-- VinDecoderService x=880 -->
+        <mxCell id="14" value="VinDecoderService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="880" y="40" width="240" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="15" value="+ constructor()&#xa;+ decodeVin(vin: string): VinResult&#xa;+ decodeVinBatch(vins): VinResult[]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="14">
+          <mxGeometry y="30" width="240" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- S3UploadService x=1160 -->
+        <mxCell id="16" value="S3UploadService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="40" width="240" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="17" value="+ constructor()&#xa;+ isConfigured(): boolean&#xa;+ getPresignedUploadUrl(p): PresignResult&#xa;+ uploadBuffer(p): UploadResult&#xa;+ deleteFile(key: string): void&#xa;+ getPublicUrl(key: string): string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="16">
+          <mxGeometry y="30" width="240" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- SmsService x=1440 -->
+        <mxCell id="18" value="SmsService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="40" width="240" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="19" value="+ constructor()&#xa;+ send(phone, msg): SmsSendResult&#xa;+ formatOrderStatusMessage(s, n): string&#xa;+ formatAppointmentConfirmation(c, d): string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="18">
+          <mxGeometry y="30" width="240" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- EmailService x=1720 -->
+        <mxCell id="20" value="EmailService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1720" y="40" width="240" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="21" value="+ constructor()&#xa;+ send(options): EmailSendResult&#xa;+ buildOrderStatusEmail(p): EmailContent&#xa;+ buildAppointmentConfirmationEmail(p): EmailContent&#xa;+ buildMaintenanceReminderEmail(p): EmailContent" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="20">
+          <mxGeometry y="30" width="240" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== ROW 2: AUTH & CORE (y=305) ===== -->
+
+        <!-- AuthService x=40 -->
+        <mxCell id="22" value="AuthService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="40" y="305" width="240" height="190" as="geometry"/>
+        </mxCell>
+        <mxCell id="23" value="- jwtService: JwtService&#xa;- db: DatabaseService&#xa;- redis: RedisService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="22">
+          <mxGeometry y="30" width="240" height="52" as="geometry"/>
+        </mxCell>
+        <mxCell id="24" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="22">
+          <mxGeometry y="82" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="25" value="+ constructor(jwt, db, redis)&#xa;+ register(dto: RegisterDto): Tokens&#xa;+ login(user: ValidatedUser): Tokens&#xa;+ refreshAccessToken(token): AccessToken&#xa;+ validateGoogleUser(profile): User&#xa;+ googleLogin(user): Tokens&#xa;+ revokeRefreshToken(token): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="22">
+          <mxGeometry y="90" width="240" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- UserService x=320 -->
+        <mxCell id="26" value="UserService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="320" y="305" width="240" height="190" as="geometry"/>
+        </mxCell>
+        <mxCell id="27" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="26">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="28" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="26">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="29" value="+ constructor(db: DatabaseService)&#xa;+ findAll(search?, sortBy?): User[]&#xa;+ findById(id): User&#xa;+ createUser(dto: CreateUserDto): User&#xa;+ updateUser(id, dto): User&#xa;+ updateProfile(userId, dto): User&#xa;+ getRoles(): Role[]&#xa;+ deleteUser(id): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="26">
+          <mxGeometry y="58" width="240" height="132" as="geometry"/>
+        </mxCell>
+
+        <!-- EmployeeService x=600 -->
+        <mxCell id="30" value="EmployeeService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="600" y="305" width="240" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="31" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="30">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="32" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="30">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="33" value="+ constructor(db: DatabaseService)&#xa;+ getEmployees(search?, sortBy?): Employee[]&#xa;+ getEmployeeById(id): Employee&#xa;+ createEmployee(dto): Employee&#xa;+ updateEmployee(id, dto): Employee&#xa;+ deleteEmployee(id): void&#xa;+ getPositions(): Position[]&#xa;+ subscribeToEmployee(userId, dto): Sub&#xa;+ createReview(userId, dto): Review&#xa;+ getEmployeeReviews(empId): Review[]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="30">
+          <mxGeometry y="58" width="240" height="152" as="geometry"/>
+        </mxCell>
+
+        <!-- EmployeeAvailabilityService x=880 -->
+        <mxCell id="34" value="EmployeeAvailabilityService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="880" y="305" width="240" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="35" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="34">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="36" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="34">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="37" value="+ constructor(db: DatabaseService)&#xa;@Cron(5m) + updateEmployeeAvailability(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="34">
+          <mxGeometry y="58" width="240" height="42" as="geometry"/>
+        </mxCell>
+
+        <!-- VehicleService x=1160 -->
+        <mxCell id="38" value="VehicleService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="305" width="240" height="175" as="geometry"/>
+        </mxCell>
+        <mxCell id="39" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="38">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="40" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="38">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="41" value="+ constructor(db: DatabaseService)&#xa;+ findByUser(userId): Car[]&#xa;+ findById(id): Car&#xa;+ findAll(): Car[]&#xa;+ create(userId, data): Car&#xa;+ update(id, userId, isAdmin, data): Car&#xa;+ remove(id, userId, isAdmin): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="38">
+          <mxGeometry y="58" width="240" height="117" as="geometry"/>
+        </mxCell>
+
+        <!-- OrderService x=1440 -->
+        <mxCell id="42" value="OrderService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="305" width="240" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="43" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="42">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="44" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="42">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="45" value="+ constructor(db: DatabaseService)&#xa;+ findAll(search?, sortBy?, userId?): Order[]&#xa;+ findById(id): Order&#xa;+ create(dto: CreateOrderDto): Order&#xa;+ update(id, dto: UpdateOrderDto): Order&#xa;+ delete(id): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="42">
+          <mxGeometry y="58" width="240" height="102" as="geometry"/>
+        </mxCell>
+
+        <!-- ServiceService x=1720 -->
+        <mxCell id="46" value="ServiceService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1720" y="305" width="240" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="47" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="46">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="48" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="46">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="49" value="+ constructor(db: DatabaseService)&#xa;+ findAll(search?, sortBy?): Service[]&#xa;+ findById(id): Service&#xa;+ create(dto: CreateServiceDto): Service&#xa;+ update(id, dto): Service&#xa;+ delete(id): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="46">
+          <mxGeometry y="58" width="240" height="102" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== ROW 3: BUSINESS LOGIC (y=555) ===== -->
+
+        <!-- BookingService x=40 -->
+        <mxCell id="50" value="BookingService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="40" y="555" width="240" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="51" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="50">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="52" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="50">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="53" value="+ constructor(db: DatabaseService)&#xa;+ getAvailableSlots(empId, date): Slot[]&#xa;+ createAppointment(userId, dto): Appt&#xa;+ findByUser(userId): Appointment[]&#xa;+ findAll(status?): Appointment[]&#xa;+ findById(id): Appointment&#xa;+ update(id, dto): Appointment&#xa;+ cancel(id, userId): Appointment&#xa;+ generateTimeSlots(empId, date): Slot[]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="50">
+          <mxGeometry y="58" width="240" height="152" as="geometry"/>
+        </mxCell>
+
+        <!-- DiagnosticsService x=320 -->
+        <mxCell id="54" value="DiagnosticsService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="320" y="555" width="240" height="190" as="geometry"/>
+        </mxCell>
+        <mxCell id="55" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="54">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="56" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="54">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="57" value="+ constructor(db: DatabaseService)&#xa;+ searchDtcCodes(query?): DtcCode[]&#xa;+ getDtcCode(code): DtcCode&#xa;+ createSession(data): DiagnosticSession&#xa;+ getSessionsByCar(carId): Session[]&#xa;+ getReminders(userId, carId?): Reminder[]&#xa;+ createReminder(data): Reminder&#xa;+ completeReminder(id): Reminder" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="54">
+          <mxGeometry y="58" width="240" height="132" as="geometry"/>
+        </mxCell>
+
+        <!-- WarrantyService x=600 -->
+        <mxCell id="58" value="WarrantyService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="600" y="555" width="240" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="59" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="58">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="60" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="58">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="61" value="+ constructor(db: DatabaseService)&#xa;+ create(data): Warranty&#xa;+ findByOrder(orderId): Warranty[]&#xa;+ findActive(): Warranty[]&#xa;+ updateStatus(id, status): Warranty&#xa;+ createClaim(data): WarrantyClaim&#xa;+ updateClaimStatus(id, status): Claim&#xa;+ getClaims(warrantyId?): Claim[]&#xa;+ generateCertificatePdf(id): Buffer" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="58">
+          <mxGeometry y="58" width="240" height="152" as="geometry"/>
+        </mxCell>
+
+        <!-- PromotionsService x=880 -->
+        <mxCell id="62" value="PromotionsService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="880" y="555" width="240" height="192" as="geometry"/>
+        </mxCell>
+        <mxCell id="63" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="62">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="64" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="62">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="65" value="+ constructor(db: DatabaseService)&#xa;+ findActiveDiscounts(): Discount[]&#xa;+ createDiscount(data): Discount&#xa;+ applyDiscountToOrder(orderId, code, amount)&#xa;+ getLoyaltyByUser(userId): LoyaltyProgram&#xa;+ ensureLoyaltyProgram(userId): LoyaltyProg&#xa;+ addPoints(userId, pts, type): LoyaltyInfo&#xa;+ spendPoints(userId, pts): LoyaltyInfo" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="62">
+          <mxGeometry y="58" width="240" height="134" as="geometry"/>
+        </mxCell>
+
+        <!-- AnalyticsService x=1160 -->
+        <mxCell id="66" value="AnalyticsService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="555" width="240" height="192" as="geometry"/>
+        </mxCell>
+        <mxCell id="67" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="66">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="68" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="66">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="69" value="+ constructor(db: DatabaseService)&#xa;+ getDashboardKpi(period?): DashboardKpi&#xa;+ getOrdersByStatus(): StatusCount[]&#xa;+ getRevenueByMonth(): RevenueData[]&#xa;+ getTopServices(limit?): ServiceMetrics[]&#xa;+ getTopEmployees(limit?): EmpMetrics[]&#xa;+ getLowStockAlerts(threshold?): Alert[]&#xa;+ getUpcomingAppointments(): DayCount[]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="66">
+          <mxGeometry y="58" width="240" height="134" as="geometry"/>
+        </mxCell>
+
+        <!-- ReportService x=1440 -->
+        <mxCell id="70" value="ReportService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="555" width="240" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="71" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="70">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="72" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="70">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="73" value="+ constructor(db: DatabaseService)&#xa;+ generateReport(type): ReportData&#xa;+ toCsv(report: ReportData): string&#xa;+ toPdf(report: ReportData): Buffer" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="70">
+          <mxGeometry y="58" width="240" height="72" as="geometry"/>
+        </mxCell>
+
+        <!-- ScheduleOptimizationService x=1720 -->
+        <mxCell id="74" value="ScheduleOptimizationService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1720" y="555" width="240" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="75" value="- db: DatabaseService&#xa;- gateway: EventsGateway" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="74">
+          <mxGeometry y="30" width="240" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="76" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="74">
+          <mxGeometry y="66" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="77" value="+ constructor(db, gateway)&#xa;+ getGanttData(date): GanttRow[]&#xa;+ optimizeSchedule(windowH?): OptResult&#xa;+ reassignOrder(orderId, empId): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="74">
+          <mxGeometry y="74" width="240" height="76" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== ROW 4: NOTIFICATIONS & SUPPORT (y=805) ===== -->
+
+        <!-- NotificationService x=40 -->
+        <mxCell id="78" value="NotificationService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="40" y="805" width="240" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="79" value="- db: DatabaseService&#xa;- sms: SmsService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="78">
+          <mxGeometry y="30" width="240" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="80" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="78">
+          <mxGeometry y="66" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="81" value="+ constructor(db, sms)&#xa;+ sendSms(userId, phone, msg): Notif&#xa;+ sendFromTemplate(userId, tpl, rcpt): Notif&#xa;+ findByUser(userId): Notification[]&#xa;+ findAll(limit?): Notification[]&#xa;+ getTemplates(): Template[]&#xa;+ createTemplate(data): Template&#xa;+ upsertChannel(userId, ch, addr): Channel" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="78">
+          <mxGeometry y="74" width="240" height="136" as="geometry"/>
+        </mxCell>
+
+        <!-- NotificationQueueService x=320 -->
+        <mxCell id="82" value="NotificationQueueService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="320" y="805" width="240" height="175" as="geometry"/>
+        </mxCell>
+        <mxCell id="83" value="- queue: Queue (BullMQ)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="82">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="84" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="82">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="85" value="+ constructor(queue: Queue)&#xa;+ addSmsJob(data): void&#xa;+ addEmailJob(data): void&#xa;+ addOrderNotificationJob(data): void&#xa;+ addMaintenanceReminderJob(data): void&#xa;+ addBookingConfirmationJob(data): void&#xa;+ getQueueStats(): QueueStats" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="82">
+          <mxGeometry y="58" width="240" height="117" as="geometry"/>
+        </mxCell>
+
+        <!-- PredictiveMaintenanceService x=600 -->
+        <mxCell id="86" value="PredictiveMaintenanceService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="600" y="805" width="240" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="87" value="- db: DatabaseService&#xa;- queue: NotificationQueueService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="86">
+          <mxGeometry y="30" width="240" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="88" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="86">
+          <mxGeometry y="66" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="89" value="+ constructor(db, queue)&#xa;@Cron(02:00) + runPredictiveCheck(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="86">
+          <mxGeometry y="74" width="240" height="36" as="geometry"/>
+        </mxCell>
+
+        <!-- ScheduledNotificationsService x=880 -->
+        <mxCell id="90" value="ScheduledNotificationsService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="880" y="805" width="240" height="125" as="geometry"/>
+        </mxCell>
+        <mxCell id="91" value="- db: DatabaseService&#xa;- queue: NotificationQueueService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="90">
+          <mxGeometry y="30" width="240" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="92" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="90">
+          <mxGeometry y="66" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="93" value="+ constructor(db, queue)&#xa;@Cron(09:00) + sendMaintenanceReminders(): void&#xa;@Cron(00:00) + batchStatusChecks(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="90">
+          <mxGeometry y="74" width="240" height="51" as="geometry"/>
+        </mxCell>
+
+        <!-- TenantService x=1160 -->
+        <mxCell id="94" value="TenantService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="805" width="240" height="192" as="geometry"/>
+        </mxCell>
+        <mxCell id="95" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="94">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="96" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="94">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="97" value="+ constructor(db: DatabaseService)&#xa;+ getSettings(): TenantSettings&#xa;+ updateSettings(data): TenantSettings&#xa;+ completeSetup(): TenantSettings&#xa;+ getPublicBranding(): BrandingInfo&#xa;+ getPages(): TenantPage[]&#xa;+ getPageBySlug(slug): TenantPage&#xa;+ upsertPage(data): TenantPage" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="94">
+          <mxGeometry y="58" width="240" height="134" as="geometry"/>
+        </mxCell>
+
+        <!-- BranchService x=1440 -->
+        <mxCell id="98" value="BranchService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="805" width="240" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="99" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="98">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="100" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="98">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="101" value="+ constructor(db: DatabaseService)&#xa;+ findAll(activeOnly?): Branch[]&#xa;+ findById(id): Branch&#xa;+ create(data): Branch&#xa;+ update(id, data): Branch&#xa;+ assignEmployee(brId, empId): BranchEmp&#xa;+ removeEmployee(brId, empId): void&#xa;+ createTransfer(data): StoreTransfer&#xa;+ updateTransferStatus(id, status): Transfer" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="98">
+          <mxGeometry y="58" width="240" height="152" as="geometry"/>
+        </mxCell>
+
+        <!-- SpareService x=1720 -->
+        <mxCell id="102" value="SpareService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1720" y="805" width="240" height="192" as="geometry"/>
+        </mxCell>
+        <mxCell id="103" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="102">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="104" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="102">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="105" value="+ constructor(db: DatabaseService)&#xa;+ findAll(search?, sortBy?): SpareStock[]&#xa;+ findById(id): SpareStock&#xa;+ createWithPayload(dto): SpareStock&#xa;+ updateWithPayload(id, dto): SpareStock&#xa;+ delete(id): void&#xa;+ getStoresList(): Store[]&#xa;+ getCategoriesList(): Category[]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="102">
+          <mxGeometry y="58" width="240" height="134" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== ROW 5: REMAINING (y=1055) ===== -->
+
+        <!-- SupplierService x=40 -->
+        <mxCell id="106" value="SupplierService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1055" width="240" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="107" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="106">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="108" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="106">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="109" value="+ constructor(db: DatabaseService)&#xa;+ findAll(search?, sortBy?): Supplier[]&#xa;+ findById(id): Supplier&#xa;+ create(dto: CreateSupplierDto): Supplier&#xa;+ update(id, dto): Supplier&#xa;+ delete(id): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="106">
+          <mxGeometry y="58" width="240" height="102" as="geometry"/>
+        </mxCell>
+
+        <!-- CorporateService x=320 -->
+        <mxCell id="110" value="CorporateService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="320" y="1055" width="240" height="225" as="geometry"/>
+        </mxCell>
+        <mxCell id="111" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="110">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="112" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="110">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="113" value="+ constructor(db: DatabaseService)&#xa;+ findAll(): Company[]&#xa;+ findById(id): Company&#xa;+ create(data): Company&#xa;+ update(id, data): Company&#xa;+ getContracts(compId): Contract[]&#xa;+ createContract(data): Contract&#xa;+ updateContractStatus(id, status): Contract&#xa;+ addCar(compId, carId): CompanyCar&#xa;+ removeCar(compId, carId): void&#xa;+ getCompanyCars(compId): CompanyCar[]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="110">
+          <mxGeometry y="58" width="240" height="167" as="geometry"/>
+        </mxCell>
+
+        <!-- PartnersService x=600 -->
+        <mxCell id="114" value="PartnersService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="600" y="1055" width="240" height="240" as="geometry"/>
+        </mxCell>
+        <mxCell id="115" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="114">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="116" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="114">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="117" value="+ constructor(db: DatabaseService)&#xa;+ findAll(status?): Partner[]&#xa;+ findById(id): Partner&#xa;+ create(data): Partner&#xa;+ update(id, data): Partner&#xa;+ generateApiKey(partnerId): ApiKey&#xa;+ getApiKeys(partnerId): ApiKey[]&#xa;+ revokeApiKey(keyId): ApiKey&#xa;+ createPartRequest(data): PartRequest&#xa;+ updatePartRequestStatus(id, status): Req&#xa;+ createClientRedirect(data): Redirect" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="114">
+          <mxGeometry y="58" width="240" height="182" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== DEPENDENCY ARROWS ===== -->
+        <!-- style: uses → (open arrow, labeled) -->
+
+        <mxCell id="300" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="10" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="301" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="22" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="302" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="22" target="6" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="303" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="26" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="304" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="30" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="305" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="34" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="306" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="38" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="307" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="42" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="308" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="46" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="309" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="50" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="310" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="54" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="311" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="58" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="312" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="62" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="313" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="66" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="314" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="70" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="315" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="74" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="316" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="78" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="317" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="78" target="18" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="318" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="86" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="319" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="86" target="82" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="320" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="90" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="321" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="90" target="82" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="322" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="94" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="323" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="98" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="324" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="102" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="325" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="106" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="326" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="110" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="327" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" source="114" target="2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram name="A4 – Core Services" id="a4">
+    <mxGraphModel dx="1200" dy="800" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0" background="none">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- DatabaseService x=40,y=40 -->
+        <mxCell id="1002" value="DatabaseService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="240" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="1003" value="- writePool: Pool&#xa;- db: DrizzleDB" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="1002">
+          <mxGeometry y="30" width="240" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="1004" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="1002">
+          <mxGeometry y="66" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="1005" value="+ constructor()&#xa;+ query(sql, params?): Result&#xa;+ getClient(): PoolClient&#xa;+ onModuleInit(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="1002">
+          <mxGeometry y="74" width="240" height="76" as="geometry"/>
+        </mxCell>
+
+        <!-- RedisService x=320,y=40 -->
+        <mxCell id="1006" value="RedisService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="320" y="40" width="240" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="1007" value="- client: Redis | null" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="1006">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="1008" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="1006">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="1009" value="+ constructor()&#xa;+ get(key): string | null&#xa;+ set(key, val, ttl?): void&#xa;+ blacklistToken(token, ttl): void&#xa;+ isTokenBlacklisted(token): boolean&#xa;+ publish(channel, data): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="1006">
+          <mxGeometry y="58" width="240" height="92" as="geometry"/>
+        </mxCell>
+
+        <!-- SmsService x=600,y=40 -->
+        <mxCell id="1010" value="SmsService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="600" y="40" width="240" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="1011" value="+ constructor()&#xa;+ send(phone, msg): SmsSendResult&#xa;+ formatOrderStatusMessage(s, n): string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="1010">
+          <mxGeometry y="30" width="240" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- AuthService x=40,y=240 -->
+        <mxCell id="1012" value="AuthService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="40" y="240" width="240" height="185" as="geometry"/>
+        </mxCell>
+        <mxCell id="1013" value="- jwtService: JwtService&#xa;- db: DatabaseService&#xa;- redis: RedisService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="1012">
+          <mxGeometry y="30" width="240" height="52" as="geometry"/>
+        </mxCell>
+        <mxCell id="1014" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="1012">
+          <mxGeometry y="82" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="1015" value="+ constructor(jwt, db, redis)&#xa;+ register(dto): Tokens&#xa;+ login(user): Tokens&#xa;+ refreshAccessToken(token): Token&#xa;+ googleLogin(user): Tokens&#xa;+ revokeRefreshToken(token): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="1012">
+          <mxGeometry y="90" width="240" height="95" as="geometry"/>
+        </mxCell>
+
+        <!-- OrderService x=320,y=240 -->
+        <mxCell id="1016" value="OrderService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="320" y="240" width="240" height="155" as="geometry"/>
+        </mxCell>
+        <mxCell id="1017" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="1016">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="1018" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="1016">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="1019" value="+ constructor(db: DatabaseService)&#xa;+ findAll(search?, sortBy?): Order[]&#xa;+ findById(id): Order&#xa;+ create(dto): Order&#xa;+ update(id, dto): Order&#xa;+ delete(id): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="1016">
+          <mxGeometry y="58" width="240" height="97" as="geometry"/>
+        </mxCell>
+
+        <!-- BookingService x=600,y=240 -->
+        <mxCell id="1020" value="BookingService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="600" y="240" width="240" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="1021" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="1020">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="1022" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="1020">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="1023" value="+ constructor(db: DatabaseService)&#xa;+ getAvailableSlots(empId, date): Slot[]&#xa;+ createAppointment(userId, dto): Appt&#xa;+ findByUser(userId): Appointment[]&#xa;+ findAll(status?): Appointment[]&#xa;+ update(id, dto): Appointment&#xa;+ cancel(id, userId): Appointment&#xa;+ generateTimeSlots(empId, date): Slot[]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="1020">
+          <mxGeometry y="58" width="240" height="142" as="geometry"/>
+        </mxCell>
+
+        <!-- NotificationService x=40,y=480 -->
+        <mxCell id="1024" value="NotificationService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="40" y="480" width="240" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="1025" value="- db: DatabaseService&#xa;- sms: SmsService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="1024">
+          <mxGeometry y="30" width="240" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="1026" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="1024">
+          <mxGeometry y="66" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="1027" value="+ constructor(db, sms)&#xa;+ sendSms(userId, phone, msg): Notif&#xa;+ sendFromTemplate(userId, tpl, rcpt): Notif&#xa;+ findByUser(userId): Notification[]&#xa;+ getTemplates(): Template[]&#xa;+ createTemplate(data): Template&#xa;+ upsertChannel(userId, ch, addr): Channel" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="1024">
+          <mxGeometry y="74" width="240" height="126" as="geometry"/>
+        </mxCell>
+
+        <!-- AnalyticsService x=320,y=480 -->
+        <mxCell id="1028" value="AnalyticsService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="320" y="480" width="240" height="185" as="geometry"/>
+        </mxCell>
+        <mxCell id="1029" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="1028">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="1030" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="1028">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="1031" value="+ constructor(db: DatabaseService)&#xa;+ getDashboardKpi(period?): KPI&#xa;+ getOrdersByStatus(): StatusCount[]&#xa;+ getRevenueByMonth(): RevenueData[]&#xa;+ getTopServices(limit?): Metrics[]&#xa;+ getTopEmployees(limit?): Metrics[]&#xa;+ getLowStockAlerts(threshold?): Alert[]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="1028">
+          <mxGeometry y="58" width="240" height="127" as="geometry"/>
+        </mxCell>
+
+        <!-- EmployeeService x=600,y=480 -->
+        <mxCell id="1032" value="EmployeeService" style="swimlane;fontStyle=1;fontSize=12;align=center;startSize=30;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="600" y="480" width="240" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="1033" value="- db: DatabaseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="1032">
+          <mxGeometry y="30" width="240" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="1034" value="" style="line;strokeColor=#000000;fillColor=none;" vertex="1" parent="1032">
+          <mxGeometry y="50" width="240" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="1035" value="+ constructor(db: DatabaseService)&#xa;+ getEmployees(search?, sortBy?): Emp[]&#xa;+ getEmployeeById(id): Employee&#xa;+ createEmployee(dto): Employee&#xa;+ updateEmployee(id, dto): Employee&#xa;+ deleteEmployee(id): void&#xa;+ subscribeToEmployee(userId, dto): Sub&#xa;+ createReview(userId, dto): Review" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;overflow=hidden;fontSize=11;" vertex="1" parent="1032">
+          <mxGeometry y="58" width="240" height="142" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== CONNECTIONS A4 ===== -->
+
+        <!-- AuthService → DatabaseService -->
+        <mxCell id="1050" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;" edge="1" source="1012" target="1002" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- AuthService → RedisService -->
+        <mxCell id="1051" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;" edge="1" source="1012" target="1006" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- OrderService → DatabaseService -->
+        <mxCell id="1052" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;" edge="1" source="1016" target="1002" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- BookingService → DatabaseService -->
+        <mxCell id="1053" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;" edge="1" source="1020" target="1002" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- NotificationService → DatabaseService -->
+        <mxCell id="1054" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;" edge="1" source="1024" target="1002" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- NotificationService → SmsService -->
+        <mxCell id="1055" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;" edge="1" source="1024" target="1010" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- AnalyticsService → DatabaseService -->
+        <mxCell id="1056" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;" edge="1" source="1028" target="1002" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- EmployeeService → DatabaseService -->
+        <mxCell id="1057" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;dashed=1;" edge="1" source="1032" target="1002" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

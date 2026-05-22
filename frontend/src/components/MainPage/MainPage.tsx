@@ -10,21 +10,13 @@ import {
   TruckOutlined,
   BarChartOutlined,
   FundOutlined,
-  PhoneOutlined,
-  EnvironmentOutlined,
-  ClockCircleOutlined,
-  ToolOutlined,
-  ThunderboltOutlined,
-  SafetyCertificateOutlined,
-  WifiOutlined,
-  StarOutlined,
-  ScanOutlined,
-  MobileOutlined,
-  MailOutlined,
-  TeamOutlined as HandshakeOutlined,
   ApartmentOutlined,
   SolutionOutlined,
   ArrowRightOutlined,
+  CheckCircleOutlined,
+  LockOutlined,
+  ClusterOutlined,
+  DashboardOutlined,
 } from "@ant-design/icons";
 import { RootState } from "../../store";
 import { Button } from "../ui/button";
@@ -44,29 +36,29 @@ const QUICK_CARDS: QuickCard[] = [
   {
     icon: <CalendarOutlined />,
     title: "Онлайн-запись",
-    desc: "Выберите удобное время и запишитесь на обслуживание",
+    desc: "Управление записями клиентов и временными слотами",
     route: "/booking",
     feature: "onlineBooking",
     color: "text-indigo-600 bg-indigo-50",
   },
   {
     icon: <FileTextOutlined />,
-    title: "Мои заказы",
-    desc: "Отслеживайте статус текущих и прошлых заказов",
+    title: "Заказы",
+    desc: "Список и статусы заказов на обслуживание",
     route: "/orders",
     color: "text-blue-600 bg-blue-50",
   },
   {
     icon: <TeamOutlined />,
-    title: "Мастера",
-    desc: "Познакомьтесь с нашей командой специалистов",
+    title: "Сотрудники",
+    desc: "Управление персоналом и расписанием работ",
     route: "/employees",
     color: "text-violet-600 bg-violet-50",
   },
   {
     icon: <InboxOutlined />,
-    title: "Склад и запчасти",
-    desc: "Управление запасами и ценами на комплектующие",
+    title: "Склад",
+    desc: "Запасы, запчасти, остатки по складам",
     route: "/dashboard",
     roles: ["admin", "manager"],
     color: "text-orange-600 bg-orange-50",
@@ -82,7 +74,7 @@ const QUICK_CARDS: QuickCard[] = [
   {
     icon: <TruckOutlined />,
     title: "Поставщики",
-    desc: "Каталог поставщиков запчастей и расходников",
+    desc: "Каталог поставщиков и управление закупками",
     route: "/suppliers",
     roles: ["admin", "manager"],
     color: "text-amber-600 bg-amber-50",
@@ -90,7 +82,7 @@ const QUICK_CARDS: QuickCard[] = [
   {
     icon: <BarChartOutlined />,
     title: "Аналитика",
-    desc: "KPI, выручка, топ-услуги и предупреждения склада",
+    desc: "KPI, выручка, топ-услуги и предупреждения",
     route: "/analytics",
     roles: ["admin", "manager"],
     color: "text-green-600 bg-green-50",
@@ -105,42 +97,54 @@ const QUICK_CARDS: QuickCard[] = [
   },
 ];
 
-const FEATURES_DISPLAY = [
-  { key: "onlineBooking", icon: <CalendarOutlined />, label: "Онлайн-запись" },
-  { key: "loyaltyProgram", icon: <StarOutlined />, label: "Программа лояльности" },
-  { key: "vinDecoder", icon: <ScanOutlined />, label: "VIN-декодер" },
-  { key: "smsNotifications", icon: <MobileOutlined />, label: "SMS-уведомления" },
-  { key: "emailNotifications", icon: <MailOutlined />, label: "Email-уведомления" },
-  { key: "partnerNetwork", icon: <HandshakeOutlined />, label: "Партнёрская сеть" },
-  { key: "multiBranch", icon: <ApartmentOutlined />, label: "Мультифилиальность" },
-  { key: "corporateClients", icon: <SolutionOutlined />, label: "Корп. клиенты" },
+const SYSTEM_MODULES = [
+  {
+    icon: <FileTextOutlined />,
+    title: "Управление заказами",
+    desc: "Полный цикл от приёмки до выдачи: статусы, назначение мастеров, контроль сроков.",
+    color: "text-blue-600 bg-blue-50 border-blue-100",
+  },
+  {
+    icon: <InboxOutlined />,
+    title: "Складской учёт",
+    desc: "Остатки запчастей, перемещения между складами, закупки у поставщиков, инвентаризация.",
+    color: "text-orange-600 bg-orange-50 border-orange-100",
+  },
+  {
+    icon: <TeamOutlined />,
+    title: "Кадровый модуль",
+    desc: "Сотрудники, должности, расписание, нагрузка, KPI по мастерам.",
+    color: "text-violet-600 bg-violet-50 border-violet-100",
+  },
+  {
+    icon: <BarChartOutlined />,
+    title: "Аналитика и отчёты",
+    desc: "Дашборды с KPI, динамика выручки, ТОП-услуги, предупреждения по остаткам.",
+    color: "text-green-600 bg-green-50 border-green-100",
+  },
+  {
+    icon: <SolutionOutlined />,
+    title: "Корпоративные клиенты",
+    desc: "Договоры с компаниями, управление парком, корпоративные скидки и кредитные лимиты.",
+    color: "text-teal-600 bg-teal-50 border-teal-100",
+  },
+  {
+    icon: <ApartmentOutlined />,
+    title: "Мультифилиальность",
+    desc: "Единая система для нескольких точек: филиалы, распределение ресурсов, общая отчётность.",
+    color: "text-indigo-600 bg-indigo-50 border-indigo-100",
+  },
 ];
 
-const WHY_US = [
-  {
-    icon: <ToolOutlined style={{ fontSize: 36 }} />,
-    title: "Опытные мастера",
-    desc: "Специалисты с многолетним опытом и сертификатами",
-    color: "text-indigo-600",
-  },
-  {
-    icon: <ThunderboltOutlined style={{ fontSize: 36 }} />,
-    title: "Быстрое обслуживание",
-    desc: "Онлайн-запись, чёткие сроки, SMS-уведомления о статусе",
-    color: "text-amber-500",
-  },
-  {
-    icon: <SafetyCertificateOutlined style={{ fontSize: 36 }} />,
-    title: "Гарантия качества",
-    desc: "Официальная гарантия на все виды работ и запчасти",
-    color: "text-green-600",
-  },
-  {
-    icon: <WifiOutlined style={{ fontSize: 36 }} />,
-    title: "Онлайн-мониторинг",
-    desc: "Следите за статусом ремонта в реальном времени",
-    color: "text-blue-600",
-  },
+const SYSTEM_HIGHLIGHTS = [
+  "Управление заказами и статусами в реальном времени",
+  "Интегрированный складской и закупочный учёт",
+  "Аналитика и KPI-дашборды для руководства",
+  "Корпоративные клиенты и договорное обслуживание",
+  "Расписание, смены и нагрузка по сотрудникам",
+  "Мультифилиальная структура с общей базой данных",
+  "Программа лояльности, гарантии, онлайн-запись",
+  "Ролевая модель доступа: администратор, менеджер, клиент",
 ];
 
 const MainPage: React.FC = () => {
@@ -150,10 +154,6 @@ const MainPage: React.FC = () => {
 
   const companyName =
     branding?.companyName || (import.meta.env.VITE_APP_NAME as string) || "АвтоСервис";
-  const tagline = branding?.tagline || "Профессиональный уход за вашим автомобилем";
-  const phone = branding?.phone;
-  const workingHours = branding?.workingHours;
-  const address = branding?.address;
   const features = branding?.features;
 
   const canAccess = (roles?: string[]) => {
@@ -171,115 +171,122 @@ const MainPage: React.FC = () => {
     (c) => canAccess(c.roles) && isFeatureEnabled(c.feature)
   );
 
-  // ── Landing (unauthenticated) ────────────────────────────────────────────
+  // ── Login/Landing (unauthenticated) ──────────────────────────────────────
   if (!isAuthenticated) {
     return (
-      <div className="flex flex-col w-full flex-1 min-h-0">
-        {/* Hero */}
-        <section className="relative overflow-hidden w-full flex-shrink-0 bg-linear-to-br from-indigo-700 via-indigo-600 to-blue-500 text-white">
-          <div
-            className="absolute inset-0 opacity-10"
-            style={{
-              backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
-              backgroundSize: "24px 24px",
-            }}
-          />
-          <div className="relative w-full max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-12 py-14 sm:py-20 lg:py-24 flex flex-col items-center text-center gap-6">
-            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-4 py-1.5 text-sm font-medium">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block" />
-              Мы работаем для вас
-            </div>
+      <div className="flex flex-col w-full flex-1 min-h-0 bg-gray-50">
 
-            <h1
-              className="text-5xl sm:text-6xl font-extrabold tracking-tight"
-              style={{ textShadow: "0 4px 24px rgba(0,0,0,0.2)" }}
-            >
-              {companyName}
-            </h1>
-            <p className="text-xl sm:text-2xl text-indigo-100 max-w-2xl leading-relaxed">{tagline}</p>
+        {/* Hero split */}
+        <section className="w-full shrink-0 bg-white border-b border-gray-200">
+          <div className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-14 sm:py-20 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
 
-            {/* Contact chips */}
-            {(phone || workingHours || address) && (
-              <div className="flex flex-wrap justify-center gap-3 mt-1">
-                {phone && (
-                  <a
-                    href={`tel:${phone}`}
-                    className="flex items-center gap-2 bg-white/15 hover:bg-white/25 border border-white/25 rounded-full px-4 py-1.5 text-sm font-medium no-underline text-white transition-all"
-                  >
-                    <PhoneOutlined />
-                    {phone}
-                  </a>
-                )}
-                {workingHours && (
-                  <span className="flex items-center gap-2 bg-white/15 border border-white/25 rounded-full px-4 py-1.5 text-sm">
-                    <ClockCircleOutlined />
-                    {workingHours}
-                  </span>
-                )}
-                {address && (
-                  <span className="flex items-center gap-2 bg-white/15 border border-white/25 rounded-full px-4 py-1.5 text-sm">
-                    <EnvironmentOutlined />
-                    {address}
-                  </span>
-                )}
+            {/* Left — system intro */}
+            <div className="flex flex-col gap-6">
+              <div className="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-100 rounded-full px-4 py-1.5 text-sm font-medium text-indigo-700 w-fit">
+                <DashboardOutlined />
+                Система управления автосервисом
               </div>
-            )}
 
-            <div className="flex gap-4 mt-2 flex-wrap justify-center">
-              <Button
-                size="lg"
-                onClick={() => navigate("/login")}
-                className="bg-white text-indigo-700 hover:bg-indigo-50 font-bold shadow-lg"
-              >
-                Войти в систему
-                <ArrowRightOutlined />
-              </Button>
-              <button
-                onClick={() => navigate("/register")}
-                className="px-6 py-2.5 bg-white/20 hover:bg-white/30 border border-white/40 text-white font-bold rounded-xl transition-all hover:scale-105 text-base cursor-pointer"
-              >
-                Регистрация
-              </button>
+              <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight">
+                {companyName}
+              </h1>
+
+              <p className="text-lg text-gray-500 leading-relaxed max-w-lg">
+                Комплексная платформа для автоматизации процессов автосервисного центра — от приёмки автомобилей до финансовой отчётности.
+              </p>
+
+              <ul className="flex flex-col gap-2.5">
+                {SYSTEM_HIGHLIGHTS.slice(0, 5).map((h) => (
+                  <li key={h} className="flex items-start gap-2.5 text-sm text-gray-600">
+                    <CheckCircleOutlined className="text-indigo-500 mt-0.5 shrink-0" />
+                    {h}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="flex gap-3 flex-wrap pt-2">
+                <Button
+                  size="lg"
+                  onClick={() => navigate("/login")}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md"
+                >
+                  <LockOutlined />
+                  Войти в систему
+                  <ArrowRightOutlined />
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => navigate("/register")}
+                  className="border-gray-300 text-gray-700 font-semibold hover:bg-gray-50"
+                >
+                  Создать аккаунт
+                </Button>
+              </div>
             </div>
-          </div>
-        </section>
 
-        {/* Active features */}
-        {features && (
-          <section className="w-full flex-shrink-0 bg-gray-50 py-10 sm:py-12">
-            <div className="w-full max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-12">
-              <h2 className="text-center text-2xl font-bold text-gray-700 mb-6">
-                Возможности системы
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                {FEATURES_DISPLAY.filter(
-                  (f) => (features as Record<string, boolean>)[f.key]
-                ).map((f) => (
-                  <div
-                    key={f.key}
-                    className="flex flex-col items-center gap-2.5 p-5 bg-white rounded-xl border border-gray-200 shadow-sm text-center hover:border-indigo-300 hover:shadow-md transition-all"
-                  >
-                    <span className="text-2xl text-indigo-600">{f.icon}</span>
-                    <span className="text-sm font-medium text-gray-700">{f.label}</span>
+            {/* Right — system stats/info card */}
+            <div className="flex flex-col gap-4">
+              <div className="bg-gray-900 rounded-2xl p-6 text-white shadow-xl">
+                <div className="flex items-center gap-2 mb-4 text-gray-400 text-xs font-medium uppercase tracking-widest">
+                  <ClusterOutlined />
+                  Модули системы
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { icon: <FileTextOutlined />, label: "Заказы", color: "text-blue-400" },
+                    { icon: <InboxOutlined />, label: "Склад", color: "text-orange-400" },
+                    { icon: <TeamOutlined />, label: "Персонал", color: "text-violet-400" },
+                    { icon: <BarChartOutlined />, label: "Аналитика", color: "text-green-400" },
+                    { icon: <UserOutlined />, label: "Клиенты", color: "text-teal-400" },
+                    { icon: <TruckOutlined />, label: "Поставщики", color: "text-amber-400" },
+                    { icon: <ApartmentOutlined />, label: "Филиалы", color: "text-indigo-400" },
+                    { icon: <FundOutlined />, label: "Отчёты", color: "text-rose-400" },
+                  ].map((m) => (
+                    <div key={m.label} className="flex items-center gap-2.5 bg-white/5 rounded-xl px-3 py-2.5">
+                      <span className={`text-base ${m.color}`}>{m.icon}</span>
+                      <span className="text-sm font-medium text-gray-200">{m.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { value: "8", label: "модулей" },
+                  { value: "3", label: "роли доступа" },
+                  { value: "REST", label: "API" },
+                ].map((s) => (
+                  <div key={s.label} className="bg-white border border-gray-200 rounded-xl p-4 text-center shadow-sm">
+                    <div className="text-2xl font-extrabold text-indigo-600">{s.value}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
                   </div>
                 ))}
               </div>
             </div>
-          </section>
-        )}
+          </div>
+        </section>
 
-        {/* Why us — flex-1 fills remaining viewport */}
-        <section className="w-full flex-1 min-h-[min(40vh,400px)] bg-white py-12 sm:py-16 lg:py-20 border-t border-gray-100">
-          <div className="w-full max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-12">
-            <h2 className="text-center text-2xl sm:text-3xl font-bold text-gray-700 mb-8 sm:mb-10">
-              Почему выбирают нас
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 text-center items-stretch">
-              {WHY_US.map((item) => (
-                <div key={item.title} className="flex flex-col items-center justify-center gap-4 p-6 sm:p-8 bg-gray-50/50 rounded-2xl min-h-[200px]">
-                  <div className={item.color}>{item.icon}</div>
-                  <h3 className="text-lg font-bold text-gray-800">{item.title}</h3>
-                  <p className="text-gray-500 text-sm sm:text-base leading-relaxed max-w-xs">{item.desc}</p>
+        {/* Modules grid */}
+        <section className="w-full flex-1 bg-gray-50 py-12 sm:py-16">
+          <div className="w-full max-w-screen-xl mx-auto px-6 sm:px-8 lg:px-12">
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-800">Функциональные модули</h2>
+              <p className="text-gray-500 mt-1 text-sm">Полный набор инструментов для управления автосервисным бизнесом</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {SYSTEM_MODULES.map((mod) => (
+                <div
+                  key={mod.title}
+                  className={`flex flex-col gap-3 p-5 bg-white rounded-xl border ${mod.color.split(" ")[2]} shadow-sm hover:shadow-md transition-shadow`}
+                >
+                  <div className={`inline-flex items-center justify-center w-10 h-10 rounded-xl text-lg ${mod.color.split(" ")[0]} ${mod.color.split(" ")[1]}`}>
+                    {mod.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-800">{mod.title}</h3>
+                    <p className="text-xs text-gray-500 mt-1 leading-relaxed">{mod.desc}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -289,59 +296,39 @@ const MainPage: React.FC = () => {
     );
   }
 
-  // ── Dashboard (authenticated) ────────────────────────────────────────────
+  // ── Management Dashboard (authenticated) ─────────────────────────────────
+  const isStaff = user?.roleName === "admin" || user?.roleName === "manager";
+
   return (
-    <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 min-h-0 flex flex-col">
-      {/* Welcome banner */}
-      <div className="relative overflow-hidden bg-linear-to-r from-indigo-600 to-blue-500 text-white rounded-2xl p-8 mb-8 shadow-md">
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
-            backgroundSize: "20px 20px",
-          }}
-        />
-        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <p className="text-indigo-200 text-sm font-medium mb-1">Добро пожаловать</p>
-            <h1 className="text-3xl font-extrabold">
-              {user?.name} {user?.surName}
-            </h1>
-            <p className="text-indigo-200 mt-1 capitalize text-sm">
-              {user?.roleName} · {companyName}
-            </p>
-          </div>
-          <div className="flex flex-col sm:items-end gap-1.5 text-sm text-indigo-100">
-            {workingHours && (
-              <span className="flex items-center gap-1.5">
-                <ClockCircleOutlined />
-                {workingHours}
-              </span>
-            )}
-            {phone && (
-              <a
-                href={`tel:${phone}`}
-                className="flex items-center gap-1.5 text-white font-semibold no-underline hover:underline"
-              >
-                <PhoneOutlined />
-                {phone}
-              </a>
-            )}
-            {address && (
-              <span className="flex items-center gap-1.5 text-indigo-200">
-                <EnvironmentOutlined />
-                {address}
-              </span>
-            )}
-          </div>
+    <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 min-h-0 flex flex-col gap-6">
+
+      {/* Welcome strip */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4 border-b border-gray-200">
+        <div>
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-widest mb-0.5">
+            {companyName}
+          </p>
+          <h1 className="text-2xl font-bold text-gray-800">
+            {user?.name} {user?.surName}
+          </h1>
+          <p className="text-sm text-gray-500 mt-0.5 capitalize">{user?.roleName}</p>
         </div>
+        {isStaff && (
+          <Button
+            onClick={() => navigate("/analytics")}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0"
+          >
+            <DashboardOutlined />
+            Открыть аналитику
+          </Button>
+        )}
       </div>
 
       {/* Quick access grid */}
       <div className="flex-1 min-h-0">
-        <h2 className="text-xs font-semibold text-gray-400 mb-4 uppercase tracking-widest">
+        <p className="text-xs font-semibold text-gray-400 mb-4 uppercase tracking-widest">
           Быстрый доступ
-        </h2>
+        </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {visibleCards.map((card) => (
             <Card

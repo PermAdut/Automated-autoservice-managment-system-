@@ -19,7 +19,7 @@ import type { AuthenticatedRequest } from '../AuthModule/types/auth.types';
 
 @ApiTags('Booking')
 @UseGuards(JwtAuthGuard)
-@Controller('booking')
+@Controller('api/v1.0/booking')
 export class BookingController {
   constructor(private readonly bookingService: BookingService) {}
 

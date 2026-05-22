@@ -18,7 +18,7 @@ import type { AuthenticatedRequest } from '../AuthModule/types/auth.types';
 
 @ApiTags('Diagnostics')
 @UseGuards(JwtAuthGuard)
-@Controller('diagnostics')
+@Controller('api/v1.0/diagnostics')
 export class DiagnosticsController {
   constructor(private readonly diagnosticsService: DiagnosticsService) {}
 

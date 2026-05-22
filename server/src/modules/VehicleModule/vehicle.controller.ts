@@ -47,7 +47,7 @@ class UpdateVehicleDto {
 
 @ApiTags('Vehicle')
 @UseGuards(JwtAuthGuard)
-@Controller('vehicle')
+@Controller('api/v1.0/vehicle')
 export class VehicleController {
   constructor(
     private readonly vinDecoderService: VinDecoderService,

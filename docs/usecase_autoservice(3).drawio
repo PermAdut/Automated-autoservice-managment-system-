@@ -1,0 +1,165 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:148.0) Gecko/20100101 Firefox/148.0" version="29.6.4">
+  <diagram id="clfkCBfctS97eFl8CbNz" name="Страница-1">
+    <mxGraphModel dx="1072" dy="734" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="uc1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;" value="Регистрация и вход" vertex="1">
+          <mxGeometry height="50" width="200" x="230" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;" value="Онлайн-запись на обслуживание" vertex="1">
+          <mxGeometry height="50" width="200" x="230" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="uc3" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;" value="Просмотр статуса заказа" vertex="1">
+          <mxGeometry height="50" width="200" x="230" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="uc4" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;" value="Просмотр истории обслуживания" vertex="1">
+          <mxGeometry height="50" width="200" x="230" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="uc5" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;" value="Участие в программе лояльности" vertex="1">
+          <mxGeometry height="50" width="200" x="230" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="uc6" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;" value="Создание заказ-наряда" vertex="1">
+          <mxGeometry height="50" width="200" x="480" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc7" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;" value="Управление расписанием постов" vertex="1">
+          <mxGeometry height="50" width="200" x="480" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="uc8" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;" value="Складской учёт запасных частей" vertex="1">
+          <mxGeometry height="50" width="200" x="480" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="uc9" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;" value="Диагностика и гарантийный учёт" vertex="1">
+          <mxGeometry height="50" width="200" x="480" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="uc10" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;" value="Работа с клиентской базой" vertex="1">
+          <mxGeometry height="50" width="200" x="480" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="uc11" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;" value="Управление пользователями" vertex="1">
+          <mxGeometry height="50" width="200" x="480" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="uc12" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;" value="Управление филиалами" vertex="1">
+          <mxGeometry height="50" width="200" x="480" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="uc13" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;" value="Просмотр аналитики и отчётов" vertex="1">
+          <mxGeometry height="50" width="200" x="480" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="uc14" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;" value="Предиктивное ТО (алгоритм)" vertex="1">
+          <mxGeometry height="50" width="200" x="730" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="uc15" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;" value="Оптимизация загрузки постов (алгоритм)" vertex="1">
+          <mxGeometry height="50" width="200" x="730" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="uc16" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;" value="Синхронизация оффлайн-данных" vertex="1">
+          <mxGeometry height="50" width="200" x="730" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" style="edgeStyle=none;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="uc1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="80" y="110" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" style="edgeStyle=none;html=1;" target="uc2">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="80" y="113.35669453573541" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" style="edgeStyle=none;html=1;" target="uc3">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="80" y="118.51918638096754" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" style="edgeStyle=none;html=1;" target="uc4">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="80" y="123.70834275440143" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" style="edgeStyle=none;html=1;" target="uc5">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="80" y="128.88707294267545" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" style="edgeStyle=none;html=1;" target="uc1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="80" y="348.88726730264443" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" style="edgeStyle=none;html=1;" target="uc6">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="80" y="359.0358214428786" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" style="edgeStyle=none;html=1;" target="uc7">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="80" y="361.7296497081825" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" style="edgeStyle=none;html=1;" target="uc8">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="80" y="364.4185893028698" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" style="edgeStyle=none;html=1;" target="uc9">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="80" y="367.1133595458962" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" style="edgeStyle=none;html=1;" target="uc10">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="80" y="369.80046738581063" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" style="edgeStyle=none;html=1;" target="uc11">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="80" y="594.4185893028698" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" style="edgeStyle=none;html=1;" target="uc12">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="80" y="597.1133595458962" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e14" edge="1" parent="1" style="edgeStyle=none;html=1;" target="uc13">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="80" y="599.8004673858106" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e15" edge="1" parent="1" style="edgeStyle=none;html=1;" target="uc6">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="80" y="580.1918075207107" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e16" edge="1" parent="1" style="edgeStyle=none;html=1;" target="uc8">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="80" y="585.5762422227328" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e17" edge="1" parent="1" style="edgeStyle=none;html=1;" target="uc14">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="980" y="361.1749775456135" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e18" edge="1" parent="1" style="edgeStyle=none;html=1;" target="uc15">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="980" y="369.2828202928233" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e19" edge="1" parent="1" style="edgeStyle=none;html=1;" target="uc16">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="980" y="377.680325940956" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="vN09-w_xXPTTMLjI_nyA-13" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Клиент" vertex="1">
+          <mxGeometry height="60" width="30" x="45" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="vN09-w_xXPTTMLjI_nyA-16" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Администратор" vertex="1">
+          <mxGeometry height="60" width="30" x="45" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="vN09-w_xXPTTMLjI_nyA-17" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Менеджер" vertex="1">
+          <mxGeometry height="60" width="30" x="45" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="vN09-w_xXPTTMLjI_nyA-18" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Система" vertex="1">
+          <mxGeometry height="60" width="30" x="990" y="330" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

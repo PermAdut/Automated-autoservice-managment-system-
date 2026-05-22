@@ -2,6 +2,7 @@ import { relations } from 'drizzle-orm';
 import { boolean, numeric, text, uuid, varchar } from 'drizzle-orm/pg-core';
 import { schema } from '../pgSchema';
 import { servicesOrders } from '../schema';
+import { tenantSettings } from './tenant.model';
 
 export const serviceCategories = schema.table('ServiceCategories', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -9,6 +10,7 @@ export const serviceCategories = schema.table('ServiceCategories', {
   description: text('description'),
   parentId: uuid('parentId'),
   isActive: boolean('isActive').default(true).notNull(),
+  tenantId: uuid('tenantId').references(() => tenantSettings.id),
 });
 
 export const services = schema.table('Services', {
@@ -19,6 +21,7 @@ export const services = schema.table('Services', {
   price: numeric('price', { mode: 'number' }).notNull(),
   durationMinutes: numeric('durationMinutes'),
   isActive: boolean('isActive').default(true).notNull(),
+  tenantId: uuid('tenantId').references(() => tenantSettings.id),
 });
 
 export const serviceCategoriesRelations = relations(

@@ -16,7 +16,7 @@ import { Public } from '../AuthModule/decorators/public.decorator';
 import type { tenantSettings } from '../database/schema';
 
 @ApiTags('Tenant')
-@Controller('tenant')
+@Controller('api/v1.0/tenant')
 export class TenantController {
   constructor(private readonly tenantService: TenantService) {}
 

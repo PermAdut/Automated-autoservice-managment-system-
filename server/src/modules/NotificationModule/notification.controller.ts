@@ -81,7 +81,7 @@ class UpsertChannelDto {
 
 @ApiTags('Notifications')
 @UseGuards(JwtAuthGuard)
-@Controller('notifications')
+@Controller('api/v1.0/notifications')
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 

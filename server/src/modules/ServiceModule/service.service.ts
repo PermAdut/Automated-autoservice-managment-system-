@@ -5,11 +5,14 @@ import {
 } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { ServiceResponseDto } from './Dto/service.response';
+import { ServiceCategoryResponseDto } from './Dto/service-category-response.dto';
 import { plainToInstance } from 'class-transformer';
-import { services } from '../database/schema';
+import { services, serviceCategories } from '../database/schema';
 import { eq, ilike, desc, asc, or, sql } from 'drizzle-orm';
 import { CreateServiceDto } from './Dto/create-service.dto';
 import { UpdateServiceDto } from './Dto/update-service.dto';
+import { CreateServiceCategoryDto } from './Dto/create-service-category.dto';
+import { UpdateServiceCategoryDto } from './Dto/update-service-category.dto';
 
 @Injectable()
 export class ServiceService {
@@ -143,5 +146,104 @@ export class ServiceService {
     }
 
     await this.databaseService.db.delete(services).where(eq(services.id, id));
+  }
+
+  async findAllCategories(search?: string): Promise<ServiceCategoryResponseDto[]> {
+    let query = this.databaseService.db.select().from(serviceCategories);
+
+    if (search) {
+      query = query.where(
+        or(
+          ilike(serviceCategories.name, `%${search}%`),
+          serviceCategories.description
+            ? ilike(serviceCategories.description, `%${search}%`)
+            : sql`FALSE`
+        )
+      ) as typeof query;
+    }
+
+    const rows = await query.orderBy(asc(serviceCategories.name));
+    return plainToInstance(ServiceCategoryResponseDto, rows, { excludeExtraneousValues: true });
+  }
+
+  async findCategoryById(id: string): Promise<ServiceCategoryResponseDto> {
+    const [category] = await this.databaseService.db
+      .select()
+      .from(serviceCategories)
+      .where(eq(serviceCategories.id, id))
+      .limit(1);
+
+    if (!category) {
+      throw new NotFoundException(`Category with id ${id} not found`);
+    }
+
+    return plainToInstance(ServiceCategoryResponseDto, category, { excludeExtraneousValues: true });
+  }
+
+  async createCategory(dto: CreateServiceCategoryDto): Promise<ServiceCategoryResponseDto> {
+    if (dto.parentId) {
+      const parent = await this.databaseService.db
+        .select()
+        .from(serviceCategories)
+        .where(eq(serviceCategories.id, dto.parentId))
+        .limit(1);
+
+      if (!parent.length) {
+        throw new NotFoundException(`Parent category with id ${dto.parentId} not found`);
+      }
+    }
+
+    const [created] = await this.databaseService.db
+      .insert(serviceCategories)
+      .values({
+        name: dto.name,
+        description: dto.description ?? null,
+        parentId: dto.parentId ?? null,
+        isActive: dto.isActive ?? true,
+      })
+      .returning();
+
+    return plainToInstance(ServiceCategoryResponseDto, created, { excludeExtraneousValues: true });
+  }
+
+  async updateCategory(id: string, dto: UpdateServiceCategoryDto): Promise<ServiceCategoryResponseDto> {
+    const updatePayload: Partial<typeof serviceCategories.$inferInsert> = {};
+
+    if (dto.name !== undefined) updatePayload.name = dto.name;
+    if (dto.description !== undefined) updatePayload.description = dto.description;
+    if (dto.parentId !== undefined) updatePayload.parentId = dto.parentId;
+    if (dto.isActive !== undefined) updatePayload.isActive = dto.isActive;
+
+    if (Object.keys(updatePayload).length === 0) {
+      throw new BadRequestException('No category fields provided for update');
+    }
+
+    const [updated] = await this.databaseService.db
+      .update(serviceCategories)
+      .set(updatePayload)
+      .where(eq(serviceCategories.id, id))
+      .returning();
+
+    if (!updated) {
+      throw new NotFoundException(`Category with id ${id} not found`);
+    }
+
+    return plainToInstance(ServiceCategoryResponseDto, updated, { excludeExtraneousValues: true });
+  }
+
+  async deleteCategory(id: string): Promise<void> {
+    const [existing] = await this.databaseService.db
+      .select()
+      .from(serviceCategories)
+      .where(eq(serviceCategories.id, id))
+      .limit(1);
+
+    if (!existing) {
+      throw new NotFoundException(`Category with id ${id} not found`);
+    }
+
+    await this.databaseService.db
+      .delete(serviceCategories)
+      .where(eq(serviceCategories.id, id));
   }
 }

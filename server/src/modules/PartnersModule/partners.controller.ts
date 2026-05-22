@@ -17,7 +17,7 @@ import { Roles } from '../AuthModule/decorators/roles.decorator';
 @ApiTags('Partners')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin', 'manager')
-@Controller('partners')
+@Controller('api/v1.0/partners')
 export class PartnersController {
   constructor(private readonly partnersService: PartnersService) {}
 

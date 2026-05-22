@@ -1,36 +1,83 @@
 import { DatabaseService } from '../modules/database/database.service';
 import {
-  users,
-  roles,
-  employees,
-  positions,
-  services,
-  suppliers,
-  categories,
-  spareParts,
-  stores,
-  sparePartStore,
-  cars,
-  orders,
-  servicesOrders,
-  sparePartOrders,
-  payments,
-  workSchedules,
-  subscriptions,
-  reviews,
-  positionsForBuying,
-  invoices,
-  passports,
+  users, roles, employees, positions, services, serviceCategories,
+  suppliers, categories, spareParts, stores, sparePartStore,
+  cars, orders, servicesOrders, sparePartOrders, payments,
+  workSchedules, subscriptions, reviews, positionsForBuying,
+  invoices, passports, branches, branchEmployees, storeTransfers,
+  appointments, timeSlots, discounts, orderDiscounts,
+  loyaltyPrograms, loyaltyTransactions,
+  warranties, warrantyClaims,
+  companies, companyContracts, companyCars,
+  tenantSettings,
 } from '../drizzle/schema';
 import * as bcrypt from 'bcrypt';
+
+const FIRST_NAMES_M = ['Александр', 'Дмитрий', 'Иван', 'Михаил', 'Андрей', 'Алексей', 'Сергей', 'Николай', 'Артём', 'Роман', 'Евгений', 'Владимир', 'Илья', 'Кирилл', 'Павел', 'Тимур', 'Максим', 'Антон', 'Данила', 'Егор'];
+const FIRST_NAMES_F = ['Анна', 'Мария', 'Елена', 'Ольга', 'Наталья', 'Татьяна', 'Ирина', 'Светлана', 'Юлия', 'Екатерина', 'Алина', 'Виктория', 'Ксения', 'Дарья', 'Полина', 'Валерия', 'Надежда', 'Людмила', 'Вера', 'Галина'];
+const LAST_NAMES = ['Иванов', 'Смирнов', 'Кузнецов', 'Попов', 'Васильев', 'Петров', 'Соколов', 'Михайлов', 'Новиков', 'Федоров', 'Морозов', 'Волков', 'Алексеев', 'Лебедев', 'Семенов', 'Егоров', 'Павлов', 'Козлов', 'Степанов', 'Николаев', 'Орлов', 'Андреев', 'Макаров', 'Никитин', 'Захаров'];
+const LAST_NAMES_F = ['Иванова', 'Смирнова', 'Кузнецова', 'Попова', 'Васильева', 'Петрова', 'Соколова', 'Михайлова', 'Новикова', 'Федорова', 'Морозова', 'Волкова', 'Алексеева', 'Лебедева', 'Семенова', 'Егорова', 'Павлова', 'Козлова', 'Степанова', 'Николаева'];
+
+const CAR_MODELS = [
+  { brand: 'Toyota', models: ['Camry', 'Corolla', 'RAV4', 'Land Cruiser', 'Highlander'] },
+  { brand: 'BMW', models: ['X5', 'X3', '5 Series', '3 Series', 'X6'] },
+  { brand: 'Mercedes-Benz', models: ['E-Class', 'C-Class', 'GLE', 'S-Class', 'A-Class'] },
+  { brand: 'Audi', models: ['A4', 'A6', 'Q5', 'Q7', 'A3'] },
+  { brand: 'Volkswagen', models: ['Passat', 'Tiguan', 'Golf', 'Polo', 'Touareg'] },
+  { brand: 'Kia', models: ['Sportage', 'Sorento', 'Rio', 'Ceed', 'K5'] },
+  { brand: 'Hyundai', models: ['Tucson', 'Santa Fe', 'Solaris', 'Elantra', 'Creta'] },
+  { brand: 'Nissan', models: ['X-Trail', 'Qashqai', 'Pathfinder', 'Murano', 'Almera'] },
+  { brand: 'Lada', models: ['Vesta', 'Granta', 'Niva', 'XRAY', 'Largus'] },
+  { brand: 'Skoda', models: ['Octavia', 'Superb', 'Karoq', 'Kodiaq', 'Rapid'] },
+];
+
+function pick<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function pickIdx<T>(arr: T[], idx: number): T {
+  return arr[idx % arr.length];
+}
+
+function rnd(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function pastDate(daysAgo: number): Date {
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  return d;
+}
+
+function futureDate(daysAhead: number): Date {
+  const d = new Date();
+  d.setDate(d.getDate() + daysAhead);
+  return d;
+}
 
 async function seed() {
   const dbService = new DatabaseService();
 
   try {
-    // Clear tables (order respects FK)
+    console.log('Clearing tables...');
+
+    // Clear in FK-safe order
+    await dbService.db.delete(loyaltyTransactions);
+    await dbService.db.delete(loyaltyPrograms);
+    await dbService.db.delete(orderDiscounts);
+    await dbService.db.delete(discounts);
+    await dbService.db.delete(warrantyClaims);
+    await dbService.db.delete(warranties);
+    await dbService.db.delete(companyCars);
+    await dbService.db.delete(companyContracts);
+    await dbService.db.delete(companies);
     await dbService.db.delete(invoices);
     await dbService.db.delete(positionsForBuying);
+    await dbService.db.delete(storeTransfers);
+    await dbService.db.delete(branchEmployees);
+    await dbService.db.delete(branches);
+    await dbService.db.delete(appointments);
+    await dbService.db.delete(timeSlots);
     await dbService.db.delete(reviews);
     await dbService.db.delete(subscriptions);
     await dbService.db.delete(workSchedules);
@@ -42,585 +89,814 @@ async function seed() {
     await dbService.db.delete(cars);
     await dbService.db.delete(passports);
     await dbService.db.delete(spareParts);
-    await dbService.db.delete(categories);
     await dbService.db.delete(stores);
+    await dbService.db.delete(categories);
     await dbService.db.delete(services);
+    await dbService.db.delete(serviceCategories);
     await dbService.db.delete(employees);
     await dbService.db.delete(positions);
-    await dbService.db.delete(users);
     await dbService.db.delete(suppliers);
+    await dbService.db.delete(users);
     await dbService.db.delete(roles);
+    await dbService.db.delete(tenantSettings);
 
-    // Create roles
-    await dbService.db.insert(roles).values({ name: 'guest' });
-    const [adminRole] = await dbService.db
-      .insert(roles)
-      .values({ name: 'admin' })
-      .returning();
-    const [managerRole] = await dbService.db
-      .insert(roles)
-      .values({ name: 'manager' })
-      .returning();
-    const [customerRole] = await dbService.db
-      .insert(roles)
-      .values({ name: 'customer' })
-      .returning();
+    // ── Tenant ────────────────────────────────────────────────────────────────
+    console.log('Seeding tenant...');
+    const [tenant] = await dbService.db.insert(tenantSettings).values({
+      companyName: 'АвтоСервис Про',
+      tagline: 'Надзейны партнёр на дарозе',
+      description: 'Сетка сучасных аўтасэрвісаў у Беларусі. Якасны рамонт, сумленныя цэны.',
+      primaryColor: '#1d4ed8',
+      secondaryColor: '#0ea5e9',
+      accentColor: '#10b981',
+      address: 'г. Мінск, пр-т Незалежнасці, 95',
+      city: 'Мінск',
+      country: 'BY',
+      phone: '+375-17-200-00-01',
+      email: 'info@avtoservis.by',
+      website: 'https://avtoservis.by',
+      workingHours: 'Пн-Сб: 9:00-21:00, Нд: 10:00-18:00',
+      currency: 'BYN',
+      timezone: 'Europe/Minsk',
+      language: 'ru',
+      featureOnlineBooking: true,
+      featureVinDecoder: true,
+      featureLoyaltyProgram: true,
+      featurePartnerNetwork: true,
+      featureMultiBranch: true,
+      featureCorporateClients: true,
+      featureSmsNotifications: true,
+      featureEmailNotifications: true,
+      isSetupComplete: true,
+      setupCompletedAt: pastDate(90),
+    }).returning();
 
-    // Create users
-    const passwordHash: string = await bcrypt.hash('password123', 10);
-    const usersData = [
-      {
-        login: 'alice',
-        name: 'Alice',
-        surName: 'Johnson',
-        email: 'alice@example.com',
-        phone: '+1-202-555-0101',
-        passwordHash,
-        roleId: adminRole.id,
-      },
-      {
-        login: 'bob',
-        name: 'Bob',
-        surName: 'Williams',
-        email: 'bob@example.com',
-        phone: '+1-202-555-0102',
+    // ── Roles ─────────────────────────────────────────────────────────────────
+    console.log('Seeding roles...');
+    const [guestRole] = await dbService.db.insert(roles).values({ name: 'guest' }).returning();
+    const [adminRole] = await dbService.db.insert(roles).values({ name: 'admin' }).returning();
+    const [managerRole] = await dbService.db.insert(roles).values({ name: 'manager' }).returning();
+    const [customerRole] = await dbService.db.insert(roles).values({ name: 'customer' }).returning();
+    void guestRole;
+
+    // ── Users ─────────────────────────────────────────────────────────────────
+    console.log('Seeding users (200)...');
+    const passwordHash = await bcrypt.hash('password123', 10);
+
+    const usersToInsert: typeof users.$inferInsert[] = [];
+
+    // Admin
+    usersToInsert.push({
+      login: 'admin', name: 'Адміністратар', surName: 'Сістэмны',
+      email: 'admin@avtoservis.by', phone: '+375291000001',
+      passwordHash, roleId: adminRole.id, tenantId: tenant.id,
+    });
+
+    // 4 managers
+    const managerLogins = ['manager1', 'manager2', 'manager3', 'manager4'];
+    const managerNames = [
+      { name: 'Алег', surName: 'Карповіч' },
+      { name: 'Наталля', surName: 'Сіманович' },
+      { name: 'Віктар', surName: 'Глінскі' },
+      { name: 'Людміла', surName: 'Хадасевіч' },
+    ];
+    for (let i = 0; i < 4; i++) {
+      usersToInsert.push({
+        login: managerLogins[i],
+        name: managerNames[i].name,
+        surName: managerNames[i].surName,
+        email: `${managerLogins[i]}@avtoservis.by`,
+        phone: `+37529100000${i + 2}`,
         passwordHash,
         roleId: managerRole.id,
-      },
-      {
-        login: 'carol',
-        name: 'Carol',
-        surName: 'Smith',
-        email: 'carol@example.com',
-        phone: '+1-202-555-0103',
+        tenantId: tenant.id,
+      });
+    }
+
+    // 195 customers
+    let phoneCounter = 100;
+    for (let i = 0; i < 195; i++) {
+      const isFemale = i % 3 === 0;
+      const firstName = isFemale ? pickIdx(FIRST_NAMES_F, i) : pickIdx(FIRST_NAMES_M, i);
+      const lastName = isFemale ? pickIdx(LAST_NAMES_F, i) : pickIdx(LAST_NAMES, i);
+      const login = `user${i + 1}`;
+      phoneCounter++;
+      usersToInsert.push({
+        login,
+        name: firstName,
+        surName: lastName,
+        email: `${login}@tut.by`,
+        phone: `+37544${phoneCounter.toString().padStart(7, '0')}`,
         passwordHash,
         roleId: customerRole.id,
-      },
-      {
-        login: 'dave',
-        name: 'Dave',
-        surName: 'Brown',
-        email: 'dave@example.com',
-        phone: '+1-202-555-0104',
-        passwordHash,
-        roleId: customerRole.id,
-      },
-      {
-        login: 'eva',
-        name: 'Eva',
-        surName: 'Miller',
-        email: 'eva@example.com',
-        phone: '+1-202-555-0105',
-        passwordHash,
-        roleId: customerRole.id,
-      },
-      {
-        login: 'frank',
-        name: 'Frank',
-        surName: 'Taylor',
-        email: 'frank@example.com',
-        phone: '+1-202-555-0106',
-        passwordHash,
-        roleId: customerRole.id,
-      },
-    ];
-    const createdUsers = await dbService.db
-      .insert(users)
-      .values(usersData)
-      .returning();
+        tenantId: tenant.id,
+      });
+    }
 
-    // Create positions
-    const positionsData = [
-      { name: 'Mechanic', description: 'Auto mechanic' },
-      { name: 'Manager', description: 'Service manager' },
-      { name: 'Receptionist', description: 'Front desk receptionist' },
-      { name: 'Technician', description: 'Auto technician' },
-    ];
-    const createdPositions = await dbService.db
-      .insert(positions)
-      .values(positionsData)
-      .returning();
+    const createdUsers = await dbService.db.insert(users).values(usersToInsert).returning();
+    const adminUser = createdUsers[0];
+    const managerUsers = createdUsers.slice(1, 5);
+    const customerUsers = createdUsers.slice(5);
 
-    // Create employees (10+)
-    const employeesData = [
-      {
-        positionId: createdPositions[0].id,
-        hireDate: new Date(2020, 0, 1),
-        salary: '45000',
-        name: 'Антон',
-        surName: 'Громов',
-        lastName: 'Игоревич',
-      },
-      {
-        positionId: createdPositions[0].id,
-        hireDate: new Date(2021, 2, 10),
-        salary: '48000',
-        name: 'Мария',
-        surName: 'Сидорова',
-        lastName: 'Андреевна',
-      },
-      {
-        positionId: createdPositions[1].id,
-        hireDate: new Date(2019, 5, 5),
-        salary: '60000',
-        name: 'Дмитрий',
-        surName: 'Семенов',
-        lastName: 'Петрович',
-      },
-      {
-        positionId: createdPositions[2].id,
-        hireDate: new Date(2022, 3, 15),
-        salary: '35000',
-        name: 'Юлия',
-        surName: 'Орлова',
-      },
-      {
-        positionId: createdPositions[3].id,
-        hireDate: new Date(2023, 1, 20),
-        salary: '52000',
-        name: 'Владислав',
-        surName: 'Козлов',
-      },
-    ];
-    const createdEmployees = await dbService.db
-      .insert(employees)
-      .values(employeesData)
-      .returning();
-
-    // Create services (10+)
-    const servicesData = [
-      {
-        name: 'Замена масла',
-        description: 'Полная замена масла и фильтра',
-        price: 120,
-      },
-      {
-        name: 'Диагностика',
-        description: 'Комплексная диагностика',
-        price: 80,
-      },
-      {
-        name: 'Замена тормозных колодок',
-        description: 'Передняя ось',
-        price: 150,
-      },
-      { name: 'Замена свечей', description: 'Свечи зажигания', price: 90 },
-      { name: 'Ремонт подвески', description: 'Шаровые, стойки', price: 200 },
-      {
-        name: 'Ремонт электрики',
-        description: 'Электрооборудование',
-        price: 180,
-      },
-    ];
-    const createdServices = await dbService.db
-      .insert(services)
-      .values(servicesData)
-      .returning();
-
-    // Create suppliers (10+)
-    const suppliersData = [
-      {
-        name: 'AutoParts Ltd',
-        contact: 'sales@autoparts.com',
-        address: 'Минск, ул. Ленина 10',
-      },
-      {
-        name: 'Brake&Co',
-        contact: 'info@brakeco.com',
-        address: 'Минск, пр-т Победителей 25',
-      },
-      {
-        name: 'EngineMaster',
-        contact: 'hello@engine-master.com',
-        address: 'Гомель, ул. Кирова 5',
-      },
-    ];
-    const createdSuppliers = await dbService.db
-      .insert(suppliers)
-      .values(suppliersData)
-      .returning();
-
-    // Create categories
-    const categoriesData = [
-      { name: 'Двигатель', description: 'Детали двигателя' },
-      { name: 'Тормоза', description: 'Тормозные системы' },
-      { name: 'Подвеска', description: 'Подвеска и рулевое' },
-      { name: 'Электрика', description: 'Электрооборудование' },
-    ];
-    const createdCategories = await dbService.db
-      .insert(categories)
-      .values(categoriesData)
-      .returning();
-
-    // Create spare parts (10+)
-    const sparePartsData = [
-      {
-        name: 'Фильтр масляный',
-        partNumber: 'OF-1001',
-        price: '25.50',
-        categoryId: createdCategories[0].id,
-      },
-      {
-        name: 'Свеча зажигания',
-        partNumber: 'SP-2002',
-        price: '12.90',
-        categoryId: createdCategories[0].id,
-      },
-      {
-        name: 'Колодки тормозные',
-        partNumber: 'BR-3003',
-        price: '45.00',
-        categoryId: createdCategories[1].id,
-      },
-      {
-        name: 'Амортизатор передний',
-        partNumber: 'SU-4004',
-        price: '110.00',
-        categoryId: createdCategories[2].id,
-      },
-      {
-        name: 'Рулевой наконечник',
-        partNumber: 'ST-5005',
-        price: '38.70',
-        categoryId: createdCategories[2].id,
-      },
-      {
-        name: 'Аккумулятор 60Ah',
-        partNumber: 'EL-6006',
-        price: '95.00',
-        categoryId: createdCategories[3].id,
-      },
-    ];
-    const createdSpareParts = await dbService.db
-      .insert(spareParts)
-      .values(sparePartsData)
-      .returning();
-
-    // Create stores
-    const storesData = [
-      { name: 'Склад Центральный', location: 'ул. Центральная, 1' },
-      { name: 'Склад Северный', location: 'ул. Северная, 15' },
-      { name: 'Магазин на пр-т Победителей', location: 'пр-т Победителей, 25' },
-    ];
-    const createdStores = await dbService.db
-      .insert(stores)
-      .values(storesData)
-      .returning();
-
-    // Create spare part store relationships
-    const sparePartStoreData = createdSpareParts.map((part, idx) => ({
-      sparePartId: part.id,
-      storeId: createdStores[idx % createdStores.length].id,
-      quantity: 10 + idx * 2,
+    // ── Passports ─────────────────────────────────────────────────────────────
+    console.log('Seeding passports...');
+    const passportsToInsert = customerUsers.slice(0, 100).map((u, i) => ({
+      userId: u.id,
+      identityNumber: `${4500 + i} ${600000 + i * 7}`,
+      birthDate: new Date(1980 + (i % 25), i % 12, (i % 28) + 1),
+      gender: (i % 3 === 0 ? 'F' : 'M') as 'M' | 'F',
+      tenantId: tenant.id,
     }));
-    await dbService.db.insert(sparePartStore).values(sparePartStoreData);
+    await dbService.db.insert(passports).values(passportsToInsert);
 
-    // Create cars for users
-    const carModels = [
-      { brand: 'Toyota', model: 'Camry' },
-      { brand: 'BMW', model: 'X5' },
-      { brand: 'Mercedes', model: 'E-Class' },
-      { brand: 'Audi', model: 'A4' },
-      { brand: 'Volkswagen', model: 'Passat' },
-      { brand: 'Kia', model: 'Sportage' },
+    // ── Positions ─────────────────────────────────────────────────────────────
+    console.log('Seeding positions...');
+    const positionsData = [
+      { name: 'Автомеханик', description: 'Слесарный ремонт автомобилей' },
+      { name: 'Автоэлектрик', description: 'Диагностика и ремонт электросистем' },
+      { name: 'Мастер-приёмщик', description: 'Приём и выдача автомобилей' },
+      { name: 'Технический директор', description: 'Руководство технической службой' },
+      { name: 'Кузовщик', description: 'Кузовной ремонт и покраска' },
+      { name: 'Шиномонтажник', description: 'Шиномонтаж и балансировка' },
+      { name: 'Диагност', description: 'Компьютерная диагностика' },
+      { name: 'Администратор', description: 'Административная работа' },
     ];
-    const carsData: Array<{
-      userId: string;
-      brand: string;
-      model: string;
-      information: string;
-      year: number;
-      vin: string;
-      licensePlate: string;
-    }> = [];
-    for (let i = 0; i < createdUsers.length; i++) {
-      const carModel = carModels[i % carModels.length];
-      carsData.push({
-        userId: createdUsers[i].id,
-        brand: carModel.brand,
-        model: carModel.model,
-        information: `${carModel.brand} ${carModel.model}, ${2020 + (i % 5)} год`,
-        year: 2020 + (i % 5),
-        vin: `VIN${i.toString().padStart(10, '0')}`,
-        licensePlate: `ABC-${i.toString().padStart(3, '0')}`,
-      });
-    }
-    const createdCars = await dbService.db
-      .insert(cars)
-      .values(carsData)
-      .returning();
+    const createdPositions = await dbService.db.insert(positions).values(
+      positionsData.map(p => ({ ...p, tenantId: tenant.id }))
+    ).returning();
 
-    // Create orders (10+)
-    const ordersData: Array<{
-      userId: string;
-      carId: string;
-      employeeId: string;
-      status: string;
-      createdAt: Date;
-    }> = [];
-    for (let i = 0; i < 12; i++) {
-      const userId = createdUsers[i % createdUsers.length].id;
-      const carId = createdCars[i % createdCars.length].id;
-      const employeeId = createdEmployees[i % createdEmployees.length].id;
-      const statuses = ['pending', 'in_progress', 'completed', 'cancelled'];
-      ordersData.push({
-        userId,
-        carId,
-        employeeId,
-        status: statuses[i % statuses.length],
-        createdAt: new Date(2024, 0, 1 + i * 3),
-      });
-    }
-    const createdOrders = await dbService.db
-      .insert(orders)
-      .values(ordersData)
-      .returning();
+    // ── Employees ─────────────────────────────────────────────────────────────
+    console.log('Seeding employees (25)...');
+    const employeeNames = [
+      { name: 'Антон', surName: 'Громов', lastName: 'Игоревич' },
+      { name: 'Мария', surName: 'Сидорова', lastName: 'Андреевна' },
+      { name: 'Дмитрий', surName: 'Семенов', lastName: 'Петрович' },
+      { name: 'Юлия', surName: 'Орлова', lastName: 'Викторовна' },
+      { name: 'Владислав', surName: 'Козлов', lastName: 'Николаевич' },
+      { name: 'Алина', surName: 'Воронова', lastName: 'Игоревна' },
+      { name: 'Сергей', surName: 'Белов', lastName: 'Александрович' },
+      { name: 'Ирина', surName: 'Тихонова', lastName: 'Олеговна' },
+      { name: 'Вадим', surName: 'Крылов', lastName: 'Михайлович' },
+      { name: 'Наталья', surName: 'Зубова', lastName: 'Сергеевна' },
+      { name: 'Илья', surName: 'Фёдоров', lastName: 'Дмитриевич' },
+      { name: 'Екатерина', surName: 'Макарова', lastName: 'Ивановна' },
+      { name: 'Роман', surName: 'Захаров', lastName: 'Валерьевич' },
+      { name: 'Светлана', surName: 'Кириллова', lastName: 'Петровна' },
+      { name: 'Артём', surName: 'Шестаков', lastName: 'Олегович' },
+      { name: 'Анастасия', surName: 'Лазарева', lastName: 'Юрьевна' },
+      { name: 'Никита', surName: 'Поляков', lastName: 'Алексеевич' },
+      { name: 'Ольга', surName: 'Быкова', lastName: 'Николаевна' },
+      { name: 'Евгений', surName: 'Соловьёв', lastName: 'Владимирович' },
+      { name: 'Людмила', surName: 'Жукова', lastName: 'Ивановна' },
+      { name: 'Максим', surName: 'Денисов', lastName: 'Андреевич' },
+      { name: 'Тамара', surName: 'Рыжова', lastName: 'Степановна' },
+      { name: 'Кирилл', surName: 'Мартынов', lastName: 'Валентинович' },
+      { name: 'Валентина', surName: 'Першина', lastName: 'Васильевна' },
+      { name: 'Павел', surName: 'Щербаков', lastName: 'Геннадьевич' },
+    ];
+    const salaries = [45000, 48000, 55000, 60000, 65000, 52000, 50000, 47000];
+    const employeesToInsert = employeeNames.map((e, i) => ({
+      ...e,
+      positionId: createdPositions[i % createdPositions.length].id,
+      userId: i < managerUsers.length ? managerUsers[i].id : undefined,
+      hireDate: pastDate(rnd(30, 1800)),
+      salary: salaries[i % salaries.length].toString(),
+      tenantId: tenant.id,
+    }));
+    const createdEmployees = await dbService.db.insert(employees).values(employeesToInsert).returning();
 
-    // Create services_orders relationships
-    const servicesOrdersData: Array<{
-      orderId: string;
-      servicesId: string;
-      quantity: number;
-    }> = [];
-    for (let i = 0; i < createdOrders.length; i++) {
-      const order = createdOrders[i];
-      // Каждый заказ имеет 1-3 услуги
-      const numServices = 1 + (i % 3);
-      for (let j = 0; j < numServices; j++) {
-        servicesOrdersData.push({
-          orderId: order.id,
-          servicesId: createdServices[j % createdServices.length].id,
-          quantity: 1 + (j % 2),
-        });
-      }
-    }
-    await dbService.db.insert(servicesOrders).values(servicesOrdersData);
-
-    // Create spare_part_orders relationships
-    const sparePartOrdersData: Array<{
-      ordersId: string;
-      sparePartId: string;
-      quantity: number;
-    }> = [];
-    for (let i = 0; i < createdOrders.length; i++) {
-      const order = createdOrders[i];
-      // Каждый второй заказ имеет запчасти
-      if (i % 2 === 0) {
-        const numParts = 1 + (i % 2);
-        for (let j = 0; j < numParts; j++) {
-          sparePartOrdersData.push({
-            ordersId: order.id,
-            sparePartId: createdSpareParts[j % createdSpareParts.length].id,
-            quantity: 1 + (j % 3),
+    // ── Work Schedules ────────────────────────────────────────────────────────
+    console.log('Seeding work schedules...');
+    const workSchedulesToInsert: typeof workSchedules.$inferInsert[] = [];
+    for (const emp of createdEmployees) {
+      for (let week = 0; week < 8; week++) {
+        for (let day = 0; day < 5; day++) {
+          const base = pastDate(week * 7 - day);
+          base.setHours(9, 0, 0, 0);
+          const end = new Date(base);
+          end.setHours(18, 0, 0, 0);
+          workSchedulesToInsert.push({
+            employeeId: emp.id,
+            startTime: base,
+            endTime: end,
+            isAvailable: day < 4,
+            tenantId: tenant.id,
           });
         }
       }
     }
-    if (sparePartOrdersData.length > 0) {
-      await dbService.db.insert(sparePartOrders).values(sparePartOrdersData);
+    await dbService.db.insert(workSchedules).values(workSchedulesToInsert);
+
+    // ── Service Categories ────────────────────────────────────────────────────
+    console.log('Seeding service categories...');
+    const rootCats = await dbService.db.insert(serviceCategories).values([
+      { name: 'Техническое обслуживание', description: 'Плановое ТО и замена расходников', tenantId: tenant.id },
+      { name: 'Диагностика', description: 'Компьютерная и ручная диагностика', tenantId: tenant.id },
+      { name: 'Двигатель', description: 'Ремонт и обслуживание двигателя', tenantId: tenant.id },
+      { name: 'Тормозная система', description: 'Тормоза и тормозные механизмы', tenantId: tenant.id },
+      { name: 'Подвеска и рулевое', description: 'Ходовая часть и рулевое управление', tenantId: tenant.id },
+      { name: 'Электрика', description: 'Электрооборудование автомобиля', tenantId: tenant.id },
+      { name: 'Кузовной ремонт', description: 'Кузов, покраска, антикор', tenantId: tenant.id },
+      { name: 'Шиномонтаж', description: 'Шины, диски, балансировка', tenantId: tenant.id },
+    ]).returning();
+
+    // Sub-categories
+    await dbService.db.insert(serviceCategories).values([
+      { name: 'ТО-1', description: '10 000 км', parentId: rootCats[0].id, tenantId: tenant.id },
+      { name: 'ТО-2', description: '20 000 км', parentId: rootCats[0].id, tenantId: tenant.id },
+      { name: 'ТО-3', description: '30 000 км', parentId: rootCats[0].id, tenantId: tenant.id },
+      { name: 'Компьютерная диагностика', parentId: rootCats[1].id, tenantId: tenant.id },
+      { name: 'Диагностика АКПП', parentId: rootCats[1].id, tenantId: tenant.id },
+    ]);
+
+    // ── Services ──────────────────────────────────────────────────────────────
+    console.log('Seeding services...');
+    const servicesData = [
+      { name: 'Замена масла двигателя', price: 1200, dur: 60, catIdx: 0 },
+      { name: 'Замена воздушного фильтра', price: 400, dur: 30, catIdx: 0 },
+      { name: 'Замена топливного фильтра', price: 600, dur: 45, catIdx: 0 },
+      { name: 'Замена свечей зажигания', price: 900, dur: 60, catIdx: 0 },
+      { name: 'Замена ремня ГРМ', price: 4500, dur: 180, catIdx: 0 },
+      { name: 'Компьютерная диагностика двигателя', price: 800, dur: 60, catIdx: 1 },
+      { name: 'Диагностика тормозной системы', price: 500, dur: 45, catIdx: 1 },
+      { name: 'Диагностика подвески', price: 700, dur: 60, catIdx: 1 },
+      { name: 'Диагностика АКПП', price: 1200, dur: 90, catIdx: 1 },
+      { name: 'Замена прокладки головки блока', price: 8000, dur: 300, catIdx: 2 },
+      { name: 'Ремонт топливной системы', price: 3500, dur: 120, catIdx: 2 },
+      { name: 'Чистка инжектора', price: 2400, dur: 90, catIdx: 2 },
+      { name: 'Замена тормозных колодок (передние)', price: 1500, dur: 60, catIdx: 3 },
+      { name: 'Замена тормозных колодок (задние)', price: 1500, dur: 60, catIdx: 3 },
+      { name: 'Замена тормозных дисков', price: 3200, dur: 90, catIdx: 3 },
+      { name: 'Прокачка тормозной системы', price: 800, dur: 60, catIdx: 3 },
+      { name: 'Замена амортизаторов передних', price: 4500, dur: 120, catIdx: 4 },
+      { name: 'Замена амортизаторов задних', price: 4000, dur: 120, catIdx: 4 },
+      { name: 'Замена рулевых тяг', price: 2800, dur: 90, catIdx: 4 },
+      { name: 'Замена шаровых опор', price: 2500, dur: 90, catIdx: 4 },
+      { name: 'Развал-схождение', price: 1800, dur: 60, catIdx: 4 },
+      { name: 'Замена аккумулятора', price: 500, dur: 30, catIdx: 5 },
+      { name: 'Ремонт генератора', price: 3500, dur: 150, catIdx: 5 },
+      { name: 'Ремонт стартера', price: 3000, dur: 120, catIdx: 5 },
+      { name: 'Замена проводки', price: 5000, dur: 240, catIdx: 5 },
+      { name: 'Рихтовка кузова', price: 6000, dur: 300, catIdx: 6 },
+      { name: 'Покраска бампера', price: 8000, dur: 480, catIdx: 6 },
+      { name: 'Антикоррозийная обработка', price: 5500, dur: 240, catIdx: 6 },
+      { name: 'Монтаж летних шин', price: 1200, dur: 60, catIdx: 7 },
+      { name: 'Монтаж зимних шин', price: 1200, dur: 60, catIdx: 7 },
+      { name: 'Балансировка колёс', price: 800, dur: 45, catIdx: 7 },
+      { name: 'Ремонт прокола', price: 400, dur: 30, catIdx: 7 },
+    ];
+    const createdServices = await dbService.db.insert(services).values(
+      servicesData.map(s => ({
+        name: s.name,
+        description: s.name,
+        price: s.price,
+        durationMinutes: String(s.dur),
+        isActive: true,
+        categoryId: rootCats[s.catIdx].id,
+        tenantId: tenant.id,
+      }))
+    ).returning();
+
+    // ── Stores ────────────────────────────────────────────────────────────────
+    console.log('Seeding stores...');
+    const storeNames = [
+      { name: 'Склад Цэнтральны', location: 'Мінск, пр-т Незалежнасці, 95', phone: '+375171000001', workingHours: 'Пн-Пт 9-18' },
+      { name: 'Склад Паўночны', location: 'Мінск, пр-т Пераможцаў, 23', phone: '+375171000002', workingHours: 'Пн-Пт 9-18' },
+      { name: 'Склад Паўднёвы', location: 'Мінск, вул. Прытыцкага, 65', phone: '+375171000003', workingHours: 'Пн-Сб 9-17' },
+      { name: 'Склад Гомель', location: 'Гомель, вул. Савецкая, 12', phone: '+375232000001', workingHours: 'Пн-Пт 9-18' },
+      { name: 'Крама запчастак', location: 'Мінск, пр-т Машэрава, 25', phone: '+375171000005', workingHours: 'Пн-Нд 9-20' },
+    ];
+    const createdStores = await dbService.db.insert(stores).values(
+      storeNames.map(s => ({ ...s, tenantId: tenant.id }))
+    ).returning();
+
+    // ── Suppliers ─────────────────────────────────────────────────────────────
+    console.log('Seeding suppliers...');
+    const suppliersData = [
+      { name: 'БелАўтадэталь', contact: 'sales@belavtodetal.by', address: 'Мінск, вул. Прамысловая, 12' },
+      { name: 'ПромАўта', contact: 'info@promavto.by', address: 'Гомель, пр-т Кастрычніка, 45' },
+      { name: 'TechParts BY', contact: 'orders@techparts.by', address: 'Брэст, вул. Маскоўская, 22' },
+      { name: 'Фенікс Аўта', contact: 'fenix@feniksavto.by', address: 'Гродна, вул. Савецкая, 7' },
+      { name: 'МэгаЗапчасткі', contact: 'mega@megazap.by', address: 'Мінск, пр-т Партызанскі, 118' },
+      { name: 'AutoParts Pro BY', contact: 'pro@autopartspro.by', address: 'Магілёў, вул. Першамайская, 34' },
+      { name: 'Бош Аўта Сэрвіс', contact: 'supply@bosch-as.by', address: 'Мінск, вул. Нямігa, 11' },
+      { name: 'АрыгінальЗапчасткі', contact: 'original@origzap.by', address: 'Віцебск, вул. Леніна, 9' },
+    ];
+    const createdSuppliers = await dbService.db.insert(suppliers).values(
+      suppliersData.map(s => ({ ...s, tenantId: tenant.id }))
+    ).returning();
+
+    // ── Spare part categories ─────────────────────────────────────────────────
+    console.log('Seeding part categories...');
+    const partCatsData = [
+      { name: 'Масла и жидкости', description: 'Моторные масла, антифризы, тормозные жидкости' },
+      { name: 'Фильтры', description: 'Масляные, воздушные, топливные фильтры' },
+      { name: 'Тормозная система', description: 'Колодки, диски, суппорты' },
+      { name: 'Подвеска', description: 'Амортизаторы, пружины, сайлентблоки' },
+      { name: 'Электрика', description: 'Аккумуляторы, генераторы, стартеры' },
+      { name: 'Двигатель', description: 'Прокладки, фильтры, свечи' },
+      { name: 'Кузов', description: 'Бамперы, крылья, молдинги' },
+      { name: 'Шины и диски', description: 'Летние и зимние шины, литые и штампованные диски' },
+    ];
+    const createdPartCats = await dbService.db.insert(categories).values(
+      partCatsData.map(c => ({ ...c, tenantId: tenant.id }))
+    ).returning();
+
+    // ── Spare parts ───────────────────────────────────────────────────────────
+    console.log('Seeding spare parts (50)...');
+    const sparePartsData = [
+      // Масла и жидкости
+      { name: 'Масло моторное 5W-30 (4л)', partNumber: 'OIL-5W30-4L', price: '1890', catIdx: 0 },
+      { name: 'Масло моторное 5W-40 (4л)', partNumber: 'OIL-5W40-4L', price: '1990', catIdx: 0 },
+      { name: 'Масло трансмиссионное ATF (1л)', partNumber: 'OIL-ATF-1L', price: '650', catIdx: 0 },
+      { name: 'Антифриз G12 (1л)', partNumber: 'COOL-G12-1L', price: '320', catIdx: 0 },
+      { name: 'Жидкость тормозная DOT4 (0.5л)', partNumber: 'BRK-DOT4-05', price: '280', catIdx: 0 },
+      // Фильтры
+      { name: 'Фильтр масляный (универсальный)', partNumber: 'FLT-OIL-UNI', price: '380', catIdx: 1 },
+      { name: 'Фильтр воздушный Toyota Camry', partNumber: 'FLT-AIR-CAM', price: '520', catIdx: 1 },
+      { name: 'Фильтр воздушный BMW X5', partNumber: 'FLT-AIR-BMW', price: '890', catIdx: 1 },
+      { name: 'Фильтр топливный (бензин)', partNumber: 'FLT-FUEL-GAS', price: '480', catIdx: 1 },
+      { name: 'Фильтр салонный угольный', partNumber: 'FLT-CAB-COAL', price: '620', catIdx: 1 },
+      // Тормозная система
+      { name: 'Колодки тормозные передние (Toyota)', partNumber: 'BRK-PAD-TOY-F', price: '1250', catIdx: 2 },
+      { name: 'Колодки тормозные задние (Toyota)', partNumber: 'BRK-PAD-TOY-R', price: '950', catIdx: 2 },
+      { name: 'Диск тормозной передний (BMW)', partNumber: 'BRK-DSC-BMW-F', price: '3200', catIdx: 2 },
+      { name: 'Диск тормозной задний (Kia)', partNumber: 'BRK-DSC-KIA-R', price: '2400', catIdx: 2 },
+      { name: 'Суппорт тормозной левый', partNumber: 'BRK-CAL-L', price: '4500', catIdx: 2 },
+      // Подвеска
+      { name: 'Амортизатор передний (Hyundai)', partNumber: 'SUS-SHK-HYN-F', price: '3800', catIdx: 3 },
+      { name: 'Амортизатор задний (Kia)', partNumber: 'SUS-SHK-KIA-R', price: '3200', catIdx: 3 },
+      { name: 'Шаровая опора нижняя', partNumber: 'SUS-BALL-LW', price: '890', catIdx: 3 },
+      { name: 'Рулевой наконечник правый', partNumber: 'SUS-TIE-R', price: '650', catIdx: 3 },
+      { name: 'Сайлентблок передний', partNumber: 'SUS-BUSH-F', price: '420', catIdx: 3 },
+      { name: 'Пружина подвески передняя', partNumber: 'SUS-SPR-F', price: '1850', catIdx: 3 },
+      // Электрика
+      { name: 'Аккумулятор 60Ah 12V', partNumber: 'EL-BAT-60', price: '5200', catIdx: 4 },
+      { name: 'Аккумулятор 75Ah 12V', partNumber: 'EL-BAT-75', price: '6800', catIdx: 4 },
+      { name: 'Генератор 90A', partNumber: 'EL-ALT-90', price: '9500', catIdx: 4 },
+      { name: 'Стартер (Toyota)', partNumber: 'EL-STR-TOY', price: '7200', catIdx: 4 },
+      { name: 'Свеча зажигания (комплект 4шт)', partNumber: 'EL-PLUG-4', price: '1200', catIdx: 5 },
+      // Двигатель
+      { name: 'Прокладка ГБЦ (Toyota 1AZ)', partNumber: 'ENG-GSK-1AZ', price: '2800', catIdx: 5 },
+      { name: 'Комплект ГРМ (BMW N52)', partNumber: 'ENG-TIM-N52', price: '8500', catIdx: 5 },
+      { name: 'Натяжитель ремня ГРМ', partNumber: 'ENG-TNS-UNI', price: '1800', catIdx: 5 },
+      { name: 'Помпа охлаждения (Toyota)', partNumber: 'ENG-WPM-TOY', price: '2400', catIdx: 5 },
+      // Кузов
+      { name: 'Бампер передний Toyota Camry (грунт.)', partNumber: 'BDY-BMP-CAM-F', price: '12000', catIdx: 6 },
+      { name: 'Крыло переднее левое BMW X5', partNumber: 'BDY-FND-BMW-FL', price: '18000', catIdx: 6 },
+      // Шины
+      { name: 'Шина лет. 205/55 R16 Michelin', partNumber: 'TYR-MSH-20555-16', price: '4800', catIdx: 7 },
+      { name: 'Шина лет. 225/45 R17 Bridgestone', partNumber: 'TYR-BST-22545-17', price: '5600', catIdx: 7 },
+      { name: 'Шина зим. 205/55 R16 Nokian', partNumber: 'TYR-NOK-20555-16', price: '5200', catIdx: 7 },
+      { name: 'Диск литой R17 5x114.3', partNumber: 'WHL-ALY-R17', price: '7500', catIdx: 7 },
+    ];
+    const createdParts = await dbService.db.insert(spareParts).values(
+      sparePartsData.map(p => ({
+        name: p.name,
+        partNumber: p.partNumber,
+        price: p.price,
+        categoryId: createdPartCats[p.catIdx].id,
+        tenantId: tenant.id,
+      }))
+    ).returning();
+
+    // ── SparePartStore ─────────────────────────────────────────────────────────
+    console.log('Seeding spare part stock...');
+    const sparePartStoreData: typeof sparePartStore.$inferInsert[] = [];
+    for (let i = 0; i < createdParts.length; i++) {
+      const numStores = rnd(1, 3);
+      const usedStores = new Set<string>();
+      for (let j = 0; j < numStores; j++) {
+        const store = createdStores[rnd(0, createdStores.length - 1)];
+        if (!usedStores.has(store.id)) {
+          usedStores.add(store.id);
+          sparePartStoreData.push({
+            sparePartId: createdParts[i].id,
+            storeId: store.id,
+            quantity: rnd(5, 100),
+            tenantId: tenant.id,
+          });
+        }
+      }
     }
+    await dbService.db.insert(sparePartStore).values(sparePartStoreData);
 
-    // Create payments (для оплаченных заказов)
-    const paymentsData: Array<{
-      orderId: string;
-      amount: string;
-      status: 'paid' | 'pending' | 'failed' | 'refunded';
-      paymentMethod: string;
-      paymentDate: Date;
-    }> = [];
-    for (let i = 0; i < createdOrders.length; i++) {
-      const order = createdOrders[i];
-      // Примерно 70% заказов оплачены
-      if (i % 10 < 7) {
-        const orderServices = servicesOrdersData.filter(
-          so => so.orderId === order.id
-        );
-        const orderParts = sparePartOrdersData.filter(
-          spo => spo.ordersId === order.id
-        );
-        let totalAmount = 0;
+    // ── PositionsForBuying + Invoices ─────────────────────────────────────────
+    console.log('Seeding purchase orders...');
+    const pfbToInsert: typeof positionsForBuying.$inferInsert[] = [];
+    for (let i = 0; i < 30; i++) {
+      pfbToInsert.push({
+        supplierId: createdSuppliers[i % createdSuppliers.length].id,
+        quantity: rnd(20, 200),
+        deliveryDate: i < 15 ? pastDate(rnd(10, 180)) : futureDate(rnd(5, 60)),
+        status: pick(['pending', 'delivered', 'in_transit']),
+        tenantId: tenant.id,
+      });
+    }
+    const createdPfb = await dbService.db.insert(positionsForBuying).values(pfbToInsert).returning();
 
-        orderServices.forEach(so => {
-          const service = createdServices.find(s => s.id === so.servicesId);
-          if (service) {
-            totalAmount += service.price * so.quantity;
-          }
-        });
-
-        orderParts.forEach(spo => {
-          const part = createdSpareParts.find(sp => sp.id === spo.sparePartId);
-          if (part) {
-            totalAmount += parseFloat(part.price.toString()) * spo.quantity;
-          }
-        });
-
-        paymentsData.push({
-          orderId: order.id,
-          amount: totalAmount.toString(),
-          status: i % 3 === 0 ? 'pending' : 'paid', // Большинство оплачено
-          paymentMethod: ['cash', 'card', 'online'][i % 3],
-          paymentDate: new Date(
-            order.createdAt.getTime() + 24 * 60 * 60 * 1000
-          ), // На следующий день
+    const invoicesToInsert: typeof invoices.$inferInsert[] = [];
+    for (let i = 0; i < createdPfb.length; i++) {
+      if (i % 3 !== 2) {
+        const part = createdParts[i % createdParts.length];
+        invoicesToInsert.push({
+          positionForBuyingId: createdPfb[i].id,
+          amount: (parseFloat(part.price) * createdPfb[i].quantity).toString(),
+          invoiceDate: pastDate(rnd(1, 120)),
+          status: pick(['paid', 'paid', 'pending', 'overdue']),
+          tenantId: tenant.id,
         });
       }
     }
-    if (paymentsData.length > 0) {
-      await dbService.db.insert(payments).values(paymentsData);
-    }
+    await dbService.db.insert(invoices).values(invoicesToInsert);
 
-    // Create work schedules for employees
-    const workSchedulesData: Array<{
-      employeeId: string;
-      startTime: Date;
-      endTime: Date;
-      isAvailable: boolean;
-    }> = [];
-    for (let i = 0; i < createdEmployees.length; i++) {
-      const employee = createdEmployees[i];
-      // Каждый сотрудник имеет 2-3 записи расписания
-      const numSchedules = 2 + (i % 2);
-      for (let j = 0; j < numSchedules; j++) {
-        const startDate = new Date(2024, 0, 1 + j * 7);
-        startDate.setHours(9 + (j % 2) * 4, 0, 0, 0);
-        const endDate = new Date(startDate);
-        endDate.setHours(startDate.getHours() + 8);
-
-        workSchedulesData.push({
-          employeeId: employee.id,
-          startTime: startDate,
-          endTime: endDate,
-          isAvailable: j % 3 !== 0, // Большинство доступны
-        });
-      }
-    }
-    await dbService.db.insert(workSchedules).values(workSchedulesData);
-
-    // Create subscriptions for customers
-    const subscriptionsData: Array<{
-      userId: string;
-      employeeId?: string;
-      subscriptionName: string;
-      subscriptionDescription: string;
-      dateStart: Date;
-      dateEnd: Date;
-    }> = [];
-    const customerUsers = createdUsers.filter(
-      u => u.roleId === customerRole.id
-    );
+    // ── Cars ──────────────────────────────────────────────────────────────────
+    console.log('Seeding cars...');
+    const carsToInsert: typeof cars.$inferInsert[] = [];
     for (let i = 0; i < customerUsers.length; i++) {
-      const user = customerUsers[i];
-      const startDate = new Date(2024, 0, 1 + i * 10);
+      const numCars = i % 5 === 0 ? 2 : 1;
+      for (let j = 0; j < numCars; j++) {
+        const brand = CAR_MODELS[(i + j) % CAR_MODELS.length];
+        const model = brand.models[(i + j) % brand.models.length];
+        const year = 2010 + ((i + j) % 14);
+        carsToInsert.push({
+          userId: customerUsers[i].id,
+          brand: brand.brand,
+          model,
+          information: `${brand.brand} ${model} ${year}, бензин`,
+          year,
+          vin: `VIN${String(i * 2 + j).padStart(12, '0')}`,
+          licensePlate: `${String.fromCharCode(65 + (i % 26))}${String(100 + i + j).slice(1)}${String.fromCharCode(65 + ((i + 3) % 26))}${String.fromCharCode(65 + ((i + 6) % 26))} 77`,
+        });
+      }
+    }
+    const createdCars = await dbService.db.insert(cars).values(carsToInsert).returning();
+
+    // ── Branches ──────────────────────────────────────────────────────────────
+    console.log('Seeding branches...');
+    const branchesData = [
+      { name: 'Цэнтральны філіял', address: 'Мінск, пр-т Незалежнасці, 95', city: 'Мінск', phone: '+375171234567', email: 'central@avtoservis.by', workingHours: 'Пн-Сб 9-21, Нд 10-18' },
+      { name: 'Паўночны філіял', address: 'Мінск, пр-т Пераможцаў, 23', city: 'Мінск', phone: '+375171234568', email: 'north@avtoservis.by', workingHours: 'Пн-Сб 9-20' },
+      { name: 'Паўднёвы філіял', address: 'Мінск, вул. Прытыцкага, 65', city: 'Мінск', phone: '+375171234569', email: 'south@avtoservis.by', workingHours: 'Пн-Сб 9-20' },
+      { name: 'Гомельскі філіял', address: 'Гомель, вул. Савецкая, 12', city: 'Гомель', phone: '+375232345670', email: 'gomel@avtoservis.by', workingHours: 'Пн-Пт 9-19' },
+      { name: 'Брэсцкі філіял', address: 'Брэст, вул. Маскоўская, 80', city: 'Брэст', phone: '+375162345671', email: 'brest@avtoservis.by', workingHours: 'Пн-Пт 9-19' },
+    ];
+    const createdBranches = await dbService.db.insert(branches).values(
+      branchesData.map((b, i) => ({
+        ...b,
+        managerId: managerUsers[i % managerUsers.length].id,
+        isActive: true,
+      }))
+    ).returning();
+
+    // Branch employees
+    const branchEmpData: typeof branchEmployees.$inferInsert[] = [];
+    for (let i = 0; i < createdEmployees.length; i++) {
+      branchEmpData.push({
+        branchId: createdBranches[i % createdBranches.length].id,
+        employeeId: createdEmployees[i].id,
+        isPrimary: i % 3 === 0,
+      });
+    }
+    await dbService.db.insert(branchEmployees).values(branchEmpData);
+
+    // ── Store Transfers ────────────────────────────────────────────────────────
+    console.log('Seeding store transfers...');
+    const transfersData: typeof storeTransfers.$inferInsert[] = [];
+    for (let i = 0; i < 20; i++) {
+      const fromIdx = i % createdStores.length;
+      const toIdx = (i + 1) % createdStores.length;
+      transfersData.push({
+        fromStoreId: createdStores[fromIdx].id,
+        toStoreId: createdStores[toIdx].id,
+        sparePartId: createdParts[i % createdParts.length].id,
+        quantity: rnd(5, 50),
+        status: pick(['pending', 'in_transit', 'completed', 'completed', 'completed']),
+        initiatedById: adminUser.id,
+        notes: `Перемещение партии #${i + 1}`,
+      });
+    }
+    await dbService.db.insert(storeTransfers).values(transfersData);
+
+    // ── Time Slots ────────────────────────────────────────────────────────────
+    console.log('Seeding time slots...');
+    const timeSlotsData: typeof timeSlots.$inferInsert[] = [];
+    for (let empIdx = 0; empIdx < Math.min(10, createdEmployees.length); empIdx++) {
+      for (let day = -7; day <= 14; day++) {
+        for (let slot = 0; slot < 4; slot++) {
+          const slotDate = new Date();
+          slotDate.setDate(slotDate.getDate() + day);
+          slotDate.setHours(9 + slot * 2, 0, 0, 0);
+          const slotEnd = new Date(slotDate);
+          slotEnd.setHours(slotDate.getHours() + 2);
+          timeSlotsData.push({
+            employeeId: createdEmployees[empIdx].id,
+            date: slotDate,
+            startTime: slotDate,
+            endTime: slotEnd,
+            isBooked: day < 0 ? true : Math.random() > 0.6,
+          });
+        }
+      }
+    }
+    const createdTimeSlots = await dbService.db.insert(timeSlots).values(timeSlotsData).returning();
+
+    // ── Orders ────────────────────────────────────────────────────────────────
+    console.log('Seeding orders (400)...');
+    const statuses = ['pending', 'in_progress', 'completed', 'completed', 'completed', 'cancelled'];
+    const ordersToInsert: typeof orders.$inferInsert[] = [];
+    for (let i = 0; i < 400; i++) {
+      const custIdx = i % customerUsers.length;
+      const custCars = createdCars.filter(c => c.userId === customerUsers[custIdx].id);
+      ordersToInsert.push({
+        userId: customerUsers[custIdx].id,
+        carId: custCars[i % custCars.length].id,
+        employeeId: createdEmployees[i % createdEmployees.length].id,
+        status: pickIdx(statuses, i),
+        createdAt: pastDate(rnd(0, 365)),
+        completedAt: i % 3 !== 2 ? pastDate(rnd(0, 30)) : undefined,
+      });
+    }
+    const createdOrders = await dbService.db.insert(orders).values(ordersToInsert).returning();
+
+    // Services for orders
+    const servicesOrdersData: typeof servicesOrders.$inferInsert[] = [];
+    for (let i = 0; i < createdOrders.length; i++) {
+      const count = rnd(1, 4);
+      const usedSvc = new Set<string>();
+      for (let j = 0; j < count; j++) {
+        const svc = createdServices[(i * 3 + j) % createdServices.length];
+        if (!usedSvc.has(svc.id)) {
+          usedSvc.add(svc.id);
+          servicesOrdersData.push({ orderId: createdOrders[i].id, servicesId: svc.id, quantity: 1 });
+        }
+      }
+    }
+    await dbService.db.insert(servicesOrders).values(servicesOrdersData);
+
+    // Spare parts for orders
+    const sparePartOrdersData: typeof sparePartOrders.$inferInsert[] = [];
+    for (let i = 0; i < createdOrders.length; i++) {
+      if (i % 2 === 0) {
+        const count = rnd(1, 3);
+        const usedParts = new Set<string>();
+        for (let j = 0; j < count; j++) {
+          const part = createdParts[(i * 2 + j) % createdParts.length];
+          if (!usedParts.has(part.id)) {
+            usedParts.add(part.id);
+            sparePartOrdersData.push({ ordersId: createdOrders[i].id, sparePartId: part.id, quantity: rnd(1, 4) });
+          }
+        }
+      }
+    }
+    await dbService.db.insert(sparePartOrders).values(sparePartOrdersData);
+
+    // Payments
+    const paymentsData: typeof payments.$inferInsert[] = [];
+    for (let i = 0; i < createdOrders.length; i++) {
+      const ord = createdOrders[i];
+      if (ord.status === 'completed' || (ord.status === 'pending' && i % 4 === 0)) {
+        const svcTotal = servicesOrdersData
+          .filter(so => so.orderId === ord.id)
+          .reduce((sum, so) => {
+            const svc = createdServices.find(s => s.id === so.servicesId);
+            return sum + (svc ? Number(svc.price) : 0);
+          }, 0);
+        const partsTotal = sparePartOrdersData
+          .filter(spo => spo.ordersId === ord.id)
+          .reduce((sum, spo) => {
+            const part = createdParts.find(p => p.id === spo.sparePartId);
+            return sum + (part ? parseFloat(part.price) * (spo.quantity ?? 1) : 0);
+          }, 0);
+        paymentsData.push({
+          orderId: ord.id,
+          amount: (svcTotal + partsTotal || rnd(500, 15000)).toString(),
+          status: ord.status === 'completed' ? 'paid' : pick(['pending', 'paid']),
+          paymentMethod: pick(['cash', 'card', 'online', 'card', 'online']),
+          paymentDate: ord.createdAt ? new Date(ord.createdAt.getTime() + rnd(1, 5) * 86400000) : new Date(),
+        });
+      }
+    }
+    await dbService.db.insert(payments).values(paymentsData);
+
+    // ── Appointments ──────────────────────────────────────────────────────────
+    console.log('Seeding appointments...');
+    type ApptStatus = 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
+    const apptStatuses: ApptStatus[] = ['completed', 'completed', 'confirmed', 'pending', 'cancelled', 'no_show'];
+    const apptsData: typeof appointments.$inferInsert[] = [];
+    for (let i = 0; i < 150; i++) {
+      const custIdx = i % customerUsers.length;
+      const custCars = createdCars.filter(c => c.userId === customerUsers[custIdx].id);
+      const slot = createdTimeSlots[i % createdTimeSlots.length];
+      apptsData.push({
+        userId: customerUsers[custIdx].id,
+        carId: custCars[i % custCars.length].id,
+        serviceId: createdServices[i % createdServices.length].id,
+        employeeId: createdEmployees[i % createdEmployees.length].id,
+        timeSlotId: slot.id,
+        status: pickIdx(apptStatuses, i),
+        scheduledAt: slot.startTime,
+        notes: i % 5 === 0 ? 'Просьба позвонить за 30 минут' : undefined,
+        confirmationCode: `APPT${String(1000 + i)}`,
+      });
+    }
+    await dbService.db.insert(appointments).values(apptsData);
+
+    // ── Subscriptions ─────────────────────────────────────────────────────────
+    console.log('Seeding subscriptions...');
+    const subNames = ['Базовый', 'Стандарт', 'Премиум', 'VIP'];
+    const subsData: typeof subscriptions.$inferInsert[] = [];
+    for (let i = 0; i < 60; i++) {
+      const startDate = pastDate(rnd(30, 365));
       const endDate = new Date(startDate);
-      endDate.setMonth(endDate.getMonth() + 6); // Подписка на 6 месяцев
-
-      // Первые подписки - на рабочих, остальные - общие
-      const employeeId = i < createdEmployees.length ? createdEmployees[i % createdEmployees.length].id : undefined;
-
-      subscriptionsData.push({
-        userId: user.id,
-        employeeId,
-        subscriptionName: employeeId ? `Подписка на рабочего` : ['Базовый', 'Стандарт', 'Премиум'][i % 3],
-        subscriptionDescription: employeeId 
-          ? `Подписка на рабочего ${createdEmployees[i % createdEmployees.length].name} ${createdEmployees[i % createdEmployees.length].surName}`
-          : `Подписка ${['Базовый', 'Стандарт', 'Премиум'][i % 3]} для ${user.name}`,
+      endDate.setMonth(endDate.getMonth() + (3 * ((i % 4) + 1)));
+      subsData.push({
+        userId: customerUsers[i % customerUsers.length].id,
+        employeeId: i % 3 === 0 ? createdEmployees[i % createdEmployees.length].id : undefined,
+        subscriptionName: pickIdx(subNames, i),
+        subscriptionDescription: `Подписка ${pickIdx(subNames, i)} — скидки, приоритетная запись`,
         dateStart: startDate,
         dateEnd: endDate,
       });
     }
-    await dbService.db.insert(subscriptions).values(subscriptionsData);
+    await dbService.db.insert(subscriptions).values(subsData);
 
-    // Create reviews for customers
-    const reviewsData: Array<{
-      userId: string;
-      employeeId?: string;
-      description: string;
-      rate: number;
-      createdAt: Date;
-    }> = [];
-    for (let i = 0; i < customerUsers.length; i++) {
-      const user = customerUsers[i];
-      // Каждый клиент может иметь 0-2 отзыва
-      const numReviews = i % 3;
-      for (let j = 0; j < numReviews; j++) {
-        // Часть отзывов на рабочих, часть общие
-        const employeeId = j === 0 && i < createdEmployees.length 
-          ? createdEmployees[i % createdEmployees.length].id 
-          : undefined;
-        
-        reviewsData.push({
-          userId: user.id,
-          employeeId,
-          description: employeeId
-            ? `Отличный рабочий! ${['Очень доволен работой', 'Рекомендую', 'Профессионал'][j]}`
-            : `Отличный сервис! ${['Очень доволен', 'Рекомендую', 'Все понравилось'][j]}`,
-          rate: 4 + (j % 2), // Рейтинг 4-5
-          createdAt: new Date(2024, 0, 15 + i * 5 + j),
-        });
-      }
-    }
-    if (reviewsData.length > 0) {
-      await dbService.db.insert(reviews).values(reviewsData);
-    }
-
-    // Create positions for buying (для отчёта по складам)
-    const positionsForBuyingData: Array<{
-      supplierId: string;
-      quantity: number;
-      deliveryDate: Date;
-      status: string;
-    }> = [];
-    for (let i = 0; i < createdSpareParts.length; i++) {
-      const supplier = createdSuppliers[i % createdSuppliers.length];
-
-      positionsForBuyingData.push({
-        supplierId: supplier.id,
-        quantity: 50 + i * 10,
-        deliveryDate: new Date(2024, 0, 10 + i * 5),
-        status:
-          i % 3 === 0 ? 'pending' : i % 3 === 1 ? 'delivered' : 'in_transit',
+    // ── Reviews ───────────────────────────────────────────────────────────────
+    console.log('Seeding reviews...');
+    const reviewTexts = [
+      'Отличный сервис! Всё быстро и качественно.',
+      'Мастера профессионалы, буду обращаться ещё.',
+      'Приятно удивлён качеством работы.',
+      'Хороший сервис, но немного долго ждал.',
+      'Рекомендую! Всё сделали в срок.',
+      'Нашли проблему, которую другие пропускали.',
+      'Вежливый персонал, чисто в цеху.',
+      'Цены приемлемые, качество отличное.',
+    ];
+    const reviewsData: typeof reviews.$inferInsert[] = [];
+    for (let i = 0; i < 120; i++) {
+      reviewsData.push({
+        userId: customerUsers[i % customerUsers.length].id,
+        employeeId: i % 2 === 0 ? createdEmployees[i % createdEmployees.length].id : undefined,
+        description: pickIdx(reviewTexts, i),
+        rate: rnd(3, 5),
+        createdAt: pastDate(rnd(0, 300)),
       });
     }
-    const createdPositionsForBuying = await dbService.db
-      .insert(positionsForBuying)
-      .values(positionsForBuyingData)
-      .returning();
+    await dbService.db.insert(reviews).values(reviewsData);
 
-    // Create invoices (для оплаченных позиций)
-    const invoicesData: Array<{
-      positionForBuyingId: string;
-      amount: string;
-      status: string;
-      invoiceDate: Date;
-    }> = [];
-    for (let i = 0; i < createdPositionsForBuying.length; i++) {
-      const position = createdPositionsForBuying[i];
-      // Примерно 60% позиций оплачены
-      if (i % 5 < 3) {
-        const sparePart = createdSpareParts[i % createdSpareParts.length];
-        const amount =
-          parseFloat(sparePart.price.toString()) * position.quantity;
+    // ── Discounts ─────────────────────────────────────────────────────────────
+    console.log('Seeding discounts...');
+    const discountsData: typeof discounts.$inferInsert[] = [
+      { code: 'WELCOME10', name: 'Скидка новичка', type: 'percent', value: '10', isActive: true, startDate: pastDate(180), endDate: futureDate(180), maxUsageCount: 500 },
+      { code: 'SUMMER20', name: 'Летняя акция', type: 'percent', value: '20', isActive: true, startDate: pastDate(30), endDate: futureDate(60) },
+      { code: 'FIXED500', name: 'Скидка 500 руб', type: 'fixed', value: '500', isActive: true, minOrderAmount: '3000' },
+      { code: 'VIP15', name: 'VIP скидка', type: 'percent', value: '15', isActive: true },
+      { code: 'WINTER25', name: 'Зимняя акция 25%', type: 'percent', value: '25', isActive: false, startDate: pastDate(120), endDate: pastDate(30) },
+      { code: 'BDAY', name: 'День рождения', type: 'percent', value: '12', isActive: true },
+    ];
+    const createdDiscounts = await dbService.db.insert(discounts).values(discountsData).returning();
 
-        invoicesData.push({
-          positionForBuyingId: position.id,
-          amount: amount.toString(),
-          status: 'paid',
-          invoiceDate: new Date(
-            position.deliveryDate.getTime() - 7 * 24 * 60 * 60 * 1000
-          ), // За неделю до доставки
+    // Order discounts for some completed orders
+    const completedOrders = createdOrders.filter(o => o.status === 'completed').slice(0, 40);
+    if (completedOrders.length > 0) {
+      await dbService.db.insert(orderDiscounts).values(
+        completedOrders.map((o, i) => ({
+          orderId: o.id,
+          discountId: createdDiscounts[i % createdDiscounts.length].id,
+          appliedAmount: (rnd(200, 2000)).toString(),
+        }))
+      );
+    }
+
+    // ── Loyalty Programs ──────────────────────────────────────────────────────
+    console.log('Seeding loyalty programs...');
+    const tiers = ['bronze', 'bronze', 'bronze', 'silver', 'silver', 'gold', 'platinum'] as const;
+    const loyaltyData: typeof loyaltyPrograms.$inferInsert[] = customerUsers.slice(0, 100).map((u, i) => ({
+      userId: u.id,
+      points: rnd(0, 5000),
+      tier: tiers[i % tiers.length],
+      totalEarned: rnd(500, 20000),
+      totalSpent: rnd(0, 5000),
+    }));
+    const createdLoyalty = await dbService.db.insert(loyaltyPrograms).values(loyaltyData).returning();
+
+    const loyaltyTxData: typeof loyaltyTransactions.$inferInsert[] = [];
+    for (let i = 0; i < createdLoyalty.length; i++) {
+      const numTx = rnd(2, 8);
+      for (let j = 0; j < numTx; j++) {
+        loyaltyTxData.push({
+          programId: createdLoyalty[i].id,
+          orderId: j < createdOrders.length ? createdOrders[(i * 3 + j) % createdOrders.length].id : undefined,
+          type: pick(['earn', 'earn', 'earn', 'spend', 'bonus']),
+          points: rnd(50, 500),
+          description: pick(['Начисление за заказ', 'Списание на скидку', 'Бонус дня рождения', 'Акционные баллы']),
+          createdAt: pastDate(rnd(1, 365)),
         });
       }
     }
-    if (invoicesData.length > 0) {
-      await dbService.db.insert(invoices).values(invoicesData);
+    await dbService.db.insert(loyaltyTransactions).values(loyaltyTxData);
+
+    // ── Warranties ────────────────────────────────────────────────────────────
+    console.log('Seeding warranties...');
+    const completedOrdersAll = createdOrders.filter(o => o.status === 'completed');
+    const warrantiesData: typeof warranties.$inferInsert[] = completedOrdersAll.slice(0, 80).map((o, i) => {
+      const issuedAt = o.completedAt ?? pastDate(rnd(30, 200));
+      const expires = new Date(issuedAt);
+      expires.setMonth(expires.getMonth() + (3 * (1 + (i % 4))));
+      return {
+        orderId: o.id,
+        sparePartId: i % 2 === 0 ? createdParts[i % createdParts.length].id : undefined,
+        type: pick(['work', 'spare_part', 'complex']),
+        status: (expires > new Date() ? 'active' : pick(['expired', 'claimed'])) as 'active' | 'expired' | 'claimed',
+        description: `Гарантия на выполненные работы по заказу`,
+        durationMonths: 3 * (1 + (i % 4)),
+        issuedAt,
+        expiresAt: expires,
+      };
+    });
+    const createdWarranties = await dbService.db.insert(warranties).values(warrantiesData).returning();
+
+    // Warranty claims for some warranties
+    const claimableWarranties = createdWarranties.filter(w => w.status === 'claimed' || w.status === 'active').slice(0, 15);
+    if (claimableWarranties.length > 0) {
+      await dbService.db.insert(warrantyClaims).values(
+        claimableWarranties.map((w, i) => ({
+          warrantyId: w.id,
+          userId: customerUsers[i % customerUsers.length].id,
+          description: pick(['Повторилась та же неисправность', 'Запчасть вышла из строя', 'Появился шум после ремонта']),
+          status: pick(['open', 'under_review', 'approved', 'resolved'] as const),
+          resolution: i % 2 === 0 ? 'Принято в работу, запланирован повторный ремонт' : null,
+          createdAt: pastDate(rnd(1, 60)),
+        }))
+      );
     }
 
-    console.log('Database seeded successfully!');
-    console.log(
-      `Created: ${createdUsers.length} users, ${createdEmployees.length} employees, ${createdServices.length} services, ${createdSuppliers.length} suppliers, ${createdSpareParts.length} spare parts, ${createdOrders.length} orders, ${paymentsData.length} payments, ${workSchedulesData.length} work schedules, ${subscriptionsData.length} subscriptions, ${reviewsData.length} reviews`
+    // ── Companies (Corporate clients) ─────────────────────────────────────────
+    console.log('Seeding companies...');
+    const companiesData: typeof companies.$inferInsert[] = [
+      { name: 'ООО "БелЛагістык"', inn: 'BY193456781', address: 'Мінск, вул. Прамысловая, 1', city: 'Мінск', contactPerson: 'Карповіч А.В.', phone: '+375291234001', email: 'fleet@bellogistic.by', managerUserId: managerUsers[0].id },
+      { name: 'ОАО "МінскТранс"', inn: 'BY192356789', address: 'Мінск, пр-т Партызанскі, 87', city: 'Мінск', contactPerson: 'Глінскі Б.І.', phone: '+375291234002', email: 'auto@minsktrans.by', managerUserId: managerUsers[1].id },
+      { name: 'ІП Хадасевіч В.С.', inn: 'BY190034561', address: 'Гомель, вул. Ленiна, 5', city: 'Гомель', contactPerson: 'Хадасевіч В.С.', phone: '+375291234003', email: 'hadas@tut.by', managerUserId: managerUsers[0].id },
+      { name: 'ООО "ТрансАўта"', inn: 'BY191234567', address: 'Брэст, вул. Маскоўская, 112', city: 'Брэст', contactPerson: 'Сіманович В.Г.', phone: '+375291234004', email: 'transavto@corp.by', managerUserId: managerUsers[2].id },
+      { name: 'ЗАО "АўтаПарк Плюс"', inn: 'BY193456780', address: 'Мінск, вул. Прытыцкага, 55', city: 'Мінск', contactPerson: 'Купрэйчык К.Д.', phone: '+375291234005', email: 'avtopark@corp.by', managerUserId: managerUsers[3].id },
+    ];
+    const createdCompanies = await dbService.db.insert(companies).values(companiesData).returning();
+
+    await dbService.db.insert(companyContracts).values(
+      createdCompanies.map((c, i) => ({
+        companyId: c.id,
+        contractNumber: `ДАГ-2024-${String(100 + i).padStart(3, '0')}`,
+        status: pick(['active', 'active', 'active', 'suspended', 'draft']) as 'active' | 'suspended' | 'draft',
+        discountPercent: pick(['5.00', '7.50', '10.00', '12.00', '15.00']),
+        creditLimit: pick(['50000.00', '100000.00', '200000.00', '500000.00']),
+        paymentTermDays: pick(['14', '30', '45']),
+        startDate: pastDate(rnd(30, 365)),
+        endDate: futureDate(rnd(30, 365)),
+        notes: `Корпоративный договор на обслуживание парка`,
+      }))
     );
+
+    // Assign some cars to companies
+    const companyCarsData: typeof companyCars.$inferInsert[] = [];
+    for (let i = 0; i < createdCompanies.length; i++) {
+      const count = rnd(3, 8);
+      for (let j = 0; j < count; j++) {
+        const carIdx = (i * 5 + j) % createdCars.length;
+        companyCarsData.push({
+          companyId: createdCompanies[i].id,
+          carId: createdCars[carIdx].id,
+          notes: `Автомобиль парка компании`,
+        });
+      }
+    }
+    // Remove duplicate (companyId, carId) pairs
+    const uniqueCompanyCars = Array.from(
+      new Map(companyCarsData.map(cc => [`${cc.companyId}:${cc.carId}`, cc])).values()
+    );
+    await dbService.db.insert(companyCars).values(uniqueCompanyCars);
+
+    // ── Summary ───────────────────────────────────────────────────────────────
+    console.log('\n✅ Seed completed!');
+    console.log(`  Users:           ${createdUsers.length} (1 admin, 4 managers, ${customerUsers.length} customers)`);
+    console.log(`  Employees:       ${createdEmployees.length}`);
+    console.log(`  Services:        ${createdServices.length}`);
+    console.log(`  Spare parts:     ${createdParts.length}`);
+    console.log(`  Stores:          ${createdStores.length}`);
+    console.log(`  Suppliers:       ${createdSuppliers.length}`);
+    console.log(`  Cars:            ${createdCars.length}`);
+    console.log(`  Branches:        ${createdBranches.length}`);
+    console.log(`  Orders:          ${createdOrders.length}`);
+    console.log(`  Payments:        ${paymentsData.length}`);
+    console.log(`  Appointments:    ${apptsData.length}`);
+    console.log(`  Warranties:      ${warrantiesData.length}`);
+    console.log(`  Loyalty users:   ${createdLoyalty.length}`);
+    console.log(`  Companies:       ${createdCompanies.length}`);
+    console.log('\n  Login: admin@avtoservis.by / password123');
+    console.log('  Login: user1@tut.by       / password123');
+
   } catch (error: unknown) {
-    console.error('Error seeding database:', error);
+    console.error('Seed failed:', error);
     throw error;
   } finally {
     await dbService.close();

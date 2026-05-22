@@ -52,7 +52,10 @@ services:
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_NAME: ${DB_NAME:-autoservice_db}
+      LISTEN_PORT: 6432
+      AUTH_TYPE: scram-sha-256
       POOL_MODE: transaction
+      IGNORE_STARTUP_PARAMETERS: search_path
       MAX_CLIENT_CONN: 200
       DEFAULT_POOL_SIZE: 20
     depends_on:
@@ -82,6 +85,46 @@ services:
     networks:
       - internal
 
+  # ── MinIO (S3-compatible local storage) ────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: autoservice_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-minioadmin}
+    volumes:
+      - miniodata:/data
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web console → http://localhost:9001
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - internal
+
+  # ── MinIO bucket init ───────────────────────────────────────────────────────
+  minio-init:
+    image: minio/mc:latest
+    container_name: autoservice_minio_init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set local http://minio:9000 ${AWS_ACCESS_KEY_ID:-minioadmin} ${AWS_SECRET_ACCESS_KEY:-minioadmin};
+        mc mb --ignore-existing local/${AWS_S3_BUCKET:-autoservice};
+        mc anonymous set download local/${AWS_S3_BUCKET:-autoservice};
+        exit 0;
+      "
+    networks:
+      - internal
+
   # ── API Server ──────────────────────────────────────────────────────────────
   server:
     build:
@@ -98,6 +141,8 @@ services:
         condition: service_healthy
       pgbouncer:
         condition: service_started
+      minio:
+        condition: service_healthy
     env_file:
       - ./server/.env
     environment:
@@ -157,6 +202,8 @@ volumes:
   pgdata:
     driver: local
   redisdata:
+    driver: local
+  miniodata:
     driver: local
 
 networks:

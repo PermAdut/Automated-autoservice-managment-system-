@@ -20,7 +20,7 @@ import type { AuthenticatedRequest } from '../AuthModule/types/auth.types';
 
 @ApiTags('Warranty')
 @UseGuards(JwtAuthGuard)
-@Controller('warranty')
+@Controller('api/v1.0/warranty')
 export class WarrantyController {
   constructor(private readonly warrantyService: WarrantyService) {}
 

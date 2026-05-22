@@ -20,6 +20,8 @@ import { Roles } from '../AuthModule/decorators/roles.decorator';
 import { Public } from '../AuthModule/decorators/public.decorator';
 import { CreateSupplierDto } from './Dto/create-supplier.dto';
 import { UpdateSupplierDto } from './Dto/update-supplier.dto';
+import { CreateInvoiceDto } from './Dto/create-invoice.dto';
+import { UpdateInvoiceDto } from './Dto/update-invoice.dto';
 
 @Controller('api/v1.0/supplier')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -71,5 +73,41 @@ export class SupplierController {
   @Roles('admin')
   async deleteSupplier(@Param('id', ParseUUIDPipe) id: string) {
     return await this.supplierService.delete(id);
+  }
+
+  @Get('position/:positionId/invoices')
+  @Public()
+  async getInvoicesByPosition(@Param('positionId', ParseUUIDPipe) positionId: string) {
+    return await this.supplierService.getInvoicesByPosition(positionId);
+  }
+
+  @Get('invoice/:id')
+  @Public()
+  async getInvoiceById(@Param('id', ParseUUIDPipe) id: string) {
+    return await this.supplierService.getInvoiceById(id);
+  }
+
+  @Post('invoice')
+  @HttpCode(201)
+  @Roles('admin', 'manager')
+  async createInvoice(@Body() dto: CreateInvoiceDto) {
+    return await this.supplierService.createInvoice(dto);
+  }
+
+  @Put('invoice/:id')
+  @HttpCode(200)
+  @Roles('admin', 'manager')
+  async updateInvoice(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateInvoiceDto
+  ) {
+    return await this.supplierService.updateInvoice(id, dto);
+  }
+
+  @Delete('invoice/:id')
+  @HttpCode(204)
+  @Roles('admin')
+  async deleteInvoice(@Param('id', ParseUUIDPipe) id: string) {
+    return await this.supplierService.deleteInvoice(id);
   }
 }

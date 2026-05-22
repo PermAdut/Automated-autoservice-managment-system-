@@ -8,11 +8,13 @@ import {
 } from 'drizzle-orm/pg-core';
 import { schema } from '../pgSchema';
 import { orders, reviews, subscriptions, users } from '../schema';
+import { tenantSettings } from './tenant.model';
 
 export const positions = schema.table('Position', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: varchar('name').notNull(),
   description: varchar('description'),
+  tenantId: uuid('tenantId').references(() => tenantSettings.id),
 });
 
 export const employees = schema.table('Employees', {
@@ -27,6 +29,7 @@ export const employees = schema.table('Employees', {
     .references(() => positions.id),
   hireDate: timestamp('hireDate', { mode: 'date' }).defaultNow().notNull(),
   salary: numeric('salary').notNull(),
+  tenantId: uuid('tenantId').references(() => tenantSettings.id),
 });
 
 export const workSchedules = schema.table('WorkSchedule', {
@@ -37,6 +40,7 @@ export const workSchedules = schema.table('WorkSchedule', {
   startTime: timestamp('startTime', { mode: 'date' }).notNull(),
   endTime: timestamp('endTime', { mode: 'date' }).notNull(),
   isAvailable: boolean('isAvailable').default(true).notNull(),
+  tenantId: uuid('tenantId').references(() => tenantSettings.id),
 });
 
 export const positionsRelations = relations(positions, ({ many }) => ({

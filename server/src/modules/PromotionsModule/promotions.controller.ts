@@ -17,7 +17,7 @@ import type { AuthenticatedRequest } from '../AuthModule/types/auth.types';
 
 @ApiTags('Promotions')
 @UseGuards(JwtAuthGuard)
-@Controller('promotions')
+@Controller('api/v1.0/promotions')
 export class PromotionsController {
   constructor(private readonly promotionsService: PromotionsService) {}
 

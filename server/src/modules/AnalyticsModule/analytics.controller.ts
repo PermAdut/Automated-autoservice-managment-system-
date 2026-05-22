@@ -8,7 +8,7 @@ import { Roles } from '../AuthModule/decorators/roles.decorator';
 @ApiTags('Analytics')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin', 'manager')
-@Controller('analytics')
+@Controller('api/v1.0/analytics')
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 

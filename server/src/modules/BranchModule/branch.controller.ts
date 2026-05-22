@@ -17,7 +17,7 @@ import { Roles } from '../AuthModule/decorators/roles.decorator';
 
 @ApiTags('Branches')
 @UseGuards(JwtAuthGuard)
-@Controller('branches')
+@Controller('api/v1.0/branches')
 export class BranchController {
   constructor(private readonly branchService: BranchService) {}
 

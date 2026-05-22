@@ -10,12 +10,14 @@ import {
 } from 'drizzle-orm/pg-core';
 import { schema } from '../pgSchema';
 import { sparePartOrders } from '../schema';
+import { tenantSettings } from './tenant.model';
 
 export const suppliers = schema.table('Suppliers', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: varchar('name', { length: 100 }).notNull(),
   contact: varchar('contact', { length: 100 }),
   address: text('address'),
+  tenantId: uuid('tenantId').references(() => tenantSettings.id),
 });
 
 export const stores = schema.table('Store', {
@@ -24,12 +26,14 @@ export const stores = schema.table('Store', {
   location: varchar('location', { length: 200 }).notNull(),
   phone: varchar('phone', { length: 20 }),
   workingHours: varchar('workingHours', { length: 100 }),
+  tenantId: uuid('tenantId').references(() => tenantSettings.id),
 });
 
 export const categories = schema.table('Categories', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: varchar('name', { length: 50 }).notNull(),
   description: text('description'),
+  tenantId: uuid('tenantId').references(() => tenantSettings.id),
 });
 
 export const spareParts = schema.table('SparePart', {
@@ -40,6 +44,7 @@ export const spareParts = schema.table('SparePart', {
   categoryId: uuid('categoryId')
     .notNull()
     .references(() => categories.id),
+  tenantId: uuid('tenantId').references(() => tenantSettings.id),
 });
 
 export const sparePartStore = schema.table(
@@ -52,6 +57,7 @@ export const sparePartStore = schema.table(
       .notNull()
       .references(() => stores.id),
     quantity: bigint('quantity', { mode: 'number' }).default(1),
+    tenantId: uuid('tenantId').references(() => tenantSettings.id),
   },
   table => ({
     pk: primaryKey({ columns: [table.sparePartId, table.storeId] }),
@@ -68,6 +74,7 @@ export const positionsForBuying = schema.table('PositionsForBuying', {
     .defaultNow()
     .notNull(),
   status: varchar('status', { length: 20 }).notNull(),
+  tenantId: uuid('tenantId').references(() => tenantSettings.id),
 });
 
 export const invoices = schema.table('Invoices', {
@@ -80,6 +87,7 @@ export const invoices = schema.table('Invoices', {
     .defaultNow()
     .notNull(),
   status: varchar('status', { length: 20 }).notNull(),
+  tenantId: uuid('tenantId').references(() => tenantSettings.id),
 });
 
 export const suppliersRelations = relations(suppliers, ({ many }) => ({
