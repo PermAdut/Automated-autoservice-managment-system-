@@ -20,8 +20,8 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/renderer/src/*"]
+      "@/*": ["../frontend/src/*"]
     }
   },
-  "include": ["src/renderer/src"]
+  "include": ["../frontend/src"]
 }

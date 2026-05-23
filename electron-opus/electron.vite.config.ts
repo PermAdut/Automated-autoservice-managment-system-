@@ -7,9 +7,15 @@ export default defineConfig({
   main: {},
   preload: {},
   renderer: {
+    root: resolve("../frontend"),
+    build: {
+      rollupOptions: {
+        input: resolve("../frontend/index.html"),
+      },
+    },
     resolve: {
       alias: {
-        "@": resolve("src/renderer/src"),
+        "@": resolve("../frontend/src"),
       },
     },
     plugins: [react(), tailwindcss()],

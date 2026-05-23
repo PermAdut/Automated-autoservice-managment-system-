@@ -104,17 +104,17 @@ async function seed() {
     console.log('Seeding tenant...');
     const [tenant] = await dbService.db.insert(tenantSettings).values({
       companyName: 'АвтоСервис Про',
-      tagline: 'Надзейны партнёр на дарозе',
-      description: 'Сетка сучасных аўтасэрвісаў у Беларусі. Якасны рамонт, сумленныя цэны.',
+      tagline: 'Надёжный партнёр на дороге',
+      description: 'Сеть современных автосервисов в Беларуси. Качественный ремонт, честные цены.',
       primaryColor: '#1d4ed8',
       secondaryColor: '#0ea5e9',
       accentColor: '#10b981',
-      address: 'г. Мінск, пр-т Незалежнасці, 95',
-      city: 'Мінск',
+      address: 'г. Минск, пр-т Независимости, 95',
+      city: 'Минск',
       country: 'BY',
       phone: '+375-17-200-00-01',
-      email: 'info@avtoservis.by',
-      website: 'https://avtoservis.by',
+      email: 'info.avtoservis@gmail.com',
+      website: 'https://avtoservis.pro',
       workingHours: 'Пн-Сб: 9:00-21:00, Нд: 10:00-18:00',
       currency: 'BYN',
       timezone: 'Europe/Minsk',
@@ -147,25 +147,25 @@ async function seed() {
 
     // Admin
     usersToInsert.push({
-      login: 'admin', name: 'Адміністратар', surName: 'Сістэмны',
-      email: 'admin@avtoservis.by', phone: '+375291000001',
+      login: 'admin', name: 'Администратор', surName: 'Системный',
+      email: 'admin@gmail.com', phone: '+375291000001',
       passwordHash, roleId: adminRole.id, tenantId: tenant.id,
     });
 
     // 4 managers
     const managerLogins = ['manager1', 'manager2', 'manager3', 'manager4'];
     const managerNames = [
-      { name: 'Алег', surName: 'Карповіч' },
-      { name: 'Наталля', surName: 'Сіманович' },
-      { name: 'Віктар', surName: 'Глінскі' },
-      { name: 'Людміла', surName: 'Хадасевіч' },
+      { name: 'Олег', surName: 'Карпов' },
+      { name: 'Наталья', surName: 'Симонова' },
+      { name: 'Виктор', surName: 'Глинский' },
+      { name: 'Людмила', surName: 'Ходасевич' },
     ];
     for (let i = 0; i < 4; i++) {
       usersToInsert.push({
         login: managerLogins[i],
         name: managerNames[i].name,
         surName: managerNames[i].surName,
-        email: `${managerLogins[i]}@avtoservis.by`,
+        email: `${managerLogins[i]}@gmail.com`,
         phone: `+37529100000${i + 2}`,
         passwordHash,
         roleId: managerRole.id,
@@ -185,7 +185,7 @@ async function seed() {
         login,
         name: firstName,
         surName: lastName,
-        email: `${login}@tut.by`,
+        email: `${login}@gmail.com`,
         phone: `+37544${phoneCounter.toString().padStart(7, '0')}`,
         passwordHash,
         roleId: customerRole.id,
@@ -204,10 +204,10 @@ async function seed() {
       userId: u.id,
       identityNumber: `${4500 + i} ${600000 + i * 7}`,
       birthDate: new Date(1980 + (i % 25), i % 12, (i % 28) + 1),
-      gender: (i % 3 === 0 ? 'F' : 'M') as 'M' | 'F',
+      gender: (i % 3 === 0 ? 'F' : 'M'),
       tenantId: tenant.id,
     }));
-    await dbService.db.insert(passports).values(passportsToInsert);
+    await dbService.db.insert(passports).values(passportsToInsert as typeof passports.$inferInsert[]);
 
     // ── Positions ─────────────────────────────────────────────────────────────
     console.log('Seeding positions...');
@@ -360,11 +360,11 @@ async function seed() {
     // ── Stores ────────────────────────────────────────────────────────────────
     console.log('Seeding stores...');
     const storeNames = [
-      { name: 'Склад Цэнтральны', location: 'Мінск, пр-т Незалежнасці, 95', phone: '+375171000001', workingHours: 'Пн-Пт 9-18' },
-      { name: 'Склад Паўночны', location: 'Мінск, пр-т Пераможцаў, 23', phone: '+375171000002', workingHours: 'Пн-Пт 9-18' },
-      { name: 'Склад Паўднёвы', location: 'Мінск, вул. Прытыцкага, 65', phone: '+375171000003', workingHours: 'Пн-Сб 9-17' },
-      { name: 'Склад Гомель', location: 'Гомель, вул. Савецкая, 12', phone: '+375232000001', workingHours: 'Пн-Пт 9-18' },
-      { name: 'Крама запчастак', location: 'Мінск, пр-т Машэрава, 25', phone: '+375171000005', workingHours: 'Пн-Нд 9-20' },
+      { name: 'Склад Центральный', location: 'Минск, пр-т Независимости, 95', phone: '+375171000001', workingHours: 'Пн-Пт 9-18' },
+      { name: 'Склад Северный', location: 'Минск, пр-т Победителей, 23', phone: '+375171000002', workingHours: 'Пн-Пт 9-18' },
+      { name: 'Склад Южный', location: 'Минск, ул. Притыцкого, 65', phone: '+375171000003', workingHours: 'Пн-Сб 9-17' },
+      { name: 'Склад Гомель', location: 'Гомель, ул. Советская, 12', phone: '+375232000001', workingHours: 'Пн-Пт 9-18' },
+      { name: 'Магазин запчастей', location: 'Минск, пр-т Машерова, 25', phone: '+375171000005', workingHours: 'Пн-Вс 9-20' },
     ];
     const createdStores = await dbService.db.insert(stores).values(
       storeNames.map(s => ({ ...s, tenantId: tenant.id }))
@@ -373,14 +373,14 @@ async function seed() {
     // ── Suppliers ─────────────────────────────────────────────────────────────
     console.log('Seeding suppliers...');
     const suppliersData = [
-      { name: 'БелАўтадэталь', contact: 'sales@belavtodetal.by', address: 'Мінск, вул. Прамысловая, 12' },
-      { name: 'ПромАўта', contact: 'info@promavto.by', address: 'Гомель, пр-т Кастрычніка, 45' },
-      { name: 'TechParts BY', contact: 'orders@techparts.by', address: 'Брэст, вул. Маскоўская, 22' },
-      { name: 'Фенікс Аўта', contact: 'fenix@feniksavto.by', address: 'Гродна, вул. Савецкая, 7' },
-      { name: 'МэгаЗапчасткі', contact: 'mega@megazap.by', address: 'Мінск, пр-т Партызанскі, 118' },
-      { name: 'AutoParts Pro BY', contact: 'pro@autopartspro.by', address: 'Магілёў, вул. Першамайская, 34' },
-      { name: 'Бош Аўта Сэрвіс', contact: 'supply@bosch-as.by', address: 'Мінск, вул. Нямігa, 11' },
-      { name: 'АрыгінальЗапчасткі', contact: 'original@origzap.by', address: 'Віцебск, вул. Леніна, 9' },
+      { name: 'БелАвтоДеталь', contact: 'sales.belavtodetal@gmail.com', address: 'Минск, ул. Промышленная, 12' },
+      { name: 'ПромАвто', contact: 'info.promavto@gmail.com', address: 'Гомель, пр-т Октябрьский, 45' },
+      { name: 'TechParts BY', contact: 'orders.techparts@gmail.com', address: 'Брест, ул. Московская, 22' },
+      { name: 'Феникс Авто', contact: 'fenix.feniksavto@gmail.com', address: 'Гродно, ул. Советская, 7' },
+      { name: 'МегаЗапчасти', contact: 'mega.megazap@gmail.com', address: 'Минск, пр-т Партизанский, 118' },
+      { name: 'AutoParts Pro BY', contact: 'pro.autopartspro@gmail.com', address: 'Могилёв, ул. Первомайская, 34' },
+      { name: 'Бош Авто Сервис', contact: 'supply.bosch.as@gmail.com', address: 'Минск, ул. Немига, 11' },
+      { name: 'ОригиналЗапчасти', contact: 'original.origzap@gmail.com', address: 'Витебск, ул. Ленина, 9' },
     ];
     const createdSuppliers = await dbService.db.insert(suppliers).values(
       suppliersData.map(s => ({ ...s, tenantId: tenant.id }))
@@ -535,11 +535,11 @@ async function seed() {
     // ── Branches ──────────────────────────────────────────────────────────────
     console.log('Seeding branches...');
     const branchesData = [
-      { name: 'Цэнтральны філіял', address: 'Мінск, пр-т Незалежнасці, 95', city: 'Мінск', phone: '+375171234567', email: 'central@avtoservis.by', workingHours: 'Пн-Сб 9-21, Нд 10-18' },
-      { name: 'Паўночны філіял', address: 'Мінск, пр-т Пераможцаў, 23', city: 'Мінск', phone: '+375171234568', email: 'north@avtoservis.by', workingHours: 'Пн-Сб 9-20' },
-      { name: 'Паўднёвы філіял', address: 'Мінск, вул. Прытыцкага, 65', city: 'Мінск', phone: '+375171234569', email: 'south@avtoservis.by', workingHours: 'Пн-Сб 9-20' },
-      { name: 'Гомельскі філіял', address: 'Гомель, вул. Савецкая, 12', city: 'Гомель', phone: '+375232345670', email: 'gomel@avtoservis.by', workingHours: 'Пн-Пт 9-19' },
-      { name: 'Брэсцкі філіял', address: 'Брэст, вул. Маскоўская, 80', city: 'Брэст', phone: '+375162345671', email: 'brest@avtoservis.by', workingHours: 'Пн-Пт 9-19' },
+      { name: 'Центральный филиал', address: 'Минск, пр-т Независимости, 95', city: 'Минск', phone: '+375171234567', email: 'central.avtoservis@gmail.com', workingHours: 'Пн-Сб 9-21, Вс 10-18' },
+      { name: 'Северный филиал', address: 'Минск, пр-т Победителей, 23', city: 'Минск', phone: '+375171234568', email: 'north.avtoservis@gmail.com', workingHours: 'Пн-Сб 9-20' },
+      { name: 'Южный филиал', address: 'Минск, ул. Притыцкого, 65', city: 'Минск', phone: '+375171234569', email: 'south.avtoservis@gmail.com', workingHours: 'Пн-Сб 9-20' },
+      { name: 'Гомельский филиал', address: 'Гомель, ул. Советская, 12', city: 'Гомель', phone: '+375232345670', email: 'gomel.avtoservis@gmail.com', workingHours: 'Пн-Пт 9-19' },
+      { name: 'Брестский филиал', address: 'Брест, ул. Московская, 80', city: 'Брест', phone: '+375162345671', email: 'brest.avtoservis@gmail.com', workingHours: 'Пн-Пт 9-19' },
     ];
     const createdBranches = await dbService.db.insert(branches).values(
       branchesData.map((b, i) => ({
@@ -750,7 +750,7 @@ async function seed() {
     const discountsData: typeof discounts.$inferInsert[] = [
       { code: 'WELCOME10', name: 'Скидка новичка', type: 'percent', value: '10', isActive: true, startDate: pastDate(180), endDate: futureDate(180), maxUsageCount: 500 },
       { code: 'SUMMER20', name: 'Летняя акция', type: 'percent', value: '20', isActive: true, startDate: pastDate(30), endDate: futureDate(60) },
-      { code: 'FIXED500', name: 'Скидка 500 руб', type: 'fixed', value: '500', isActive: true, minOrderAmount: '3000' },
+      { code: 'FIXED500', name: 'Скидка 500 BYN', type: 'fixed', value: '500', isActive: true, minOrderAmount: '3000' },
       { code: 'VIP15', name: 'VIP скидка', type: 'percent', value: '15', isActive: true },
       { code: 'WINTER25', name: 'Зимняя акция 25%', type: 'percent', value: '25', isActive: false, startDate: pastDate(120), endDate: pastDate(30) },
       { code: 'BDAY', name: 'День рождения', type: 'percent', value: '12', isActive: true },
@@ -808,7 +808,7 @@ async function seed() {
         orderId: o.id,
         sparePartId: i % 2 === 0 ? createdParts[i % createdParts.length].id : undefined,
         type: pick(['work', 'spare_part', 'complex']),
-        status: (expires > new Date() ? 'active' : pick(['expired', 'claimed'])) as 'active' | 'expired' | 'claimed',
+        status: (expires > new Date() ? 'active' : pick(['expired', 'claimed'])),
         description: `Гарантия на выполненные работы по заказу`,
         durationMonths: 3 * (1 + (i % 4)),
         issuedAt,
@@ -835,11 +835,11 @@ async function seed() {
     // ── Companies (Corporate clients) ─────────────────────────────────────────
     console.log('Seeding companies...');
     const companiesData: typeof companies.$inferInsert[] = [
-      { name: 'ООО "БелЛагістык"', inn: 'BY193456781', address: 'Мінск, вул. Прамысловая, 1', city: 'Мінск', contactPerson: 'Карповіч А.В.', phone: '+375291234001', email: 'fleet@bellogistic.by', managerUserId: managerUsers[0].id },
-      { name: 'ОАО "МінскТранс"', inn: 'BY192356789', address: 'Мінск, пр-т Партызанскі, 87', city: 'Мінск', contactPerson: 'Глінскі Б.І.', phone: '+375291234002', email: 'auto@minsktrans.by', managerUserId: managerUsers[1].id },
-      { name: 'ІП Хадасевіч В.С.', inn: 'BY190034561', address: 'Гомель, вул. Ленiна, 5', city: 'Гомель', contactPerson: 'Хадасевіч В.С.', phone: '+375291234003', email: 'hadas@tut.by', managerUserId: managerUsers[0].id },
-      { name: 'ООО "ТрансАўта"', inn: 'BY191234567', address: 'Брэст, вул. Маскоўская, 112', city: 'Брэст', contactPerson: 'Сіманович В.Г.', phone: '+375291234004', email: 'transavto@corp.by', managerUserId: managerUsers[2].id },
-      { name: 'ЗАО "АўтаПарк Плюс"', inn: 'BY193456780', address: 'Мінск, вул. Прытыцкага, 55', city: 'Мінск', contactPerson: 'Купрэйчык К.Д.', phone: '+375291234005', email: 'avtopark@corp.by', managerUserId: managerUsers[3].id },
+      { name: 'ООО "БелЛогистик"', inn: 'BY193456781', address: 'Минск, ул. Промышленная, 1', city: 'Минск', contactPerson: 'Карпов А.В.', phone: '+375291234001', email: 'fleet.bellogistic@gmail.com', managerUserId: managerUsers[0].id },
+      { name: 'ОАО "МинскТранс"', inn: 'BY192356789', address: 'Минск, пр-т Партизанский, 87', city: 'Минск', contactPerson: 'Глинский Б.И.', phone: '+375291234002', email: 'auto.minsktrans@gmail.com', managerUserId: managerUsers[1].id },
+      { name: 'ИП Ходасевич В.С.', inn: 'BY190034561', address: 'Гомель, ул. Ленина, 5', city: 'Гомель', contactPerson: 'Ходасевич В.С.', phone: '+375291234003', email: 'hadas.hodasevich@gmail.com', managerUserId: managerUsers[0].id },
+      { name: 'ООО "ТрансАвто"', inn: 'BY191234567', address: 'Брест, ул. Московская, 112', city: 'Брест', contactPerson: 'Симонов В.Г.', phone: '+375291234004', email: 'transavto.corp@gmail.com', managerUserId: managerUsers[2].id },
+      { name: 'ЗАО "АвтоПарк Плюс"', inn: 'BY193456780', address: 'Минск, ул. Притыцкого, 55', city: 'Минск', contactPerson: 'Купреевич К.Д.', phone: '+375291234005', email: 'avtopark.corp@gmail.com', managerUserId: managerUsers[3].id },
     ];
     const createdCompanies = await dbService.db.insert(companies).values(companiesData).returning();
 
@@ -847,7 +847,7 @@ async function seed() {
       createdCompanies.map((c, i) => ({
         companyId: c.id,
         contractNumber: `ДАГ-2024-${String(100 + i).padStart(3, '0')}`,
-        status: pick(['active', 'active', 'active', 'suspended', 'draft']) as 'active' | 'suspended' | 'draft',
+        status: pick(['active', 'active', 'active', 'suspended', 'draft']) as 'active' | 'suspended' | 'expired' | 'draft' | 'terminated',
         discountPercent: pick(['5.00', '7.50', '10.00', '12.00', '15.00']),
         creditLimit: pick(['50000.00', '100000.00', '200000.00', '500000.00']),
         paymentTermDays: pick(['14', '30', '45']),
@@ -892,8 +892,8 @@ async function seed() {
     console.log(`  Warranties:      ${warrantiesData.length}`);
     console.log(`  Loyalty users:   ${createdLoyalty.length}`);
     console.log(`  Companies:       ${createdCompanies.length}`);
-    console.log('\n  Login: admin@avtoservis.by / password123');
-    console.log('  Login: user1@tut.by       / password123');
+    console.log('\n  Login: admin@gmail.com / password123');
+    console.log('  Login: user1@gmail.com / password123');
 
   } catch (error: unknown) {
     console.error('Seed failed:', error);
