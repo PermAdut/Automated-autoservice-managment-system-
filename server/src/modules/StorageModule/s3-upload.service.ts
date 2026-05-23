@@ -39,6 +39,9 @@ export class S3UploadService {
   private readonly bucket = process.env.AWS_S3_BUCKET;
   private readonly region = process.env.AWS_REGION || 'us-east-1';
   private readonly cdnDomain = process.env.AWS_CLOUDFRONT_DOMAIN;
+  private readonly s3Endpoint = process.env.AWS_S3_ENDPOINT;
+  private readonly s3PublicEndpoint =
+    process.env.AWS_S3_PUBLIC_ENDPOINT || process.env.AWS_S3_ENDPOINT;
 
   async onModuleInit() {
     await this.initClient();
@@ -61,8 +64,8 @@ export class S3UploadService {
       this.s3Client = new S3Client({
         region: this.region,
         credentials: { accessKeyId: keyId, secretAccessKey: secret },
-        ...(process.env.AWS_S3_ENDPOINT && {
-          endpoint: process.env.AWS_S3_ENDPOINT,
+        ...(this.s3Endpoint && {
+          endpoint: this.s3Endpoint,
           forcePathStyle: true, // Required for MinIO/LocalStack
         }),
       });
@@ -109,7 +112,9 @@ export class S3UploadService {
         ContentType: params.contentType,
       });
 
-      const uploadUrl = await getSignedUrl(this.s3Client, command, { expiresIn });
+      const uploadUrl = this.toPublicUrl(
+        await getSignedUrl(this.s3Client, command, { expiresIn }),
+      );
 
       return { uploadUrl, key, publicUrl: this.getPublicUrl(key), expiresIn };
     } catch (err) {
@@ -179,6 +184,30 @@ export class S3UploadService {
     if (this.cdnDomain) {
       return `https://${this.cdnDomain}/${key}`;
     }
+
+    if (this.s3PublicEndpoint && this.bucket) {
+      const base = this.s3PublicEndpoint.replace(/\/$/, '');
+      return `${base}/${this.bucket}/${key}`;
+    }
+
     return `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`;
+  }
+
+  /** Rewrite presigned URL host for browser access (e.g. minio:9000 → localhost:9000). */
+  private toPublicUrl(url: string): string {
+    if (!this.s3Endpoint || !this.s3PublicEndpoint || this.s3Endpoint === this.s3PublicEndpoint) {
+      return url;
+    }
+
+    try {
+      const internal = new URL(this.s3Endpoint);
+      const external = new URL(this.s3PublicEndpoint);
+      return url.replace(
+        `${internal.protocol}//${internal.host}`,
+        `${external.protocol}//${external.host}`,
+      );
+    } catch {
+      return url;
+    }
   }
 }

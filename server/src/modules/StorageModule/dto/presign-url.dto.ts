@@ -1,5 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsIn, IsOptional, IsPositive, IsString, Matches, Max } from 'class-validator';
+import { sanitizeUploadFilename } from '../utils/sanitize-filename';
 
 export type S3FileCategory = 'profiles' | 'cars' | 'orders' | 'documents' | 'warranties' | 'employees';
 
@@ -27,6 +29,9 @@ export class PresignUrlDto {
   category: S3FileCategory;
 
   @ApiProperty({ description: 'Original filename (used for extension extraction)', example: 'photo.jpg' })
+  @Transform(({ value, obj }) =>
+    sanitizeUploadFilename(String(value ?? ''), obj?.contentType),
+  )
   @IsString()
   @Matches(/^[\w\-. ]+$/, { message: 'Filename contains invalid characters' })
   filename: string;
