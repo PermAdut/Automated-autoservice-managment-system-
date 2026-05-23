@@ -1,5 +1,6 @@
 import { relations } from 'drizzle-orm';
-import { boolean, numeric, text, uuid, varchar } from 'drizzle-orm/pg-core';
+import { boolean, integer, numeric, text, uuid, varchar } from 'drizzle-orm/pg-core';
+import { workTypes } from './staff.model';
 import { schema } from '../pgSchema';
 import { servicesOrders } from '../schema';
 import { tenantSettings } from './tenant.model';
@@ -20,6 +21,10 @@ export const services = schema.table('Services', {
   description: varchar('description'),
   price: numeric('price', { mode: 'number' }).notNull(),
   durationMinutes: numeric('durationMinutes'),
+  workTypeId: uuid('workTypeId').references(() => workTypes.id),
+  requiredQualificationLevel: integer('requiredQualificationLevel')
+    .default(1)
+    .notNull(),
   isActive: boolean('isActive').default(true).notNull(),
   tenantId: uuid('tenantId').references(() => tenantSettings.id),
 });
@@ -41,6 +46,10 @@ export const servicesRelations = relations(services, ({ one, many }) => ({
   category: one(serviceCategories, {
     fields: [services.categoryId],
     references: [serviceCategories.id],
+  }),
+  workType: one(workTypes, {
+    fields: [services.workTypeId],
+    references: [workTypes.id],
   }),
   servicesOrders: many(servicesOrders),
 }));

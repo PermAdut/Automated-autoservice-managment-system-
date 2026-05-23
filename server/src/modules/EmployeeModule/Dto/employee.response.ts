@@ -3,6 +3,57 @@ import { Exclude, Expose } from 'class-transformer';
 import { IsBoolean, IsISO8601, IsString, IsUUID } from 'class-validator';
 
 @Exclude()
+export class QualificationResponse {
+  @ApiProperty()
+  @IsUUID()
+  @Expose()
+  id: string;
+
+  @ApiProperty()
+  @IsUUID()
+  @Expose()
+  workTypeId: string;
+
+  @ApiProperty()
+  @IsString()
+  @Expose()
+  workTypeName: string;
+
+  @ApiProperty({ minimum: 1, maximum: 5 })
+  @Expose()
+  level: number;
+}
+
+@Exclude()
+export class ContactResponse {
+  @ApiProperty({ nullable: true })
+  @Expose()
+  email?: string | null;
+
+  @ApiProperty({ nullable: true })
+  @Expose()
+  phone?: string | null;
+}
+
+@Exclude()
+export class BranchResponse {
+  @ApiProperty()
+  @IsUUID()
+  @Expose()
+  id: string;
+
+  @ApiProperty()
+  @IsString()
+  @Expose()
+  name: string;
+
+  @ApiProperty()
+  @IsBoolean()
+  @Expose()
+  isPrimary: boolean;
+}
+
+@Exclude()
 export class EmployeeResponse {
   @ApiProperty({
     description: 'The id of the employee',
@@ -30,6 +81,11 @@ export class EmployeeResponse {
   @IsString()
   @Expose()
   lastName?: string | null;
+
+  @ApiProperty()
+  @IsUUID()
+  @Expose()
+  positionId: string;
 
   @ApiProperty({
     description: 'The position of the employee',
@@ -66,6 +122,18 @@ export class EmployeeResponse {
   })
   @Expose()
   orders?: OrderResponse;
+
+  @ApiProperty({ nullable: true })
+  @Expose()
+  contact?: ContactResponse;
+
+  @ApiProperty({ nullable: true })
+  @Expose()
+  branch?: BranchResponse;
+
+  @ApiProperty({ type: [QualificationResponse], nullable: true })
+  @Expose()
+  qualifications?: QualificationResponse[];
 }
 
 @Exclude()

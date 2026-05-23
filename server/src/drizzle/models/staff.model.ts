@@ -1,8 +1,11 @@
 import { relations } from 'drizzle-orm';
 import {
   boolean,
+  integer,
   numeric,
+  text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
@@ -43,6 +46,34 @@ export const workSchedules = schema.table('WorkSchedule', {
   tenantId: uuid('tenantId').references(() => tenantSettings.id),
 });
 
+export const workTypes = schema.table('WorkTypes', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  tenantId: uuid('tenantId').references(() => tenantSettings.id),
+});
+
+export const employeeQualifications = schema.table(
+  'EmployeeQualifications',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    employeeId: uuid('employeeId')
+      .notNull()
+      .references(() => employees.id, { onDelete: 'cascade' }),
+    workTypeId: uuid('workTypeId')
+      .notNull()
+      .references(() => workTypes.id, { onDelete: 'cascade' }),
+    level: integer('level').notNull(),
+    tenantId: uuid('tenantId').references(() => tenantSettings.id),
+  },
+  table => ({
+    employeeWorkTypeUnique: uniqueIndex('employee_work_type_unique').on(
+      table.employeeId,
+      table.workTypeId,
+    ),
+  }),
+);
+
 export const positionsRelations = relations(positions, ({ many }) => ({
   employees: many(employees),
 }));
@@ -57,10 +88,29 @@ export const employeesRelations = relations(employees, ({ one, many }) => ({
     references: [positions.id],
   }),
   workSchedules: many(workSchedules),
+  qualifications: many(employeeQualifications),
   orders: many(orders),
   subscriptions: many(subscriptions),
   reviews: many(reviews),
 }));
+
+export const workTypesRelations = relations(workTypes, ({ many }) => ({
+  qualifications: many(employeeQualifications),
+}));
+
+export const employeeQualificationsRelations = relations(
+  employeeQualifications,
+  ({ one }) => ({
+    employee: one(employees, {
+      fields: [employeeQualifications.employeeId],
+      references: [employees.id],
+    }),
+    workType: one(workTypes, {
+      fields: [employeeQualifications.workTypeId],
+      references: [workTypes.id],
+    }),
+  }),
+);
 
 export const workSchedulesRelations = relations(workSchedules, ({ one }) => ({
   employee: one(employees, {

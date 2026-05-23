@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -7,6 +7,10 @@ import {
   useUpdateEmployeeMutation,
   useGetEmployeeByIdQuery,
   useGetPositionsQuery,
+  useGetWorkTypesQuery,
+  useGetEmployeeQualificationsQuery,
+  useSetEmployeeQualificationsMutation,
+  type QualificationInput,
 } from "../../../api/employeesApi";
 
 const inputBase =
@@ -50,6 +54,15 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({
     isLoading: isLoadingPositions,
     error: positionsError,
   } = useGetPositionsQuery();
+  const { data: workTypes = [] } = useGetWorkTypesQuery(undefined, {
+    skip: !employeeId,
+  });
+  const { data: existingQualifications = [] } = useGetEmployeeQualificationsQuery(
+    employeeId!,
+    { skip: !employeeId },
+  );
+  const [setQualifications] = useSetEmployeeQualificationsMutation();
+  const [qualifications, setQualificationsDraft] = useState<QualificationInput[]>([]);
 
   const {
     register,
@@ -86,6 +99,41 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({
     }
   }, [employee, reset]);
 
+  useEffect(() => {
+    if (existingQualifications.length > 0) {
+      setQualificationsDraft(
+        existingQualifications.map((item) => ({
+          workTypeId: item.workTypeId,
+          level: item.level,
+        })),
+      );
+    }
+  }, [existingQualifications]);
+
+  const addQualificationRow = () => {
+    if (workTypes.length === 0) return;
+    setQualificationsDraft((prev) => [
+      ...prev,
+      { workTypeId: workTypes[0].id, level: 1 },
+    ]);
+  };
+
+  const updateQualificationRow = (
+    index: number,
+    field: keyof QualificationInput,
+    value: string | number,
+  ) => {
+    setQualificationsDraft((prev) =>
+      prev.map((row, rowIndex) =>
+        rowIndex === index ? { ...row, [field]: value } : row,
+      ),
+    );
+  };
+
+  const removeQualificationRow = (index: number) => {
+    setQualificationsDraft((prev) => prev.filter((_, rowIndex) => rowIndex !== index));
+  };
+
   const onSubmit = async (data: EmployeeFormData) => {
     const payload = {
       ...data,
@@ -97,6 +145,10 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({
         await updateEmployee({
           id: employeeId,
           data: payload,
+        }).unwrap();
+        await setQualifications({
+          employeeId,
+          qualifications,
         }).unwrap();
       } else {
         await createEmployee(payload).unwrap();
@@ -177,6 +229,68 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({
               {errors.salary && <span className="text-red-500 text-xs">{errors.salary.message}</span>}
             </div>
           </div>
+
+          {employeeId && (
+            <div className="border-t border-gray-200 pt-4 mt-2">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold text-gray-700">
+                  Квалификации мастера
+                </h3>
+                <button
+                  type="button"
+                  onClick={addQualificationRow}
+                  className="px-3 py-1.5 text-sm bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  Добавить
+                </button>
+              </div>
+              {qualifications.length === 0 ? (
+                <p className="text-sm text-gray-500">
+                  Виды работ и уровень мастерства не заданы.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {qualifications.map((row, index) => (
+                    <div key={`${row.workTypeId}-${index}`} className="grid grid-cols-1 sm:grid-cols-[1fr_120px_auto] gap-3">
+                      <select
+                        value={row.workTypeId}
+                        onChange={(e) =>
+                          updateQualificationRow(index, "workTypeId", e.target.value)
+                        }
+                        className={inputBase}
+                      >
+                        {workTypes.map((workType) => (
+                          <option key={workType.id} value={workType.id}>
+                            {workType.name}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={row.level}
+                        onChange={(e) =>
+                          updateQualificationRow(index, "level", Number(e.target.value))
+                        }
+                        className={inputBase}
+                      >
+                        {[1, 2, 3, 4, 5].map((level) => (
+                          <option key={level} value={level}>
+                            Уровень {level}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => removeQualificationRow(index)}
+                        className="px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
+                      >
+                        Удалить
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="flex gap-3 justify-end mt-4">
             <button

@@ -150,6 +150,9 @@ const EmployeeList: React.FC = () => {
                 hireDate={employee.hireDate}
                 salary={typeof employee.salary === "string" ? parseFloat(employee.salary) || 0 : employee.salary}
                 showAdminInfo={isAdmin}
+                contact={employee.contact}
+                branch={employee.branch}
+                qualifications={employee.qualifications}
               />
               {isAdmin && (
                 <div className="flex gap-2 justify-end px-2 pt-2">

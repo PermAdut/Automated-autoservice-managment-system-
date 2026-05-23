@@ -19,6 +19,9 @@ interface EmployeeItemProps {
   hireDate: string;
   salary: number;
   showAdminInfo?: boolean;
+  contact?: { email?: string | null; phone?: string | null };
+  branch?: { id: string; name: string; isPrimary: boolean };
+  qualifications?: { workTypeName: string; level: number }[];
 }
 
 const formatScheduleTime = (timeString?: string) => {
@@ -46,6 +49,9 @@ export const EmployeeItem: React.FC<EmployeeItemProps> = ({
   hireDate,
   salary,
   showAdminInfo = false,
+  contact,
+  branch,
+  qualifications = [],
 }) => {
   const [isSubscribeModalOpen, setIsSubscribeModalOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
@@ -137,7 +143,34 @@ export const EmployeeItem: React.FC<EmployeeItemProps> = ({
             <strong>Дата найма:</strong> {new Date(hireDate).toLocaleDateString()}
           </p>
         )}
+        {contact?.email && (
+          <p>
+            <strong>Email:</strong> {contact.email}
+          </p>
+        )}
+        {contact?.phone && (
+          <p>
+            <strong>Телефон:</strong> {contact.phone}
+          </p>
+        )}
+        {branch && (
+          <p>
+            <strong>Филиал:</strong> {branch.name}
+            {branch.isPrimary ? " (основной)" : ""}
+          </p>
+        )}
       </div>
+
+      {qualifications.length > 0 && (
+        <div className="mt-4 [&_p]:text-base [&_p]:text-gray-500 [&_p]:my-1 [&_strong]:text-gray-800">
+          <h3 className="text-lg font-medium text-gray-700 mb-2">Квалификации</h3>
+          {qualifications.map((item) => (
+            <p key={`${item.workTypeName}-${item.level}`}>
+              <strong>{item.workTypeName}:</strong> уровень {item.level}
+            </p>
+          ))}
+        </div>
+      )}
 
       <div className="mt-4 [&_p]:text-base [&_p]:text-gray-500 [&_p]:my-1 [&_strong]:text-gray-800">
         <h3 className="text-lg font-medium text-gray-700 mb-2">Текущий заказ</h3>

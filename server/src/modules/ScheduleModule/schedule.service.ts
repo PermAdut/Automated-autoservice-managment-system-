@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
+import { EmployeeQualificationService } from '../EmployeeModule/employee-qualification.service';
 import {
   orders,
   employees,
@@ -49,6 +50,7 @@ export class ScheduleOptimizationService {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly gateway: EventsGateway,
+    private readonly qualificationService: EmployeeQualificationService,
   ) {}
 
   async getGanttData(date: string): Promise<GanttRow[]> {
@@ -205,6 +207,15 @@ export class ScheduleOptimizationService {
       let assigned = false;
 
       for (const emp of availableEmployees) {
+        const isQualified =
+          await this.qualificationService.isEmployeeQualifiedForOrder(
+            emp.id,
+            order.id,
+          );
+        if (!isQualified) {
+          continue;
+        }
+
         const busyUntil = employeeBusyUntil[emp.id] ?? (emp.startTime ?? now);
         const slotStart = busyUntil < now ? now : busyUntil;
         const slotEnd = new Date(slotStart.getTime() + order.totalDurationMin * 60 * 1000);
@@ -228,7 +239,10 @@ export class ScheduleOptimizationService {
       }
 
       if (!assigned) {
-        unscheduled.push({ orderId: order.id, reason: 'No available employee in window' });
+        unscheduled.push({
+          orderId: order.id,
+          reason: 'No qualified available employee in window',
+        });
       }
     }
 
@@ -236,7 +250,10 @@ export class ScheduleOptimizationService {
     return { assignments, unscheduled };
   }
 
-  async reassignOrder(orderId: string, employeeId: string): Promise<void> {
+  async reassignOrder(
+    orderId: string,
+    employeeId: string,
+  ): Promise<{ warning?: string }> {
     const [order] = await this.databaseService.db
       .select()
       .from(orders)
@@ -245,6 +262,12 @@ export class ScheduleOptimizationService {
 
     if (!order) throw new Error(`Order ${orderId} not found`);
 
+    const warning =
+      (await this.qualificationService.getQualificationMismatch(
+        employeeId,
+        orderId,
+      )) ?? undefined;
+
     await this.databaseService.db
       .update(orders)
       .set({ employeeId, updatedAt: new Date() })
@@ -252,5 +275,6 @@ export class ScheduleOptimizationService {
 
     this.gateway.notifyOrderUpdated(order.userId, orderId, order.status ?? 'pending');
     this.logger.log(`Order ${orderId} manually reassigned to employee ${employeeId}`);
+    return { warning };
   }
 }

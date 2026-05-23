@@ -17,6 +17,28 @@ export class NotificationService {
     private readonly smsService: SmsService,
   ) {}
 
+  async notifyUser(
+    userId: string,
+    subject: string,
+    body: string,
+    recipient?: string,
+  ) {
+    const [notification] = await this.databaseService.db
+      .insert(notifications)
+      .values({
+        userId,
+        channel: 'push',
+        status: 'sent',
+        subject,
+        body,
+        recipient: recipient ?? userId,
+        sentAt: new Date(),
+      })
+      .returning();
+
+    return notification;
+  }
+
   async sendSms(userId: string, phone: string, message: string) {
     const result = await this.smsService.send(phone, message);
 

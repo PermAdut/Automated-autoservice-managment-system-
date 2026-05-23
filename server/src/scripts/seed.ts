@@ -4,6 +4,7 @@ import {
   suppliers, categories, spareParts, stores, sparePartStore,
   cars, orders, servicesOrders, sparePartOrders, payments,
   workSchedules, subscriptions, reviews, positionsForBuying,
+  workTypes, employeeQualifications,
   invoices, passports, branches, branchEmployees, storeTransfers,
   appointments, timeSlots, discounts, orderDiscounts,
   loyaltyPrograms, loyaltyTransactions,
@@ -80,6 +81,7 @@ async function seed() {
     await dbService.db.delete(timeSlots);
     await dbService.db.delete(reviews);
     await dbService.db.delete(subscriptions);
+    await dbService.db.delete(employeeQualifications);
     await dbService.db.delete(workSchedules);
     await dbService.db.delete(sparePartStore);
     await dbService.db.delete(servicesOrders);
@@ -93,6 +95,7 @@ async function seed() {
     await dbService.db.delete(categories);
     await dbService.db.delete(services);
     await dbService.db.delete(serviceCategories);
+    await dbService.db.delete(workTypes);
     await dbService.db.delete(employees);
     await dbService.db.delete(positions);
     await dbService.db.delete(suppliers);
@@ -272,6 +275,45 @@ async function seed() {
     }));
     const createdEmployees = await dbService.db.insert(employees).values(employeesToInsert).returning();
 
+    // ── Work Types (qualification matrix) ─────────────────────────────────────
+    console.log('Seeding work types...');
+    const workTypesData = [
+      { name: 'Слесарные работы', description: 'ТО, двигатель, базовый ремонт' },
+      { name: 'Диагностика', description: 'Компьютерная и механическая диагностика' },
+      { name: 'Тормозная система', description: 'Ремонт и обслуживание тормозов' },
+      { name: 'Подвеска и рулевое', description: 'Ходовая часть, развал-схождение' },
+      { name: 'Автоэлектрика', description: 'Электрооборудование и проводка' },
+      { name: 'Кузовной ремонт', description: 'Кузов, покраска, рихтовка' },
+      { name: 'Шиномонтаж', description: 'Шины, балансировка, проколы' },
+    ];
+    const createdWorkTypes = await dbService.db.insert(workTypes).values(
+      workTypesData.map(item => ({ ...item, tenantId: tenant.id })),
+    ).returning();
+
+    console.log('Seeding employee qualifications...');
+    const qualificationLevels = [3, 4, 5, 2, 4, 3, 5, 2, 4, 3];
+    const qualificationsToInsert: typeof employeeQualifications.$inferInsert[] = [];
+    for (let i = 0; i < createdEmployees.length; i++) {
+      const emp = createdEmployees[i];
+      const primaryType = createdWorkTypes[i % createdWorkTypes.length];
+      qualificationsToInsert.push({
+        employeeId: emp.id,
+        workTypeId: primaryType.id,
+        level: qualificationLevels[i % qualificationLevels.length],
+        tenantId: tenant.id,
+      });
+      if (i % 2 === 0) {
+        const secondaryType = createdWorkTypes[(i + 1) % createdWorkTypes.length];
+        qualificationsToInsert.push({
+          employeeId: emp.id,
+          workTypeId: secondaryType.id,
+          level: Math.max(1, qualificationLevels[i % qualificationLevels.length] - 1),
+          tenantId: tenant.id,
+        });
+      }
+    }
+    await dbService.db.insert(employeeQualifications).values(qualificationsToInsert);
+
     // ── Work Schedules ────────────────────────────────────────────────────────
     console.log('Seeding work schedules...');
     const workSchedulesToInsert: typeof workSchedules.$inferInsert[] = [];
@@ -352,6 +394,17 @@ async function seed() {
       { name: 'Балансировка колёс', price: 800, dur: 45, catIdx: 7 },
       { name: 'Ремонт прокола', price: 400, dur: 30, catIdx: 7 },
     ];
+    const serviceWorkTypeByCategory = [
+      createdWorkTypes[0].id,
+      createdWorkTypes[1].id,
+      createdWorkTypes[0].id,
+      createdWorkTypes[2].id,
+      createdWorkTypes[3].id,
+      createdWorkTypes[4].id,
+      createdWorkTypes[5].id,
+      createdWorkTypes[6].id,
+    ];
+    const serviceRequiredLevels = [2, 3, 4, 2, 3, 4, 3, 2];
     const createdServices = await dbService.db.insert(services).values(
       servicesData.map(s => ({
         name: s.name,
@@ -360,6 +413,8 @@ async function seed() {
         durationMinutes: String(s.dur),
         isActive: true,
         categoryId: rootCats[s.catIdx].id,
+        workTypeId: serviceWorkTypeByCategory[s.catIdx],
+        requiredQualificationLevel: serviceRequiredLevels[s.catIdx],
         tenantId: tenant.id,
       }))
     ).returning();

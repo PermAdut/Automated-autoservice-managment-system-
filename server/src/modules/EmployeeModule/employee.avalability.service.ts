@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { DatabaseService } from '../database/database.service';
+import { NotificationService } from '../NotificationModule/notification.service';
 import {
   employees,
   workSchedules,
@@ -11,7 +12,12 @@ import { eq, and, sql } from 'drizzle-orm';
 
 @Injectable()
 export class EmployeeAvailabilityService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  private readonly logger = new Logger(EmployeeAvailabilityService.name);
+
+  constructor(
+    private readonly databaseService: DatabaseService,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   @Cron(CronExpression.EVERY_5_MINUTES)
   async updateEmployeeAvailability() {
@@ -113,16 +119,20 @@ export class EmployeeAvailabilityService {
         );
 
       for (const subscription of activeSubscriptions) {
-        console.log(
-          `Notification sent to ${subscription.userName} ${subscription.userSurName} (${subscription.userEmail}): ` +
-            `Рабочий ${employeeName} ${employeeSurName} теперь доступен!`,
+        const message =
+          `Рабочий ${employeeName} ${employeeSurName} теперь доступен для записи.`;
+        await this.notificationService.notifyUser(
+          subscription.userId,
+          'Мастер доступен',
+          message,
+          subscription.userEmail ?? subscription.userId,
         );
-      }
 
-      if (activeSubscriptions.length > 0) {
-        console.log(
-          `Sent availability notifications to ${activeSubscriptions.length} subscribers for employee ${employeeId}`,
-        );
+        if (subscription.userEmail) {
+          this.logger.log(
+            `Availability notification sent to ${subscription.userEmail}`,
+          );
+        }
       }
     } catch (error) {
       console.error('Error notifying subscribers:', error);

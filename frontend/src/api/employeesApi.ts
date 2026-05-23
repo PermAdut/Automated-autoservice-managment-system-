@@ -24,6 +24,34 @@ export interface Employee {
     id: string;
     status: string;
   };
+  contact?: {
+    email?: string | null;
+    phone?: string | null;
+  };
+  branch?: {
+    id: string;
+    name: string;
+    isPrimary: boolean;
+  };
+  qualifications?: EmployeeQualification[];
+}
+
+export interface WorkType {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+export interface EmployeeQualification {
+  id: string;
+  workTypeId: string;
+  workTypeName: string;
+  level: number;
+}
+
+export interface QualificationInput {
+  workTypeId: string;
+  level: number;
 }
 
 export interface PositionOption {
@@ -77,6 +105,31 @@ export const employeesApi = baseApi.injectEndpoints({
     getPositions: builder.query<PositionOption[], void>({
       query: () => "/employee/positions",
       providesTags: [apiTags.POSITIONS],
+    }),
+    getWorkTypes: builder.query<WorkType[], void>({
+      query: () => "/employee/work-types",
+      providesTags: [apiTags.POSITIONS],
+    }),
+    getEmployeeQualifications: builder.query<EmployeeQualification[], string>({
+      query: (employeeId) => `/employee/${employeeId}/qualifications`,
+      providesTags: (_result, _error, employeeId) => [
+        { type: apiTags.EMPLOYEE, id: `qualifications-${employeeId}` },
+      ],
+    }),
+    setEmployeeQualifications: builder.mutation<
+      EmployeeQualification[],
+      { employeeId: string; qualifications: QualificationInput[] }
+    >({
+      query: ({ employeeId, qualifications }) => ({
+        url: `/employee/${employeeId}/qualifications`,
+        method: "PUT",
+        body: { qualifications },
+      }),
+      invalidatesTags: (_result, _error, { employeeId }) => [
+        { type: apiTags.EMPLOYEE, id: employeeId },
+        { type: apiTags.EMPLOYEE, id: `qualifications-${employeeId}` },
+        apiTags.EMPLOYEES,
+      ],
     }),
     createEmployee: builder.mutation<Employee, Partial<Employee>>({
       query: (body) => ({
@@ -158,6 +211,9 @@ export const {
   useGetEmployeesQuery,
   useGetEmployeeByIdQuery,
   useGetPositionsQuery,
+  useGetWorkTypesQuery,
+  useGetEmployeeQualificationsQuery,
+  useSetEmployeeQualificationsMutation,
   useCreateEmployeeMutation,
   useUpdateEmployeeMutation,
   useDeleteEmployeeMutation,

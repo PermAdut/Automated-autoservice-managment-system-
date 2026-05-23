@@ -22,6 +22,8 @@ import { Public } from '../AuthModule/decorators/public.decorator';
 import { CreateEmployeeDto } from './Dto/create-employee.dto';
 import { UpdateEmployeeDto } from './Dto/update-employee.dto';
 import { CreateReviewDto } from './Dto/create-review.dto';
+import { SetEmployeeQualificationsDto } from './Dto/set-qualifications.dto';
+import { EmployeeQualificationService } from './employee-qualification.service';
 import { Req } from '@nestjs/common';
 import { Request } from 'express';
 import type { AuthenticatedRequest } from '../AuthModule/types/auth.types';
@@ -29,7 +31,10 @@ import type { AuthenticatedRequest } from '../AuthModule/types/auth.types';
 @Controller('api/v1.0/employee')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class EmployeeController {
-  constructor(private readonly employeeService: EmployeeService) {}
+  constructor(
+    private readonly employeeService: EmployeeService,
+    private readonly qualificationService: EmployeeQualificationService,
+  ) {}
 
   private getAuth(req?: Request) {
     const authUser = (req as AuthenticatedRequest | undefined)?.user;
@@ -58,6 +63,33 @@ export class EmployeeController {
   @ApiOperation({ summary: 'Get all positions for employees' })
   async getPositions() {
     return await this.employeeService.getPositions();
+  }
+
+  @Get('work-types')
+  @Public()
+  @ApiOperation({ summary: 'Get work types for qualification matrix' })
+  async getWorkTypes() {
+    return await this.qualificationService.getWorkTypes();
+  }
+
+  @Get(':id/qualifications')
+  @Public()
+  @ApiOperation({ summary: 'Get employee qualifications' })
+  async getEmployeeQualifications(@Param('id', ParseUUIDPipe) id: string) {
+    return await this.qualificationService.getEmployeeQualifications(id);
+  }
+
+  @Put(':id/qualifications')
+  @Roles('admin', 'manager')
+  @ApiOperation({ summary: 'Set employee qualifications' })
+  async setEmployeeQualifications(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: SetEmployeeQualificationsDto,
+  ) {
+    return await this.qualificationService.setEmployeeQualifications(
+      id,
+      body.qualifications,
+    );
   }
 
   @Get(':id')
@@ -168,5 +200,15 @@ export class EmployeeController {
   @ApiOperation({ summary: 'Get employee reviews' })
   async getEmployeeReviews(@Param('id', ParseUUIDPipe) employeeId: string) {
     return await this.employeeService.getEmployeeReviews(employeeId);
+  }
+
+  @Delete(':id/reviews/:reviewId')
+  @HttpCode(200)
+  @Roles('admin', 'manager')
+  @ApiOperation({ summary: 'Hide employee review (soft delete)' })
+  async hideEmployeeReview(
+    @Param('reviewId', ParseUUIDPipe) reviewId: string,
+  ) {
+    return await this.employeeService.hideReview(reviewId);
   }
 }

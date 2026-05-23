@@ -13,16 +13,22 @@ import {
   subscriptions,
   reviews,
   users,
+  branchEmployees,
+  branches,
 } from '../database/schema';
 import { eq, and, asc, desc, ilike, or, sql } from 'drizzle-orm';
 import { CreateEmployeeDto } from './Dto/create-employee.dto';
 import { UpdateEmployeeDto } from './Dto/update-employee.dto';
 import { SubscribeEmployeeDto } from './Dto/subscribe-employee.dto';
 import { CreateReviewDto } from './Dto/create-review.dto';
+import { EmployeeQualificationService } from './employee-qualification.service';
 
 @Injectable()
 export class EmployeeService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(
+    private readonly databaseService: DatabaseService,
+    private readonly qualificationService: EmployeeQualificationService,
+  ) {}
 
   async getEmployees(
     search?: string,
@@ -39,6 +45,7 @@ export class EmployeeService {
           positionId: employees.positionId,
           hireDate: employees.hireDate,
           salary: employees.salary,
+          userId: employees.userId,
         })
         .from(employees)
         .leftJoin(positions, eq(positions.id, employees.positionId))
@@ -74,62 +81,7 @@ export class EmployeeService {
       }
 
       const employeesResponse: EmployeeResponse[] = await Promise.all(
-        employeesList.map(async employee => {
-          const [position] = await this.databaseService.db
-            .select()
-            .from(positions)
-            .where(eq(positions.id, employee.positionId))
-            .limit(1);
-
-          const [schedule] = await this.databaseService.db
-            .select()
-            .from(workSchedules)
-            .where(eq(workSchedules.employeeId, employee.id))
-            .limit(1);
-
-          const [currentOrder] = await this.databaseService.db
-            .select()
-            .from(orders)
-            .where(
-              and(
-                eq(orders.employeeId, employee.id),
-                eq(orders.status, 'pending')
-              )
-            )
-            .limit(1);
-
-          return {
-            id: employee.id,
-            name: employee.name,
-            surName: employee.surName,
-            lastName: employee.lastName,
-            positionId: employee.positionId,
-            hireDate: employee.hireDate.toISOString(),
-            salary: parseFloat(employee.salary.toString()),
-            position: position
-              ? {
-                  id: position.id,
-                  name: position.name,
-                  description: position.description,
-                }
-              : undefined,
-            schedule: schedule
-              ? {
-                  id: schedule.id,
-                  employeeId: schedule.employeeId,
-                  startTime: schedule.startTime.toISOString(),
-                  endTime: schedule.endTime.toISOString(),
-                  isAvailable: schedule.isAvailable,
-                }
-              : undefined,
-            orders: currentOrder
-              ? {
-                  id: currentOrder.id,
-                  status: currentOrder.status,
-                }
-              : undefined,
-          };
-        })
+        employeesList.map(async employee => this.buildEmployeeResponse(employee))
       );
 
       return employeesResponse;
@@ -149,6 +101,22 @@ export class EmployeeService {
       throw new NotFoundException(`Employee with id ${id} not found`);
     }
 
+    return this.buildEmployeeResponse(employee);
+  }
+
+  private async buildEmployeeResponse(
+    employee: Pick<
+      typeof employees.$inferSelect,
+      | 'id'
+      | 'name'
+      | 'surName'
+      | 'lastName'
+      | 'positionId'
+      | 'hireDate'
+      | 'salary'
+      | 'userId'
+    >,
+  ): Promise<EmployeeResponse> {
     const [position] = await this.databaseService.db
       .select()
       .from(positions)
@@ -165,15 +133,42 @@ export class EmployeeService {
       .select()
       .from(orders)
       .where(
-        and(eq(orders.employeeId, employee.id), eq(orders.status, 'pending'))
+        and(eq(orders.employeeId, employee.id), eq(orders.status, 'pending')),
       )
       .limit(1);
 
+    let contact: { email?: string | null; phone?: string | null } | undefined;
+    if (employee.userId) {
+      const [user] = await this.databaseService.db
+        .select({ email: users.email, phone: users.phone })
+        .from(users)
+        .where(eq(users.id, employee.userId))
+        .limit(1);
+      if (user) {
+        contact = { email: user.email, phone: user.phone };
+      }
+    }
+
+    const [branchRow] = await this.databaseService.db
+      .select({
+        id: branches.id,
+        name: branches.name,
+        isPrimary: branchEmployees.isPrimary,
+      })
+      .from(branchEmployees)
+      .innerJoin(branches, eq(branches.id, branchEmployees.branchId))
+      .where(eq(branchEmployees.employeeId, employee.id))
+      .limit(1);
+
+    const qualifications =
+      await this.qualificationService.getEmployeeQualifications(employee.id);
+
     return {
       id: employee.id,
-      name: employee?.name ?? '',
-      surName: employee?.surName ?? '',
-      lastName: employee?.lastName ?? '',
+      name: employee.name,
+      surName: employee.surName,
+      lastName: employee.lastName,
+      positionId: employee.positionId,
       hireDate: employee.hireDate.toISOString(),
       salary: parseFloat(employee.salary.toString()),
       position: position
@@ -198,7 +193,30 @@ export class EmployeeService {
             status: currentOrder.status,
           }
         : undefined,
+      contact,
+      branch: branchRow
+        ? {
+            id: branchRow.id,
+            name: branchRow.name,
+            isPrimary: branchRow.isPrimary,
+          }
+        : undefined,
+      qualifications,
     };
+  }
+
+  async hideReview(reviewId: string) {
+    const [review] = await this.databaseService.db
+      .update(reviews)
+      .set({ deletedAt: new Date() })
+      .where(and(eq(reviews.id, reviewId), sql`${reviews.deletedAt} IS NULL`))
+      .returning();
+
+    if (!review) {
+      throw new NotFoundException(`Review with id ${reviewId} not found`);
+    }
+
+    return { id: review.id, hidden: true };
   }
 
   async createEmployee(
