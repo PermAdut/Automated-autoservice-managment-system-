@@ -10,10 +10,24 @@
       "breakpoints": true
     },
     {
+      "idx": 1,
+      "version": "7",
+      "when": 1779370133863,
+      "tag": "0001_watery_living_tribunal",
+      "breakpoints": true
+    },
+    {
       "idx": 2,
       "version": "7",
       "when": 1779500000000,
       "tag": "0002_ft2_users_profiles",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1779600000000,
+      "tag": "0003_drop_cars_mileage",
       "breakpoints": true
     }
   ]

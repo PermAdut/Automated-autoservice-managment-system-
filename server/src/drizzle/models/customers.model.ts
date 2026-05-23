@@ -15,7 +15,6 @@ export const cars = schema.table('Cars', {
   year: bigint('year', { mode: 'number' }).notNull(),
   vin: varchar('vin').notNull(),
   licensePlate: varchar('licensePlate'),
-  mileage: integer('mileage'),
 });
 
 export const subscriptions = schema.table('Subscriptions', {

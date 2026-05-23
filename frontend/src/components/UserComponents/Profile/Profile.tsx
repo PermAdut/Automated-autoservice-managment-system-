@@ -137,7 +137,6 @@ const Profile: React.FC = () => {
           year: car.year ? parseInt(car.year) : undefined,
           vin: car.vin || "",
           licensePlate: car.licensePlate || "",
-          mileage: car.mileage ?? undefined,
         })) || [],
       });
     }
@@ -181,7 +180,6 @@ const Profile: React.FC = () => {
           year: car.year,
           vin: car.vin,
           licensePlate: car.licensePlate || undefined,
-          mileage: car.mileage,
         })),
       }).unwrap();
       setIsEditing(false);
@@ -354,7 +352,6 @@ const Profile: React.FC = () => {
                     year: undefined,
                     licensePlate: "",
                     information: "",
-                    mileage: undefined,
                   })
                 }
               >
@@ -449,23 +446,6 @@ const Profile: React.FC = () => {
                         disabled={!isEditing}
                         className={inputClass(false)}
                       />
-                    </div>
-                    <div className="flex flex-col">
-                      <label className="font-medium text-gray-700 mb-2">Пробег (км)</label>
-                      <input
-                        type="number"
-                        {...register(`cars.${index}.mileage`, {
-                          valueAsNumber: true,
-                          min: { value: 0, message: "Пробег не может быть отрицательным" },
-                        })}
-                        disabled={!isEditing}
-                        className={inputClass(!!errors.cars?.[index]?.mileage)}
-                      />
-                      {errors.cars?.[index]?.mileage && (
-                        <span className="text-red-600 text-sm mt-1">
-                          {errors.cars[index].mileage?.message}
-                        </span>
-                      )}
                     </div>
                     <div className="flex flex-col col-span-full">
                       <label className="font-medium text-gray-700 mb-2">Информация</label>

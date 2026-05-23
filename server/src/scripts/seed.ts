@@ -150,6 +150,8 @@ async function seed() {
       login: 'admin', name: 'Администратор', surName: 'Системный',
       email: 'admin@gmail.com', phone: '+375291000001',
       passwordHash, roleId: adminRole.id, tenantId: tenant.id,
+      avatarUrl: 'https://ui-avatars.com/api/?name=Admin&background=6366f1&color=fff',
+      isBlocked: false,
     });
 
     // 4 managers
@@ -170,6 +172,7 @@ async function seed() {
         passwordHash,
         roleId: managerRole.id,
         tenantId: tenant.id,
+        isBlocked: false,
       });
     }
 
@@ -190,6 +193,10 @@ async function seed() {
         passwordHash,
         roleId: customerRole.id,
         tenantId: tenant.id,
+        isBlocked: i === 2 || i === 7,
+        avatarUrl: i < 5
+          ? `https://ui-avatars.com/api/?name=${encodeURIComponent(firstName + '+' + lastName)}&background=random`
+          : undefined,
       });
     }
 
@@ -894,6 +901,7 @@ async function seed() {
     console.log(`  Companies:       ${createdCompanies.length}`);
     console.log('\n  Login: admin@gmail.com / password123');
     console.log('  Login: user1@gmail.com / password123');
+    console.log('  Blocked:         user3@gmail.com, user8@gmail.com');
 
   } catch (error: unknown) {
     console.error('Seed failed:', error);

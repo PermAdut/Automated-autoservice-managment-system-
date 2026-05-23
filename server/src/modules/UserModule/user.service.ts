@@ -262,7 +262,6 @@ export class UserService {
             year: c.year.toString(),
             vin: c.vin,
             licensePlate: c.licensePlate || '',
-            mileage: c.mileage ?? null,
           })),
           reviews: userReviews.map(r => ({
             id: r.id,
@@ -388,7 +387,6 @@ export class UserService {
           year: c.year.toString(),
           vin: c.vin,
           licensePlate: c.licensePlate || '',
-          mileage: c.mileage ?? null,
         })),
         orders: userOrders.map(o => ({
           id: o.id,
@@ -558,7 +556,6 @@ export class UserService {
               year: carData.year,
               vin: carData.vin,
               licensePlate: carData.licensePlate ?? null,
-              mileage: carData.mileage ?? null,
             })
             .where(eq(cars.id, carData.id));
         } else {
@@ -572,7 +569,6 @@ export class UserService {
               year: carData.year,
               vin: carData.vin,
               licensePlate: carData.licensePlate ?? null,
-              mileage: carData.mileage ?? null,
             });
           }
         }

@@ -53,7 +53,6 @@ export interface UserDetailed {
     year: string;
     vin: string;
     licensePlate: string;
-    mileage?: number | null;
   }[];
   orders?: {
     id: string;
@@ -95,7 +94,6 @@ export interface UpdateCarDto {
   year?: number;
   vin?: string;
   licensePlate?: string;
-  mileage?: number;
 }
 
 export interface UpdateProfileDto {

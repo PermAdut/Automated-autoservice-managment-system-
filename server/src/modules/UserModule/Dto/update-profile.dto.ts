@@ -5,8 +5,6 @@ import {
   IsArray,
   ValidateNested,
   IsUUID,
-  IsInt,
-  Min,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
@@ -45,12 +43,6 @@ export class UpdateCarDto {
   @IsString()
   @IsOptional()
   licensePlate?: string;
-
-  @ApiProperty({ description: 'Car mileage in km', required: false })
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  mileage?: number;
 }
 
 export class UpdateProfileDto {

@@ -19,7 +19,7 @@
 | Баллы лояльности в профиле | ✅ | `GET /api/v1.0/promotions/loyalty/my` — `LoyaltyPage.tsx` |
 | Блокировка учётной записи | ✅ | `Users.isBlocked` — admin через `PUT /users/:id`; проверка при login/JWT |
 | Фото профиля | ✅ | `Users.avatarUrl` — upload через `StorageModule` + `Profile.tsx` |
-| Пробег автомобиля | ✅ | `Cars.mileage` — `VehicleModule`, `Profile.tsx`, `VehiclesPage.tsx` |
+| Пробег автомобиля | ✅ | `DiagnosticSessions.mileage` — только при диагностике (FT-11) |
 
 ### Backend
 
@@ -66,7 +66,7 @@ server/src/modules/VehicleModule/
 |---|---|
 | `Users` | login, name, surName, email, phone, roleId, avatarUrl, isBlocked |
 | `Passport` | identityNumber, birthDate, gender |
-| `Cars` | brand, model, year, vin, licensePlate, userId, mileage |
+| `Cars` | brand, model, year, vin, licensePlate, userId |
 | `Orders` | история заказов по userId / carId |
 | `LoyaltyPrograms` | points, tier |
 
@@ -74,4 +74,4 @@ server/src/modules/VehicleModule/
 
 - [x] Блокировка пользователя admin-ом
 - [x] Загрузка и отображение фото профиля
-- [x] Пробег автомобиля (`Cars.mileage`)
+- [x] Пробег — через диагностику (`DiagnosticSessions.mileage`), не в `Cars`

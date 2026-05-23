@@ -194,9 +194,6 @@ export const DetailedUserComponent: React.FC = () => {
                 <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Марка:</strong> {car.brand} {car.model}</p>
                 <p className="text-gray-500 my-1.5"><strong className="text-gray-800">VIN:</strong> {car.vin}</p>
                 <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Номерной знак:</strong> {car.licensePlate}</p>
-                {car.mileage != null && (
-                  <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Пробег:</strong> {car.mileage.toLocaleString()} км</p>
-                )}
                 <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Год:</strong> {car.year}</p>
                 <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Информация:</strong> {car.information || "Нет"}</p>
               </div>

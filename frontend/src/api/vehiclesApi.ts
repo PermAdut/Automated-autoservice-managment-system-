@@ -9,7 +9,6 @@ export interface Vehicle {
   vin: string;
   licensePlate?: string;
   information?: string;
-  mileage?: number;
 }
 
 export interface CreateVehicleDto {
@@ -19,7 +18,6 @@ export interface CreateVehicleDto {
   vin: string;
   licensePlate?: string;
   information?: string;
-  mileage?: number;
 }
 
 export const vehiclesApi = baseApi.injectEndpoints({
