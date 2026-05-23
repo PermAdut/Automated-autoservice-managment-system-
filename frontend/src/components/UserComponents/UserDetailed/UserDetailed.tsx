@@ -66,7 +66,20 @@ export const DetailedUserComponent: React.FC = () => {
         </button>
         <h2 className="text-2xl font-bold text-gray-800 mb-5 text-center">
           {detailedUser.name} {detailedUser.surName}
+          {detailedUser.isBlocked && (
+            <span className="ml-2 text-sm font-normal text-red-600">(заблокирован)</span>
+          )}
         </h2>
+
+        {detailedUser.avatarUrl && (
+          <div className="flex justify-center mb-5">
+            <img
+              src={detailedUser.avatarUrl}
+              alt="Аватар"
+              className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+            />
+          </div>
+        )}
 
         <div className="mb-5">
           <h3 className="text-xl font-semibold text-gray-700 mb-2.5">Общая информация</h3>
@@ -181,6 +194,9 @@ export const DetailedUserComponent: React.FC = () => {
                 <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Марка:</strong> {car.brand} {car.model}</p>
                 <p className="text-gray-500 my-1.5"><strong className="text-gray-800">VIN:</strong> {car.vin}</p>
                 <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Номерной знак:</strong> {car.licensePlate}</p>
+                {car.mileage != null && (
+                  <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Пробег:</strong> {car.mileage.toLocaleString()} км</p>
+                )}
                 <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Год:</strong> {car.year}</p>
                 <p className="text-gray-500 my-1.5"><strong className="text-gray-800">Информация:</strong> {car.information || "Нет"}</p>
               </div>

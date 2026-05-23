@@ -8,6 +8,8 @@ export interface User {
   email: string;
   phone: string;
   role: string;
+  avatarUrl?: string | null;
+  isBlocked?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -20,6 +22,8 @@ export interface UserDetailed {
   surName: string;
   email: string;
   phone: string;
+  avatarUrl?: string | null;
+  isBlocked?: boolean;
   passwordHash?: string;
   createdAt: string;
   updatedAt: string;
@@ -49,6 +53,7 @@ export interface UserDetailed {
     year: string;
     vin: string;
     licensePlate: string;
+    mileage?: number | null;
   }[];
   orders?: {
     id: string;
@@ -78,6 +83,8 @@ export interface UpdateUserDto {
   phone?: string;
   password?: string;
   roleId?: string;
+  isBlocked?: boolean;
+  avatarUrl?: string;
 }
 
 export interface UpdateCarDto {
@@ -88,6 +95,7 @@ export interface UpdateCarDto {
   year?: number;
   vin?: string;
   licensePlate?: string;
+  mileage?: number;
 }
 
 export interface UpdateProfileDto {
@@ -95,6 +103,7 @@ export interface UpdateProfileDto {
   surName?: string;
   email?: string;
   phone?: string;
+  avatarUrl?: string;
   cars?: UpdateCarDto[];
 }
 

@@ -33,6 +33,7 @@ export class VehicleService {
     vin: string;
     licensePlate?: string;
     information?: string;
+    mileage?: number;
   }) {
     const [created] = await this.databaseService.db
       .insert(cars)
@@ -48,6 +49,7 @@ export class VehicleService {
     vin: string;
     licensePlate: string;
     information: string;
+    mileage: number;
   }>) {
     const car = await this.findById(id);
     if (!isAdmin && car.userId !== userId) {

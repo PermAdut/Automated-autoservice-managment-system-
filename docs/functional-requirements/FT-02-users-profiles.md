@@ -17,8 +17,9 @@
 | Несколько авто на клиента | ✅ | `VehicleModule` — `GET/POST /api/v1.0/vehicle` |
 | История заказов по авто | ✅ | `OrderModule` — заказы связаны с `userId` + `carId` |
 | Баллы лояльности в профиле | ✅ | `GET /api/v1.0/promotions/loyalty/my` — `LoyaltyPage.tsx` |
-| Блокировка учётной записи | ❌ | Нет поля `isBlocked` / `isActive` в `Users` |
-| Фото профиля | ❌ | Нет avatar URL в схеме; upload через `StorageModule` не привязан к профилю |
+| Блокировка учётной записи | ✅ | `Users.isBlocked` — admin через `PUT /users/:id`; проверка при login/JWT |
+| Фото профиля | ✅ | `Users.avatarUrl` — upload через `StorageModule` + `Profile.tsx` |
+| Пробег автомобиля | ✅ | `Cars.mileage` — `VehicleModule`, `Profile.tsx`, `VehiclesPage.tsx` |
 
 ### Backend
 
@@ -63,14 +64,14 @@ server/src/modules/VehicleModule/
 
 | Таблица | Назначение |
 |---|---|
-| `Users` | login, name, surName, email, phone, roleId |
+| `Users` | login, name, surName, email, phone, roleId, avatarUrl, isBlocked |
 | `Passport` | identityNumber, birthDate, gender |
-| `Cars` | brand, model, year, vin, licensePlate, userId |
+| `Cars` | brand, model, year, vin, licensePlate, userId, mileage |
 | `Orders` | история заказов по userId / carId |
 | `LoyaltyPrograms` | points, tier |
 
 ## Пробелы
 
-- [ ] Блокировка пользователя admin-ом
-- [ ] Загрузка и отображение фото профиля
-- [ ] Пробег автомобиля (`Cars.mileage` есть в схеме, но UI/API может быть неполным)
+- [x] Блокировка пользователя admin-ом
+- [x] Загрузка и отображение фото профиля
+- [x] Пробег автомобиля (`Cars.mileage`)

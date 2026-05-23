@@ -37,6 +37,7 @@ export interface Car {
   year: string;
   vin: string;
   licensePlate: string;
+  mileage?: number | null;
 }
 
 export interface Order {

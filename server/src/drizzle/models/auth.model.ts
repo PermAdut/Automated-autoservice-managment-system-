@@ -1,5 +1,6 @@
 import { relations } from 'drizzle-orm';
 import {
+  boolean,
   index,
   text,
   timestamp,
@@ -43,6 +44,8 @@ export const users = schema.table(
     passwordHash: text('passwordHash'),
     oauthProvider: oauthProviderEnum('oauthProvider').default('local'),
     oauthId: varchar('oauthId'),
+    avatarUrl: text('avatarUrl'),
+    isBlocked: boolean('isBlocked').default(false).notNull(),
     createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
     updatedAt: timestamp('updatedAt', { mode: 'date' }),
     tenantId: uuid('tenantId').references(() => tenantSettings.id),

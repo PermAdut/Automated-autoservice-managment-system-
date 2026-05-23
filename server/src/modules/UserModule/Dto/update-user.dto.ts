@@ -4,6 +4,7 @@ import {
   IsOptional,
   MinLength,
   IsUUID,
+  IsBoolean,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -42,4 +43,14 @@ export class UpdateUserDto {
   @IsOptional()
   @IsUUID()
   roleId?: string;
+
+  @ApiProperty({ description: 'Block user account', type: Boolean, required: false })
+  @IsOptional()
+  @IsBoolean()
+  isBlocked?: boolean;
+
+  @ApiProperty({ description: 'Profile avatar URL', type: String, required: false })
+  @IsOptional()
+  @IsString()
+  avatarUrl?: string;
 }

@@ -94,10 +94,14 @@ export class UserController {
   @Put(':id')
   @Roles('admin', 'manager')
   async updateUser(
+    @Req() req: AuthenticatedRequest,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() user: UpdateUserDto
   ) {
-    return await this.userService.updateUser(id, user);
+    const callerRole = req.user?.roleId
+      ? await this.userService.getRoleById(req.user.roleId)
+      : null;
+    return await this.userService.updateUser(id, user, callerRole?.name);
   }
 
   @HttpCode(200)

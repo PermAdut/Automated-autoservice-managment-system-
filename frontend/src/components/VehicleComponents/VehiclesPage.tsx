@@ -22,9 +22,10 @@ const vehicleSchema = z.object({
   brand: z.string().min(1, "Марка обязательна"),
   model: z.string().min(1, "Модель обязательна"),
   year: z.number().min(1900, "Год должен быть больше 1900").max(2100),
-  vin: z.string().min(1, "VIN обязателен"),
+  vin: z.string().min(1, "VIN обязательен"),
   licensePlate: z.string().optional(),
   information: z.string().optional(),
+  mileage: z.number().min(0, "Пробег не может быть отрицательным").optional(),
 });
 
 type VehicleFormData = z.infer<typeof vehicleSchema>;
@@ -54,6 +55,11 @@ function VehicleCard({
             {vehicle.licensePlate && (
               <p className="text-sm text-gray-600 mt-0.5">
                 Гос. номер: <span className="font-semibold">{vehicle.licensePlate}</span>
+              </p>
+            )}
+            {vehicle.mileage != null && (
+              <p className="text-sm text-gray-600 mt-0.5">
+                Пробег: <span className="font-semibold">{vehicle.mileage.toLocaleString()} км</span>
               </p>
             )}
             {vehicle.information && (
@@ -116,6 +122,11 @@ function VehicleForm({
         <div>
           <Label htmlFor="licensePlate">Гос. номер</Label>
           <Input id="licensePlate" {...register("licensePlate")} placeholder="А001АА77" />
+        </div>
+        <div>
+          <Label htmlFor="mileage">Пробег (км)</Label>
+          <Input id="mileage" type="number" {...register("mileage", { valueAsNumber: true })} placeholder="85000" />
+          {errors.mileage && <p className="text-red-500 text-xs mt-1">{errors.mileage.message}</p>}
         </div>
         <div>
           <Label htmlFor="information">Дополнительно</Label>

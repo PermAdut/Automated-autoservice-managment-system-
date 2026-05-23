@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm';
-import { bigint, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { bigint, integer, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { schema } from '../pgSchema';
 import { employees, orders, users } from '../schema';
 import { tenantSettings } from './tenant.model';
@@ -15,6 +15,7 @@ export const cars = schema.table('Cars', {
   year: bigint('year', { mode: 'number' }).notNull(),
   vin: varchar('vin').notNull(),
   licensePlate: varchar('licensePlate'),
+  mileage: integer('mileage'),
 });
 
 export const subscriptions = schema.table('Subscriptions', {

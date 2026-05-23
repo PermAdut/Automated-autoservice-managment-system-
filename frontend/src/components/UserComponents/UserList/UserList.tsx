@@ -26,6 +26,7 @@ type UserRow = {
   surName: string;
   roleName?: string;
   email?: string;
+  isBlocked?: boolean;
 };
 
 const roleColors: Record<string, "info" | "success" | "warning" | "secondary"> = {
@@ -97,7 +98,14 @@ function UserRowActions({ row }: { row: UserRow }) {
               const { role, ...rest } = data;
               await updateUser({
                 id: row.id,
-                data: { ...rest, roleId: role?.id ?? data.roleId },
+                data: {
+                  name: rest.name,
+                  surName: rest.surName,
+                  email: rest.email,
+                  phone: rest.phone,
+                  roleId: role?.id ?? data.roleId,
+                  isBlocked: data.isBlocked,
+                },
               }).unwrap();
             } catch (err) {
               console.error("Failed to update user:", err);
@@ -121,6 +129,9 @@ const columns: ColumnDef<UserRow>[] = [
         className="font-medium text-gray-900 hover:text-indigo-600 transition-colors"
       >
         {row.original.surName} {row.original.name}
+        {row.original.isBlocked && (
+          <Badge variant="secondary" className="ml-2">Заблокирован</Badge>
+        )}
       </Link>
     ),
   },

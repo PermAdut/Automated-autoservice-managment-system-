@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGetMyProfileQuery, useUpdateMyProfileMutation, UpdateCarDto } from "../../../api/usersApi";
+import { uploadProfilePhoto } from "../../../api/storageApi";
 import { useGetMyVehiclesQuery } from "../../../api/vehiclesApi";
 import { useGetRemindersQuery, useCompleteReminderMutation } from "../../../api/diagnosticsApi";
 import { useFieldArray, useForm } from "react-hook-form";
@@ -91,6 +92,9 @@ const Profile: React.FC = () => {
   const { data: profile, isLoading, error } = useGetMyProfileQuery();
   const [updateProfile, { isLoading: isUpdating }] = useUpdateMyProfileMutation();
   const [isEditing, setIsEditing] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -119,6 +123,7 @@ const Profile: React.FC = () => {
 
   useEffect(() => {
     if (profile) {
+      setAvatarUrl(profile.avatarUrl ?? null);
       reset({
         name: profile.name || "",
         surName: profile.surName || "",
@@ -132,10 +137,33 @@ const Profile: React.FC = () => {
           year: car.year ? parseInt(car.year) : undefined,
           vin: car.vin || "",
           licensePlate: car.licensePlate || "",
+          mileage: car.mileage ?? undefined,
         })) || [],
       });
     }
   }, [profile, reset]);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Выберите изображение (JPEG, PNG, WebP)");
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    try {
+      const url = await uploadProfilePhoto(file);
+      setAvatarUrl(url);
+    } catch (err) {
+      console.error("Avatar upload failed:", err);
+      alert("Не удалось загрузить фото. Проверьте настройки хранилища.");
+    } finally {
+      setIsUploadingAvatar(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const onSubmit = async (data: ProfileFormData) => {
     try {
@@ -144,6 +172,7 @@ const Profile: React.FC = () => {
         surName: data.surName,
         email: data.email,
         phone: data.phone || undefined,
+        avatarUrl: avatarUrl ?? undefined,
         cars: data.cars.map((car) => ({
           id: car.id,
           brand: car.brand,
@@ -152,6 +181,7 @@ const Profile: React.FC = () => {
           year: car.year,
           vin: car.vin,
           licensePlate: car.licensePlate || undefined,
+          mileage: car.mileage,
         })),
       }).unwrap();
       setIsEditing(false);
@@ -210,6 +240,53 @@ const Profile: React.FC = () => {
       <MaintenanceRecommendations />
 
       <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg p-8 shadow-sm mt-6">
+        <div className="mb-8 flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+          <div className="relative shrink-0">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="Аватар"
+                className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-indigo-100 flex items-center justify-center text-3xl text-indigo-600 font-bold">
+                {(profile.name?.[0] ?? "?").toUpperCase()}
+              </div>
+            )}
+          </div>
+          <div className="flex flex-col items-center sm:items-start gap-2">
+            <p className="text-sm text-gray-500 m-0">Фото профиля</p>
+            {isEditing && (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  className={btnSecondarySmall}
+                  disabled={isUploadingAvatar}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {isUploadingAvatar ? "Загрузка..." : "Загрузить фото"}
+                </button>
+                {avatarUrl && (
+                  <button
+                    type="button"
+                    className="text-sm text-red-600 hover:underline bg-transparent border-none cursor-pointer"
+                    onClick={() => setAvatarUrl(null)}
+                  >
+                    Удалить фото
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
         <div className="mb-8">
           <h2 className="text-2xl font-semibold text-gray-700 mb-4">Основная информация</h2>
           <div className="grid gap-4 grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(250px,1fr))]">
@@ -277,6 +354,7 @@ const Profile: React.FC = () => {
                     year: undefined,
                     licensePlate: "",
                     information: "",
+                    mileage: undefined,
                   })
                 }
               >
@@ -371,6 +449,23 @@ const Profile: React.FC = () => {
                         disabled={!isEditing}
                         className={inputClass(false)}
                       />
+                    </div>
+                    <div className="flex flex-col">
+                      <label className="font-medium text-gray-700 mb-2">Пробег (км)</label>
+                      <input
+                        type="number"
+                        {...register(`cars.${index}.mileage`, {
+                          valueAsNumber: true,
+                          min: { value: 0, message: "Пробег не может быть отрицательным" },
+                        })}
+                        disabled={!isEditing}
+                        className={inputClass(!!errors.cars?.[index]?.mileage)}
+                      />
+                      {errors.cars?.[index]?.mileage && (
+                        <span className="text-red-600 text-sm mt-1">
+                          {errors.cars[index].mileage?.message}
+                        </span>
+                      )}
                     </div>
                     <div className="flex flex-col col-span-full">
                       <label className="font-medium text-gray-700 mb-2">Информация</label>

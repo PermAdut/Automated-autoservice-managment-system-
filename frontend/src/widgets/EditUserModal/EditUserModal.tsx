@@ -1,6 +1,8 @@
 import { FC, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useSelector } from "react-redux";
 import { UserDetailed, useGetRolesQuery } from "../../api/usersApi";
+import type { RootState } from "../../store";
 
 interface EditUserModalProps {
   isOpen: boolean;
@@ -17,6 +19,8 @@ export const EditUserModal: FC<EditUserModalProps> = ({
 }) => {
   const [formData, setFormData] = useState<UserDetailed>(initialData);
   const { data: roles = [] } = useGetRolesQuery();
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const isAdmin = currentUser?.roleName === "admin";
 
   useEffect(() => {
     if (isOpen) {
@@ -43,7 +47,11 @@ export const EditUserModal: FC<EditUserModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ ...formData, roleId: formData.role?.id });
+    onSave({
+      ...formData,
+      roleId: formData.role?.id,
+      isBlocked: formData.isBlocked,
+    });
     onClose();
   };
   const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -142,6 +150,22 @@ export const EditUserModal: FC<EditUserModalProps> = ({
               ))}
             </select>
           </div>
+          {isAdmin && (
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="isBlocked"
+                checked={formData.isBlocked ?? false}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, isBlocked: e.target.checked }))
+                }
+                className="w-4 h-4 rounded border-gray-300"
+              />
+              <label htmlFor="isBlocked" className="text-sm font-medium text-gray-700">
+                Заблокировать учётную запись
+              </label>
+            </div>
+          )}
           <div className="flex justify-end gap-3 mt-6">
             <button
               type="button"

@@ -34,6 +34,7 @@ class CreateVehicleDto {
   @ApiProperty() @IsString() vin: string;
   @ApiProperty({ required: false }) @IsOptional() @IsString() licensePlate?: string;
   @ApiProperty({ required: false }) @IsOptional() @IsString() information?: string;
+  @ApiProperty({ required: false }) @IsOptional() @IsNumber() @Type(() => Number) @Min(0) mileage?: number;
 }
 
 class UpdateVehicleDto {
@@ -43,6 +44,7 @@ class UpdateVehicleDto {
   @ApiProperty({ required: false }) @IsOptional() @IsString() vin?: string;
   @ApiProperty({ required: false }) @IsOptional() @IsString() licensePlate?: string;
   @ApiProperty({ required: false }) @IsOptional() @IsString() information?: string;
+  @ApiProperty({ required: false }) @IsOptional() @IsNumber() @Type(() => Number) @Min(0) mileage?: number;
 }
 
 @ApiTags('Vehicle')

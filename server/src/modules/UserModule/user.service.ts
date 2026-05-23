@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -19,6 +20,7 @@ import {
   cars,
   reviews,
   subscriptions,
+  refreshTokens,
 } from '../database/schema';
 import { asc, desc, eq, like, or, inArray } from 'drizzle-orm';
 
@@ -172,6 +174,8 @@ export class UserService {
         phone: users.phone,
         roleId: users.roleId,
         roleName: roles.name,
+        avatarUrl: users.avatarUrl,
+        isBlocked: users.isBlocked,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       })
@@ -232,6 +236,8 @@ export class UserService {
           email: user.email,
           phone: user.phone,
           role: user.roleName || '',
+          avatarUrl: user.avatarUrl,
+          isBlocked: user.isBlocked,
           createdAt: user.createdAt?.toISOString() || '',
           updatedAt: user.updatedAt?.toISOString() || '',
           passport: passport
@@ -256,6 +262,7 @@ export class UserService {
             year: c.year.toString(),
             vin: c.vin,
             licensePlate: c.licensePlate || '',
+            mileage: c.mileage ?? null,
           })),
           reviews: userReviews.map(r => ({
             id: r.id,
@@ -292,6 +299,8 @@ export class UserService {
         surName: users.surName,
         email: users.email,
         phone: users.phone,
+        avatarUrl: users.avatarUrl,
+        isBlocked: users.isBlocked,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
         roleId: roles.id,
@@ -346,6 +355,8 @@ export class UserService {
         surName: user.surName,
         email: user.email,
         phone: user.phone,
+        avatarUrl: user.avatarUrl,
+        isBlocked: user.isBlocked,
         createdAt: user.createdAt?.toISOString() || '',
         updatedAt: user.updatedAt?.toISOString() || '',
         passport: passport
@@ -370,11 +381,14 @@ export class UserService {
         })),
         cars: userCars.map(c => ({
           id: c.id,
+          brand: c.brand,
+          model: c.model,
           name: `${c.brand} ${c.model}`,
           information: c.information || '',
           year: c.year.toString(),
           vin: c.vin,
           licensePlate: c.licensePlate || '',
+          mileage: c.mileage ?? null,
         })),
         orders: userOrders.map(o => ({
           id: o.id,
@@ -405,7 +419,8 @@ export class UserService {
 
   async updateUser(
     id: string,
-    userBody: UpdateUserDto
+    userBody: UpdateUserDto,
+    callerRoleName?: string
   ): Promise<UserResponseDto> {
     const userCheck = await this.databaseService.db
       .select()
@@ -415,6 +430,10 @@ export class UserService {
 
     if (userCheck.length === 0) {
       throw new NotFoundException(`User with id ${id} not found`);
+    }
+
+    if (userBody.isBlocked !== undefined && callerRoleName !== 'admin') {
+      throw new ForbiddenException('Only admin can block users');
     }
 
     let newPasswordHash = userCheck[0].passwordHash;
@@ -444,9 +463,23 @@ export class UserService {
         phone: userBody.phone ?? userCheck[0].phone,
         passwordHash: newPasswordHash,
         roleId: userBody.roleId ?? userCheck[0].roleId,
+        avatarUrl:
+          userBody.avatarUrl !== undefined
+            ? userBody.avatarUrl
+            : userCheck[0].avatarUrl,
+        isBlocked:
+          userBody.isBlocked !== undefined
+            ? userBody.isBlocked
+            : userCheck[0].isBlocked,
         updatedAt: new Date(),
       })
       .where(eq(users.id, id));
+
+    if (userBody.isBlocked === true) {
+      await this.databaseService.db
+        .delete(refreshTokens)
+        .where(eq(refreshTokens.userId, id));
+    }
 
     return this.findById(id);
   }
@@ -470,7 +503,8 @@ export class UserService {
       profileData.name ||
       profileData.surName ||
       profileData.email ||
-      profileData.phone
+      profileData.phone ||
+      profileData.avatarUrl !== undefined
     ) {
       await this.databaseService.db
         .update(users)
@@ -479,6 +513,10 @@ export class UserService {
           surName: profileData.surName ?? userCheck[0].surName,
           email: profileData.email ?? userCheck[0].email,
           phone: profileData.phone ?? userCheck[0].phone,
+          avatarUrl:
+            profileData.avatarUrl !== undefined
+              ? profileData.avatarUrl
+              : userCheck[0].avatarUrl,
           updatedAt: new Date(),
         })
         .where(eq(users.id, userId));
@@ -520,6 +558,7 @@ export class UserService {
               year: carData.year,
               vin: carData.vin,
               licensePlate: carData.licensePlate ?? null,
+              mileage: carData.mileage ?? null,
             })
             .where(eq(cars.id, carData.id));
         } else {
@@ -533,6 +572,7 @@ export class UserService {
               year: carData.year,
               vin: carData.vin,
               licensePlate: carData.licensePlate ?? null,
+              mileage: carData.mileage ?? null,
             });
           }
         }

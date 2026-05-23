@@ -49,6 +49,21 @@ export class UserResponseDto {
 
   @Expose()
   @ApiProperty({
+    description: 'Profile avatar URL',
+    type: String,
+    nullable: true,
+  })
+  avatarUrl?: string | null;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Whether the account is blocked',
+    type: Boolean,
+  })
+  isBlocked: boolean;
+
+  @Expose()
+  @ApiProperty({
     description: 'User createdAt',
     type: String,
   })

@@ -119,6 +119,10 @@ export class AuthService {
 
     const userData = user[0];
 
+    if (userData.isBlocked) {
+      throw new UnauthorizedException('Учётная запись заблокирована');
+    }
+
     // Check if user is OAuth-only (no password)
     if (!userData.passwordHash) {
       throw new UnauthorizedException(
@@ -205,6 +209,11 @@ export class AuthService {
     }
 
     const userData = user[0];
+
+    if (userData.isBlocked) {
+      throw new UnauthorizedException('Учётная запись заблокирована');
+    }
+
     const payload = {
       email: userData.email,
       sub: userData.id,
@@ -259,6 +268,11 @@ export class AuthService {
 
     if (existingUser.length > 0) {
       const user = existingUser[0];
+
+      if (user.isBlocked) {
+        throw new UnauthorizedException('Учётная запись заблокирована');
+      }
+
       // Update OAuth info if not set
       if (!user.oauthId) {
         await this.databaseService.db
