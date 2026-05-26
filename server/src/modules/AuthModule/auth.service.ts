@@ -142,9 +142,15 @@ export class AuthService {
     // Reset fail counter on success
     await this.redisService.del(failKey);
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash: _pwd, ...result } = userData;
-    return result;
+    return {
+      id: userData.id,
+      email: userData.email,
+      name: userData.name,
+      surName: userData.surName,
+      phone: userData.phone,
+      roleId: userData.roleId,
+      login: userData.login,
+    };
   }
 
   async login(user: ValidatedUser) {
@@ -244,6 +250,24 @@ export class AuthService {
     await this.databaseService.db
       .delete(refreshTokens)
       .where(eq(refreshTokens.token, token));
+  }
+
+  async logout(refreshToken: string, accessToken?: string): Promise<void> {
+    await this.revokeRefreshToken(refreshToken);
+
+    if (!accessToken) return;
+
+    try {
+      const decoded = this.jwtService.decode(accessToken);
+      if (!decoded?.exp) return;
+
+      const ttl = decoded.exp - Math.floor(Date.now() / 1000);
+      if (ttl > 0) {
+        await this.redisService.blacklistToken(accessToken, ttl);
+      }
+    } catch {
+      // ignore malformed token on logout
+    }
   }
 
   async validateGoogleUser(profile: GoogleProfile) {

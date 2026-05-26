@@ -24,7 +24,7 @@ type UserRow = {
   id: string;
   name: string;
   surName: string;
-  roleName?: string;
+  role?: string;
   email?: string;
   isBlocked?: boolean;
 };
@@ -32,6 +32,7 @@ type UserRow = {
 const roleColors: Record<string, "info" | "success" | "warning" | "secondary"> = {
   admin: "warning",
   manager: "info",
+  customer: "success",
   client: "success",
   mechanic: "secondary",
 };
@@ -39,6 +40,7 @@ const roleColors: Record<string, "info" | "success" | "warning" | "secondary"> =
 const roleLabels: Record<string, string> = {
   admin: "Администратор",
   manager: "Менеджер",
+  customer: "Клиент",
   client: "Клиент",
   mechanic: "Механик",
 };
@@ -103,7 +105,7 @@ function UserRowActions({ row }: { row: UserRow }) {
                   surName: rest.surName,
                   email: rest.email,
                   phone: rest.phone,
-                  roleId: role?.id ?? data.roleId,
+                  roleId: data.roleId ?? (typeof role === "object" ? role?.id : undefined),
                   isBlocked: data.isBlocked,
                 },
               }).unwrap();
@@ -121,8 +123,10 @@ function UserRowActions({ row }: { row: UserRow }) {
 
 const columns: ColumnDef<UserRow>[] = [
   {
-    accessorKey: "name",
+    id: "fullName",
+    accessorFn: (row) => `${row.surName} ${row.name}`.trim(),
     header: "Имя",
+    sortingFn: "text",
     cell: ({ row }) => (
       <Link
         to={`/user/${row.original.id}`}
@@ -138,13 +142,19 @@ const columns: ColumnDef<UserRow>[] = [
   {
     accessorKey: "email",
     header: "Email",
+    sortingFn: "text",
     cell: ({ getValue }) => (
       <span className="text-gray-500 text-sm">{(getValue() as string) || "—"}</span>
     ),
   },
   {
-    accessorKey: "roleName",
+    accessorKey: "role",
     header: "Роль",
+    sortingFn: (rowA, rowB) => {
+      const labelA = roleLabels[rowA.original.role ?? ""] ?? rowA.original.role ?? "";
+      const labelB = roleLabels[rowB.original.role ?? ""] ?? rowB.original.role ?? "";
+      return labelA.localeCompare(labelB, "ru");
+    },
     cell: ({ getValue }) => {
       const role = (getValue() as string) ?? "";
       return (

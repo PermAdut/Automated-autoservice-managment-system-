@@ -6,9 +6,12 @@ import {
   Param,
   Patch,
   Post,
+  Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { CorporateService } from './corporate.service';
 import { JwtAuthGuard } from '../AuthModule/guards/jwt-auth.guard';
 import { RolesGuard } from '../AuthModule/guards/roles.guard';
@@ -45,6 +48,8 @@ export class CorporateController {
     phone?: string;
     email?: string;
     managerUserId?: string;
+    bankAccount?: string;
+    bic?: string;
   }) {
     return this.corporateService.create(body);
   }
@@ -60,6 +65,8 @@ export class CorporateController {
     phone: string;
     email: string;
     managerUserId: string;
+    bankAccount: string;
+    bic: string;
     isActive: boolean;
   }>) {
     return this.corporateService.update(id, body);
@@ -116,5 +123,52 @@ export class CorporateController {
   @ApiOperation({ summary: 'Remove car from company' })
   removeCar(@Param('id') id: string, @Param('carId') carId: string) {
     return this.corporateService.removeCar(id, carId);
+  }
+
+  @Get('companies/:id/drivers')
+  @ApiOperation({ summary: 'Get company drivers' })
+  getDrivers(@Param('id') id: string) {
+    return this.corporateService.getDrivers(id);
+  }
+
+  @Post('companies/:id/drivers')
+  @ApiOperation({ summary: 'Assign driver to company' })
+  addDriver(@Param('id') id: string, @Body() body: { userId: string }) {
+    return this.corporateService.addDriver(id, body.userId);
+  }
+
+  @Delete('companies/:id/drivers/:userId')
+  @ApiOperation({ summary: 'Remove driver from company' })
+  removeDriver(@Param('id') id: string, @Param('userId') userId: string) {
+    return this.corporateService.removeDriver(id, userId);
+  }
+
+  @Get('companies/:id/spend')
+  @ApiOperation({ summary: 'Get total spend for company' })
+  getSpend(@Param('id') id: string) {
+    return this.corporateService.getCompanySpend(id).then(total => ({ total }));
+  }
+
+  @Get('companies/:id/monthly-act')
+  @ApiOperation({ summary: 'Download monthly act PDF' })
+  @ApiQuery({ name: 'year', required: false })
+  @ApiQuery({ name: 'month', required: false })
+  async downloadMonthlyAct(
+    @Param('id') id: string,
+    @Query('year') yearStr?: string,
+    @Query('month') monthStr?: string,
+    @Res() res?: Response,
+  ) {
+    const now = new Date();
+    const year = yearStr ? parseInt(yearStr, 10) : now.getFullYear();
+    const month = monthStr ? parseInt(monthStr, 10) : now.getMonth() + 1;
+    const pdf = await this.corporateService.generateMonthlyActPdf(id, year, month);
+
+    res!.setHeader('Content-Type', 'application/pdf');
+    res!.setHeader(
+      'Content-Disposition',
+      `attachment; filename="act-${id.slice(0, 8)}-${year}-${month}.pdf"`,
+    );
+    res!.send(pdf);
   }
 }

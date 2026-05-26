@@ -71,7 +71,6 @@ export class PredictiveMaintenanceService {
         model: cars.model,
         year: cars.year,
         userEmail: users.email,
-        userPhone: users.phone,
         userName: users.name,
       })
       .from(cars)
@@ -99,7 +98,6 @@ export class PredictiveMaintenanceService {
       model: string | null;
       year: number | null;
       userEmail: string | null;
-      userPhone: string | null;
       userName: string | null;
     },
     companyName: string,
@@ -207,7 +205,6 @@ export class PredictiveMaintenanceService {
         type: norm.type,
         dueDate: needsByDate ? nextDueDate.toLocaleDateString('ru-RU') : undefined,
         dueMileage: needsByMileage ? nextDueMileage : undefined,
-        userPhone: car.userPhone ?? undefined,
         userEmail: car.userEmail ?? undefined,
         userName: car.userName ?? undefined,
         companyName,

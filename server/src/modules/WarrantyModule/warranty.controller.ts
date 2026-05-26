@@ -38,6 +38,32 @@ export class WarrantyController {
     return this.warrantyService.findByOrder(orderId);
   }
 
+  @Get('claims/my')
+  @ApiOperation({ summary: 'Get warranty claims for current user' })
+  getMyClaims(@Request() req: AuthenticatedRequest) {
+    return this.warrantyService.getUserClaims(req.user.userId);
+  }
+
+  @Get('claims')
+  @UseGuards(RolesGuard)
+  @Roles('admin', 'manager')
+  @ApiOperation({ summary: 'Get all warranty claims (admin/manager)' })
+  getClaims(@Query('warrantyId') warrantyId?: string) {
+    return this.warrantyService.getClaims(warrantyId);
+  }
+
+  @Get(':id/certificate')
+  @ApiOperation({ summary: 'Download warranty certificate as PDF' })
+  async downloadCertificate(@Param('id') id: string, @Res() res: Response) {
+    const pdf = await this.warrantyService.generateCertificatePdf(id);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="warranty-${id.slice(0, 8)}.pdf"`,
+    );
+    res.send(pdf);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get warranty by ID' })
   findOne(@Param('id') id: string) {
@@ -69,20 +95,6 @@ export class WarrantyController {
     return this.warrantyService.updateStatus(id, body.status);
   }
 
-  @Get('claims/my')
-  @ApiOperation({ summary: 'Get warranty claims for current user' })
-  getMyClaims(@Request() req: AuthenticatedRequest) {
-    return this.warrantyService.getUserClaims(req.user.userId);
-  }
-
-  @Get('claims')
-  @UseGuards(RolesGuard)
-  @Roles('admin', 'manager')
-  @ApiOperation({ summary: 'Get all warranty claims (admin/manager)' })
-  getClaims(@Query('warrantyId') warrantyId?: string) {
-    return this.warrantyService.getClaims(warrantyId);
-  }
-
   @Post('claims')
   @ApiOperation({ summary: 'File a warranty claim' })
   createClaim(
@@ -108,17 +120,5 @@ export class WarrantyController {
     },
   ) {
     return this.warrantyService.updateClaimStatus(id, body.status, body.resolution);
-  }
-
-  @Get(':id/certificate')
-  @ApiOperation({ summary: 'Download warranty certificate as PDF' })
-  async downloadCertificate(@Param('id') id: string, @Res() res: Response) {
-    const pdf = await this.warrantyService.generateCertificatePdf(id);
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="warranty-${id.slice(0, 8)}.pdf"`,
-    );
-    res.send(pdf);
   }
 }

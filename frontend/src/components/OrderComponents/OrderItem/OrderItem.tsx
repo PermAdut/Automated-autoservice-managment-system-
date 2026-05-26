@@ -9,7 +9,6 @@ interface OrderItemProps {
   status: string;
   createdAt: string;
   updatedAt: string | null;
-  completedAt: string | null;
   services?: { id: string; name: string; description: string; price: number | string }[];
   sparePart?: {
     id: string;
@@ -28,7 +27,6 @@ export const OrderItem: React.FC<OrderItemProps> = ({
   status,
   createdAt,
   updatedAt,
-  completedAt,
   services,
   sparePart,
 }) => {
@@ -64,10 +62,6 @@ export const OrderItem: React.FC<OrderItemProps> = ({
         <p>
           <strong>Обновлён:</strong>{" "}
           {updatedAt ? new Date(updatedAt).toLocaleString() : "Не обновлён"}
-        </p>
-        <p>
-          <strong>Завершён:</strong>{" "}
-          {completedAt ? new Date(completedAt).toLocaleString() : "Не завершён"}
         </p>
       </div>
 

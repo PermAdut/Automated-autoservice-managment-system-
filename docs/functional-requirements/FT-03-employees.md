@@ -105,6 +105,8 @@ sequenceDiagram
 
 ### TC-3.1 CRUD карточки сотрудника
 
+**Роль:** admin (`admin@gmail.com` / `password123`)
+
 | Шаг | Действие | Ожидаемый результат |
 |---|---|---|
 | 1 | Admin: `POST /employee` с name, surName, positionId, salary | 201, карточка создана |
@@ -150,6 +152,8 @@ sequenceDiagram
 | 3 | Завершить/снять заказ, время в смене | `isAvailable=true` |
 
 ### TC-3.6 Подписка на мастера
+
+**Роль:** customer (`user1@gmail.com` / `password123`)
 
 | Шаг | Действие | Ожидаемый результат |
 |---|---|---|

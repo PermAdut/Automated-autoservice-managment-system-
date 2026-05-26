@@ -5,6 +5,9 @@ import {
   useUpdateBranchMutation,
   useGetTransfersQuery,
   useUpdateTransferStatusMutation,
+  useGetPostsQuery,
+  useCreatePostMutation,
+  useDeletePostMutation,
   type Branch,
 } from "../../api/branchesApi";
 import { PageLayout } from "../layout/PageLayout";
@@ -13,6 +16,7 @@ import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { ModalOverlay } from "../ui/modal-overlay";
 import { cn } from "../../lib/utils";
 
 const transferStatusConfig: Record<string, { label: string; variant: "warning" | "info" | "success" | "destructive" }> = {
@@ -62,7 +66,7 @@ function BranchFormModal({
   const set = (k: keyof Branch, v: string) => setForm(prev => ({ ...prev, [k]: v }));
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <ModalOverlay className="bg-black/40">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-4">
         <h2 className="text-lg font-semibold">{branch ? "Редактировать филиал" : "Новый филиал"}</h2>
         <div className="grid grid-cols-2 gap-4">
@@ -98,7 +102,7 @@ function BranchFormModal({
           </Button>
         </div>
       </div>
-    </div>
+    </ModalOverlay>
   );
 }
 
@@ -138,6 +142,62 @@ function TransfersTab() {
   );
 }
 
+function PostsTab({ branches }: { branches: Branch[] }) {
+  const [branchId, setBranchId] = useState(branches[0]?.id ?? "");
+  const [name, setName] = useState("");
+  const { data: posts = [], isLoading } = useGetPostsQuery(branchId, { skip: !branchId });
+  const [createPost, { isLoading: creating }] = useCreatePostMutation();
+  const [deletePost] = useDeletePostMutation();
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-3 items-end">
+        <div>
+          <Label>Филиал</Label>
+          <select
+            className="block mt-1 px-3 py-2 border rounded-lg text-sm"
+            value={branchId}
+            onChange={(e) => setBranchId(e.target.value)}
+          >
+            {branches.map((b) => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex-1 min-w-[200px]">
+          <Label>Название поста</Label>
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Пост 1" />
+        </div>
+        <Button
+          disabled={!branchId || !name || creating}
+          onClick={async () => {
+            await createPost({ branchId, name });
+            setName("");
+          }}
+        >
+          Добавить
+        </Button>
+      </div>
+      {isLoading ? (
+        <p className="text-gray-400 text-sm">Загрузка...</p>
+      ) : posts.length === 0 ? (
+        <p className="text-gray-400 text-sm">Нет производственных постов</p>
+      ) : (
+        <div className="space-y-2">
+          {posts.map((p) => (
+            <div key={p.id} className="flex items-center justify-between p-3 border rounded-lg">
+              <span className="font-medium">{p.name}</span>
+              <Button size="sm" variant="outline" onClick={() => deletePost({ branchId, postId: p.id })}>
+                Удалить
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function BranchesPage() {
   const { data: branches = [], isLoading } = useGetBranchesQuery();
   const [createBranch, { isLoading: isCreating }] = useCreateBranchMutation();
@@ -145,7 +205,7 @@ export default function BranchesPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
-  const [tab, setTab] = useState<"branches" | "transfers">("branches");
+  const [tab, setTab] = useState<"branches" | "transfers" | "posts">("branches");
 
   const handleSubmit = async (data: Partial<Branch>) => {
     if (editingBranch) {
@@ -168,7 +228,7 @@ export default function BranchesPage() {
       </div>
 
       <div className="flex gap-1 p-1 bg-gray-100 rounded-xl w-fit">
-        {(["branches", "transfers"] as const).map(t => (
+        {(["branches", "posts", "transfers"] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -177,7 +237,7 @@ export default function BranchesPage() {
               tab === t ? "bg-white text-indigo-700 shadow-sm" : "bg-transparent text-gray-500 hover:text-gray-700",
             )}
           >
-            {t === "branches" ? `Филиалы (${branches.length})` : "Перемещения"}
+            {t === "branches" ? `Филиалы (${branches.length})` : t === "posts" ? "Посты" : "Перемещения"}
           </button>
         ))}
       </div>
@@ -195,6 +255,7 @@ export default function BranchesPage() {
       )}
 
       {tab === "transfers" && <TransfersTab />}
+      {tab === "posts" && <PostsTab branches={branches} />}
 
       {(showForm || editingBranch) && (
         <BranchFormModal

@@ -9,8 +9,23 @@ import {
   orderDiscounts,
   loyaltyPrograms,
   loyaltyTransactions,
+  tenantSettings,
 } from '../database/schema';
-import { eq, and, desc, lte, gte, sql } from 'drizzle-orm';
+import { eq, and, desc, lte, gte, sql, or, isNull } from 'drizzle-orm';
+
+const TIER_LABELS: Record<string, string> = {
+  bronze: 'Стандарт',
+  silver: 'Серебро',
+  gold: 'Золото',
+  platinum: 'Премиум',
+};
+
+const TIER_MULTIPLIERS: Record<string, number> = {
+  bronze: 1.0,
+  silver: 1.1,
+  gold: 1.2,
+  platinum: 1.5,
+};
 
 @Injectable()
 export class PromotionsService {
@@ -149,7 +164,29 @@ export class PromotionsService {
       .where(eq(loyaltyPrograms.userId, userId))
       .limit(1);
 
-    return program ?? null;
+    if (!program) return null;
+
+    return {
+      ...program,
+      tierLabel: TIER_LABELS[program.tier] ?? program.tier,
+      tierMultiplier: TIER_MULTIPLIERS[program.tier] ?? 1,
+    };
+  }
+
+  async findPersonalDiscounts(userId: string) {
+    const now = new Date();
+    return this.databaseService.db
+      .select()
+      .from(discounts)
+      .where(
+        and(
+          eq(discounts.userId, userId),
+          eq(discounts.isActive, true),
+          or(isNull(discounts.startDate), lte(discounts.startDate, now)),
+          or(isNull(discounts.endDate), gte(discounts.endDate, now)),
+        ),
+      )
+      .orderBy(discounts.name);
   }
 
   async ensureLoyaltyProgram(userId: string) {
@@ -174,7 +211,7 @@ export class PromotionsService {
 
     const newPoints = program.points + points;
     const newTotalEarned = program.totalEarned + points;
-    const tier = this.calculateTier(newTotalEarned);
+    const tier = this.calculateTier(newPoints);
 
     await this.databaseService.db
       .update(loyaltyPrograms)
@@ -202,6 +239,7 @@ export class PromotionsService {
     points: number,
     orderId?: string,
     description?: string,
+    orderAmount?: number,
   ) {
     const program = await this.getLoyaltyByUser(userId);
     if (!program) throw new NotFoundException('Loyalty program not found');
@@ -212,12 +250,27 @@ export class PromotionsService {
       );
     }
 
+    if (orderAmount !== undefined && orderAmount > 0) {
+      const [tenant] = await this.databaseService.db
+        .select({ maxPercent: tenantSettings.loyaltyMaxSpendPercent })
+        .from(tenantSettings)
+        .limit(1);
+      const maxPercent = tenant?.maxPercent ?? 20;
+      const maxPoints = Math.floor((orderAmount * maxPercent) / 100);
+      if (points > maxPoints) {
+        throw new BadRequestException(
+          `Cannot spend more than ${maxPercent}% of order (${maxPoints} points max)`,
+        );
+      }
+    }
+
     const newPoints = program.points - points;
     const newTotalSpent = program.totalSpent + points;
+    const tier = this.calculateTier(newPoints);
 
     await this.databaseService.db
       .update(loyaltyPrograms)
-      .set({ points: newPoints, totalSpent: newTotalSpent, updatedAt: new Date() })
+      .set({ points: newPoints, totalSpent: newTotalSpent, tier, updatedAt: new Date() })
       .where(eq(loyaltyPrograms.id, program.id));
 
     await this.databaseService.db.insert(loyaltyTransactions).values({
@@ -228,7 +281,52 @@ export class PromotionsService {
       description,
     });
 
-    return { points: newPoints };
+    return { points: newPoints, tier, tierLabel: TIER_LABELS[tier] };
+  }
+
+  async earnForCompletedOrder(
+    userId: string,
+    orderId: string,
+    orderAmountRub: number,
+  ) {
+    if (orderAmountRub <= 0) return null;
+
+    const existing = await this.databaseService.db
+      .select({ id: loyaltyTransactions.id })
+      .from(loyaltyTransactions)
+      .innerJoin(loyaltyPrograms, eq(loyaltyTransactions.programId, loyaltyPrograms.id))
+      .where(
+        and(
+          eq(loyaltyPrograms.userId, userId),
+          eq(loyaltyTransactions.orderId, orderId),
+          eq(loyaltyTransactions.type, 'earn'),
+        ),
+      )
+      .limit(1);
+
+    if (existing.length) return null;
+
+    const program = await this.ensureLoyaltyProgram(userId);
+    const [tenant] = await this.databaseService.db
+      .select({ pointsPerRub: tenantSettings.loyaltyPointsPerRub })
+      .from(tenantSettings)
+      .limit(1);
+
+    const baseRate = tenant?.pointsPerRub
+      ? parseFloat(String(tenant.pointsPerRub))
+      : 0.1;
+    const multiplier = TIER_MULTIPLIERS[program.tier] ?? 1;
+    const points = Math.floor(orderAmountRub * baseRate * multiplier);
+
+    if (points <= 0) return null;
+
+    return this.addPoints(
+      userId,
+      points,
+      'earn',
+      orderId,
+      `Начисление за заказ (${orderAmountRub.toFixed(0)} BYN)`,
+    );
   }
 
   async getLoyaltyTransactions(userId: string) {
@@ -243,11 +341,11 @@ export class PromotionsService {
   }
 
   private calculateTier(
-    totalEarned: number,
+    points: number,
   ): 'bronze' | 'silver' | 'gold' | 'platinum' {
-    if (totalEarned >= 10000) return 'platinum';
-    if (totalEarned >= 5000) return 'gold';
-    if (totalEarned >= 1000) return 'silver';
+    if (points >= 5000) return 'platinum';
+    if (points >= 2000) return 'gold';
+    if (points >= 500) return 'silver';
     return 'bronze';
   }
 }

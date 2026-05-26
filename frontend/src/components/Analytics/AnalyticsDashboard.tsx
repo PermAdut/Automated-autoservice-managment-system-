@@ -19,9 +19,13 @@ import {
   useGetTopServicesQuery,
   useGetLowStockQuery,
   useGetTopEmployeesQuery,
+  useGetBranchesComparisonQuery,
 } from "../../api/analyticsApi";
+import { useGetBranchesQuery } from "../../api/branchesApi";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
+import { formatEmployeeName } from "../../utils/formatEmployeeName";
+import { getOrderStatusLabel } from "../../utils/orderStatus";
 import { cn } from "../../lib/utils";
 import { PageLayout } from "../layout/PageLayout";
 
@@ -35,10 +39,15 @@ const periodLabels: Record<Period, string> = {
 };
 
 const statusConfig: Record<string, { label: string; variant: "success" | "info" | "secondary" | "destructive" | "warning" | "purple" }> = {
-  pending: { label: "Ожидание", variant: "warning" },
-  in_progress: { label: "В работе", variant: "info" },
-  completed: { label: "Завершён", variant: "success" },
-  cancelled: { label: "Отменён", variant: "destructive" },
+  pending: { label: getOrderStatusLabel("pending"), variant: "warning" },
+  diagnosed: { label: getOrderStatusLabel("diagnosed"), variant: "info" },
+  in_progress: { label: getOrderStatusLabel("in_progress"), variant: "info" },
+  quality_check: { label: getOrderStatusLabel("quality_check"), variant: "purple" },
+  completed: { label: getOrderStatusLabel("completed"), variant: "success" },
+  cancelled: { label: getOrderStatusLabel("cancelled"), variant: "destructive" },
+  urgent: { label: getOrderStatusLabel("urgent"), variant: "destructive" },
+  created: { label: getOrderStatusLabel("created"), variant: "warning" },
+  quality_control: { label: getOrderStatusLabel("quality_control"), variant: "purple" },
   confirmed: { label: "Подтверждён", variant: "purple" },
 };
 
@@ -89,13 +98,17 @@ function KpiCard({ title, value, growth, prefix = "", suffix = "", icon, iconBg 
 
 export default function AnalyticsDashboard() {
   const [period, setPeriod] = useState<Period>("month");
+  const [branchId, setBranchId] = useState("");
+  const branchParams = branchId ? { branchId } : undefined;
 
-  const { data: kpi, isLoading: kpiLoading } = useGetDashboardKpiQuery(period);
-  const { data: byStatus } = useGetOrdersByStatusQuery();
-  const { data: revenue } = useGetRevenueByMonthQuery();
-  const { data: topServices } = useGetTopServicesQuery(10);
-  const { data: topEmployees } = useGetTopEmployeesQuery(10);
+  const { data: branches = [] } = useGetBranchesQuery();
+  const { data: kpi, isLoading: kpiLoading } = useGetDashboardKpiQuery({ period, branchId: branchId || undefined });
+  const { data: byStatus } = useGetOrdersByStatusQuery(branchParams);
+  const { data: revenue } = useGetRevenueByMonthQuery(branchParams);
+  const { data: topServices } = useGetTopServicesQuery({ limit: 10, branchId: branchId || undefined });
+  const { data: topEmployees } = useGetTopEmployeesQuery({ limit: 10, branchId: branchId || undefined });
   const { data: lowStock } = useGetLowStockQuery();
+  const { data: branchComparison } = useGetBranchesComparisonQuery();
 
   return (
     <PageLayout className="space-y-6">
@@ -105,7 +118,18 @@ export default function AnalyticsDashboard() {
           <BarChartOutlined className="text-indigo-600 text-xl" />
           <h1 className="text-2xl font-bold text-gray-900">Аналитика</h1>
         </div>
-        <div className="flex gap-1.5 p-1 bg-gray-100 rounded-xl">
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white"
+            value={branchId}
+            onChange={(e) => setBranchId(e.target.value)}
+          >
+            <option value="">Все филиалы</option>
+            {branches.map((b) => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
+          <div className="flex gap-1.5 p-1 bg-gray-100 rounded-xl">
           {(Object.keys(periodLabels) as Period[]).map((p) => (
             <button
               key={p}
@@ -120,6 +144,7 @@ export default function AnalyticsDashboard() {
               {periodLabels[p]}
             </button>
           ))}
+        </div>
         </div>
       </div>
 
@@ -198,7 +223,7 @@ export default function AnalyticsDashboard() {
                   return (
                     <div key={item.status} className="flex items-center justify-between">
                       <Badge variant={cfg?.variant ?? "secondary"}>
-                        {cfg?.label ?? item.status}
+                        {cfg?.label ?? getOrderStatusLabel(item.status)}
                       </Badge>
                       <span className="font-semibold text-gray-900 tabular-nums">
                         {item.count}
@@ -359,7 +384,9 @@ export default function AnalyticsDashboard() {
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium text-gray-800 truncate">{e.name}</span>
+                          <span className="text-sm font-medium text-gray-800 truncate">
+                            {formatEmployeeName({ name: e.name, surName: e.surName })}
+                          </span>
                           <span className="text-xs text-gray-400 font-medium tabular-nums ml-2 shrink-0">
                             {e.orderCount} зак.
                           </span>
@@ -405,7 +432,7 @@ export default function AnalyticsDashboard() {
                     <div key={item.status}>
                       <div className="flex items-center justify-between mb-1">
                         <Badge variant={cfg?.variant ?? "secondary"}>
-                          {cfg?.label ?? item.status}
+                          {cfg?.label ?? getOrderStatusLabel(item.status)}
                         </Badge>
                         <span className="font-semibold text-gray-900 tabular-nums text-sm">
                           {item.count} ({Math.round(pct)}%)
@@ -427,6 +454,24 @@ export default function AnalyticsDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {branchComparison && branchComparison.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Сравнение филиалов</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 space-y-2">
+            {branchComparison.map((b) => (
+              <div key={b.branchId} className="flex justify-between text-sm border-b pb-2 last:border-0">
+                <span>{b.branchName}</span>
+                <span className="text-gray-600">
+                  {b.orderCount} заказов · {Number(b.revenue).toLocaleString()} BYN
+                </span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </PageLayout>
   );
 }

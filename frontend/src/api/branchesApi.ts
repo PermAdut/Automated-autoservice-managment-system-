@@ -12,6 +12,14 @@ export interface Branch {
   isActive: boolean;
 }
 
+export interface ProductionPost {
+  id: string;
+  branchId: string;
+  name: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
 export interface StoreTransfer {
   id: string;
   fromStoreId: string;
@@ -62,6 +70,22 @@ export const branchesApi = baseApi.injectEndpoints({
       query: ({ id, status }) => ({ url: `/branches/transfers/${id}/status`, method: 'PATCH', body: { status } }),
       invalidatesTags: ['Branch'],
     }),
+    getPosts: builder.query<ProductionPost[], string>({
+      query: (branchId) => `/branches/${branchId}/posts`,
+      providesTags: ['Branch'],
+    }),
+    createPost: builder.mutation<ProductionPost, { branchId: string; name: string }>({
+      query: ({ branchId, name }) => ({ url: `/branches/${branchId}/posts`, method: 'POST', body: { name } }),
+      invalidatesTags: ['Branch'],
+    }),
+    updatePost: builder.mutation<ProductionPost, { branchId: string; postId: string; data: Partial<ProductionPost> }>({
+      query: ({ branchId, postId, data }) => ({ url: `/branches/${branchId}/posts/${postId}`, method: 'PATCH', body: data }),
+      invalidatesTags: ['Branch'],
+    }),
+    deletePost: builder.mutation<void, { branchId: string; postId: string }>({
+      query: ({ branchId, postId }) => ({ url: `/branches/${branchId}/posts/${postId}`, method: 'DELETE' }),
+      invalidatesTags: ['Branch'],
+    }),
   }),
 });
 
@@ -75,4 +99,8 @@ export const {
   useGetTransfersQuery,
   useCreateTransferMutation,
   useUpdateTransferStatusMutation,
+  useGetPostsQuery,
+  useCreatePostMutation,
+  useUpdatePostMutation,
+  useDeletePostMutation,
 } = branchesApi;

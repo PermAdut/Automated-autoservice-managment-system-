@@ -53,6 +53,12 @@ export const servicesApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [apiTags.SERVICES],
     }),
+    getQualifiedEmployees: builder.query<
+      { employeeId: string; name: string; level: number | null; requiredLevel: number | null }[],
+      string
+    >({
+      query: (serviceId) => `/services/${serviceId}/qualified-employees`,
+    }),
   }),
 });
 
@@ -62,4 +68,5 @@ export const {
   useCreateServiceMutation,
   useUpdateServiceMutation,
   useDeleteServiceMutation,
+  useGetQualifiedEmployeesQuery,
 } = servicesApi;

@@ -32,6 +32,8 @@ export const companies = schema.table(
     phone: varchar('phone', { length: 20 }),
     email: varchar('email', { length: 100 }),
     managerUserId: uuid('managerUserId').references(() => users.id),
+    bankAccount: varchar('bankAccount'),
+    bic: varchar('bic'),
     isActive: boolean('isActive').default(true).notNull(),
     createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
   },
@@ -84,6 +86,21 @@ export const companyCars = schema.table(
   })
 );
 
+export const companyDrivers = schema.table(
+  'CompanyDrivers',
+  {
+    companyId: uuid('companyId')
+      .notNull()
+      .references(() => companies.id, { onDelete: 'cascade' }),
+    userId: uuid('userId')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+  },
+  table => ({
+    pk: primaryKey({ columns: [table.companyId, table.userId] }),
+  })
+);
+
 export const companiesRelations = relations(companies, ({ one, many }) => ({
   manager: one(users, {
     fields: [companies.managerUserId],
@@ -91,6 +108,7 @@ export const companiesRelations = relations(companies, ({ one, many }) => ({
   }),
   contracts: many(companyContracts),
   companyCars: many(companyCars),
+  companyDrivers: many(companyDrivers),
 }));
 
 export const companyContractsRelations = relations(
@@ -111,5 +129,16 @@ export const companyCarsRelations = relations(companyCars, ({ one }) => ({
   car: one(cars, {
     fields: [companyCars.carId],
     references: [cars.id],
+  }),
+}));
+
+export const companyDriversRelations = relations(companyDrivers, ({ one }) => ({
+  company: one(companies, {
+    fields: [companyDrivers.companyId],
+    references: [companies.id],
+  }),
+  user: one(users, {
+    fields: [companyDrivers.userId],
+    references: [users.id],
   }),
 }));

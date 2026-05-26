@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useGetUserByIdQuery } from "../../../api/usersApi";
 import { getOrderStatusLabel } from "../../../utils/orderStatus";
+import { ModalOverlay } from "../../ui/modal-overlay";
 
 const ITEMS_PER_PAGE = 1;
 
@@ -50,12 +51,9 @@ export const DetailedUserComponent: React.FC = () => {
     items ? Math.ceil(items.length / ITEMS_PER_PAGE) : 0;
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4 sm:p-6"
-      onClick={handleClose}
-    >
+    <ModalOverlay zIndex="high" onClick={handleClose}>
       <div
-        className="bg-white rounded-xl p-6 sm:p-8 max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-xl relative m-2.5"
+        className="bg-white rounded-xl p-6 sm:p-8 max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-xl relative"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -230,10 +228,6 @@ export const DetailedUserComponent: React.FC = () => {
                   <strong className="text-gray-800">Обновлён:</strong>{" "}
                   {order.updateAt ? new Date(order.updateAt).toLocaleString() : "Нет"}
                 </p>
-                <p className="text-gray-500 my-1.5">
-                  <strong className="text-gray-800">Завершён:</strong>{" "}
-                  {order.completedAt ? new Date(order.completedAt).toLocaleString() : "Нет"}
-                </p>
               </div>
             ))}
             {getTotalPages(detailedUser.orders) > 1 && (
@@ -256,6 +250,6 @@ export const DetailedUserComponent: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
+    </ModalOverlay>
   );
 };

@@ -3,14 +3,19 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import PDFDocument from 'pdfkit';
+import PDFDocument = require('pdfkit');
 import { DatabaseService } from '../database/database.service';
+import { PDF_FONT_BOLD, PDF_FONT_REGULAR, registerPdfFonts } from '../../utils/pdfFonts';
+import { NotificationService } from '../NotificationModule/notification.service';
 import { warranties, warrantyClaims, orders, users, cars } from '../database/schema';
 import { eq, and, desc, gte } from 'drizzle-orm';
 
 @Injectable()
 export class WarrantyService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(
+    private readonly databaseService: DatabaseService,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   async create(data: {
     orderId: string;
@@ -97,6 +102,15 @@ export class WarrantyService {
       .insert(warrantyClaims)
       .values(data)
       .returning();
+
+    void this.notificationService
+      .notifyUser(
+        data.userId,
+        'Гарантийное обращение принято',
+        `Обращение по гарантии зарегистрировано. Статус: open`,
+      )
+      .catch(() => undefined);
+
     return claim;
   }
 
@@ -167,16 +181,18 @@ export class WarrantyService {
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
 
+      registerPdfFonts(doc);
+
       // Header
-      doc.fontSize(20).font('Helvetica-Bold').text('ГАРАНТИЙНЫЙ ТАЛОН', { align: 'center' });
+      doc.fontSize(20).font(PDF_FONT_BOLD).text('ГАРАНТИЙНЫЙ ТАЛОН', { align: 'center' });
       doc.moveDown(0.3);
-      doc.fontSize(11).font('Helvetica').text(`№ ${warrantyId.slice(0, 8).toUpperCase()}`, { align: 'center' });
+      doc.fontSize(11).font(PDF_FONT_REGULAR).text(`№ ${warrantyId.slice(0, 8).toUpperCase()}`, { align: 'center' });
       doc.moveDown(1.5);
 
       // Warranty info
       const row = (label: string, value: string) => {
-        doc.fontSize(10).font('Helvetica-Bold').text(`${label}: `, { continued: true });
-        doc.font('Helvetica').text(value);
+        doc.fontSize(10).font(PDF_FONT_BOLD).text(`${label}: `, { continued: true });
+        doc.font(PDF_FONT_REGULAR).text(value);
       };
 
       row('Дата выдачи', warranty.issuedAt.toLocaleDateString('ru-RU'));
@@ -191,7 +207,7 @@ export class WarrantyService {
       doc.moveDown(1);
 
       if (orderData) {
-        doc.fontSize(12).font('Helvetica-Bold').text('Клиент и автомобиль');
+        doc.fontSize(12).font(PDF_FONT_BOLD).text('Клиент и автомобиль');
         doc.moveDown(0.3);
         row('Клиент', `${orderData.clientName ?? ''} ${orderData.clientSurName ?? ''}`.trim());
         if (orderData.clientPhone) row('Телефон', orderData.clientPhone);
@@ -203,7 +219,7 @@ export class WarrantyService {
       }
 
       doc.moveDown(2);
-      doc.fontSize(9).font('Helvetica').fillColor('gray')
+      doc.fontSize(9).font(PDF_FONT_REGULAR).fillColor('gray')
         .text(
           'Гарантия действительна при соблюдении условий эксплуатации и прохождении планового технического обслуживания в нашем сервисном центре.',
           { align: 'justify' },

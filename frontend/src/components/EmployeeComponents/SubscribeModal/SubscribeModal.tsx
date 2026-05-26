@@ -4,6 +4,7 @@ import {
   useUnsubscribeFromEmployeeMutation,
   useGetUserSubscriptionQuery,
 } from "../../../api/employeesApi";
+import { ModalOverlay } from "../../ui/modal-overlay";
 
 interface SubscribeModalProps {
   employeeId: string;
@@ -51,12 +52,9 @@ export const SubscribeModal: React.FC<SubscribeModalProps> = ({
   const isLoading = isLoadingSubscription || isSubscribing || isUnsubscribing;
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 p-4 sm:p-6"
-      onClick={onClose}
-    >
+    <ModalOverlay onClick={onClose}>
       <div
-        className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl m-2.5"
+        className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center p-6 border-b border-gray-200">
@@ -111,6 +109,6 @@ export const SubscribeModal: React.FC<SubscribeModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </ModalOverlay>
   );
 };

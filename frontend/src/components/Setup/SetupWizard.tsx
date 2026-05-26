@@ -28,7 +28,6 @@ interface FormData {
   featureOnlineBooking: boolean;
   featureVinDecoder: boolean;
   featureLoyaltyProgram: boolean;
-  featureSmsNotifications: boolean;
   featureEmailNotifications: boolean;
   featureMultiBranch: boolean;
   featureCorporateClients: boolean;
@@ -54,7 +53,6 @@ export default function SetupWizard() {
     featureOnlineBooking: true,
     featureVinDecoder: true,
     featureLoyaltyProgram: true,
-    featureSmsNotifications: false,
     featureEmailNotifications: false,
     featureMultiBranch: false,
     featureCorporateClients: false,
@@ -256,7 +254,6 @@ export default function SetupWizard() {
                     { key: "featureOnlineBooking", label: "Онлайн-запись", desc: "Клиенты могут записываться через сайт" },
                     { key: "featureVinDecoder", label: "VIN-декодер", desc: "Проверка авто по VIN через NHTSA API" },
                     { key: "featureLoyaltyProgram", label: "Программа лояльности", desc: "Бонусные баллы и тиры" },
-                    { key: "featureSmsNotifications", label: "SMS уведомления", desc: "Требуется API ID от SMS.ru" },
                     { key: "featureEmailNotifications", label: "Email уведомления", desc: "Требуется SMTP-сервер" },
                     { key: "featureMultiBranch", label: "Мультифилиальность", desc: "Несколько точек в одной системе" },
                     { key: "featureCorporateClients", label: "Корпоративные клиенты", desc: "Компании, договоры, автопарки" },

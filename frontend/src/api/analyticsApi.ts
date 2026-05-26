@@ -29,6 +29,7 @@ export interface TopService {
 export interface TopEmployee {
   employeeId: string;
   name: string;
+  surName?: string;
   orderCount: number;
   avgRating: number;
 }
@@ -40,30 +41,54 @@ export interface LowStockItem {
   totalQuantity: number;
 }
 
+export interface BranchComparison {
+  branchId: string;
+  branchName: string;
+  orderCount: number;
+  revenue: number;
+}
+
+type AnalyticsParams = { branchId?: string };
+
 export const analyticsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getDashboardKpi: builder.query<KpiData, "today" | "week" | "month" | "year" | void>({
-      query: (period) => ({
+    getDashboardKpi: builder.query<
+      KpiData,
+      { period?: "today" | "week" | "month" | "year"; branchId?: string }
+    >({
+      query: ({ period, branchId } = {}) => ({
         url: "/analytics/kpi",
-        params: period ? { period } : {},
+        params: { ...(period ? { period } : {}), ...(branchId ? { branchId } : {}) },
       }),
     }),
-    getOrdersByStatus: builder.query<OrdersByStatus[], void>({
-      query: () => "/analytics/orders-by-status",
+    getOrdersByStatus: builder.query<OrdersByStatus[], AnalyticsParams | void>({
+      query: (params) => ({
+        url: "/analytics/orders-by-status",
+        params: params?.branchId ? { branchId: params.branchId } : {},
+      }),
     }),
-    getRevenueByMonth: builder.query<RevenueByMonth[], void>({
-      query: () => "/analytics/revenue-by-month",
+    getRevenueByMonth: builder.query<RevenueByMonth[], AnalyticsParams | void>({
+      query: (params) => ({
+        url: "/analytics/revenue-by-month",
+        params: params?.branchId ? { branchId: params.branchId } : {},
+      }),
     }),
-    getTopServices: builder.query<TopService[], number | void>({
-      query: (limit) => ({
+    getTopServices: builder.query<TopService[], { limit?: number; branchId?: string } | void>({
+      query: (params) => ({
         url: "/analytics/top-services",
-        params: limit ? { limit } : {},
+        params: {
+          ...(params?.limit ? { limit: params.limit } : {}),
+          ...(params?.branchId ? { branchId: params.branchId } : {}),
+        },
       }),
     }),
-    getTopEmployees: builder.query<TopEmployee[], number | void>({
-      query: (limit) => ({
+    getTopEmployees: builder.query<TopEmployee[], { limit?: number; branchId?: string } | void>({
+      query: (params) => ({
         url: "/analytics/top-employees",
-        params: limit ? { limit } : {},
+        params: {
+          ...(params?.limit ? { limit: params.limit } : {}),
+          ...(params?.branchId ? { branchId: params.branchId } : {}),
+        },
       }),
     }),
     getLowStock: builder.query<LowStockItem[], number | void>({
@@ -78,6 +103,9 @@ export const analyticsApi = baseApi.injectEndpoints({
     getLoyaltySummary: builder.query<{ tier: string; count: number; totalPoints: number }[], void>({
       query: () => "/analytics/loyalty-summary",
     }),
+    getBranchesComparison: builder.query<BranchComparison[], void>({
+      query: () => "/analytics/branches-comparison",
+    }),
   }),
 });
 
@@ -90,4 +118,5 @@ export const {
   useGetLowStockQuery,
   useGetUpcomingAppointmentsQuery,
   useGetLoyaltySummaryQuery,
+  useGetBranchesComparisonQuery,
 } = analyticsApi;

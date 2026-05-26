@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import PDFDocument from 'pdfkit';
+import PDFDocument = require('pdfkit');
 import { DatabaseService } from '../database/database.service';
+import { PDF_FONT_BOLD, PDF_FONT_REGULAR, registerPdfFonts } from '../../utils/pdfFonts';
 
 export interface ReportColumn {
   key: string;
@@ -250,11 +251,12 @@ export class ReportService {
         e.salary,
         COUNT(o.id) AS order_count,
         COALESCE(
-          (SELECT json_agg(json_build_object(
-            'start_time', ws."startTime",
-            'end_time', ws."endTime",
-            'is_available', ws."isAvailable"
-          ))
+          (SELECT json_agg(
+            json_build_object(
+              'start_time', ws."startTime",
+              'end_time', ws."endTime"
+            ) ORDER BY ws."startTime"
+          )
           FROM autoservice."WorkSchedule" ws
           WHERE ws."employeeId" = e.id),
           '[]'
@@ -265,26 +267,15 @@ export class ReportService {
       GROUP BY e.id, e.name, e."surName", p.name, e."hireDate", e.salary
     `);
 
-    const rows = (result.rows || []).map((row: Record<string, unknown>) => {
-      const schedule = Array.isArray(row.schedule)
-        ? (row.schedule as Array<{ start_time: string; end_time: string; is_available: boolean }>)
-            .map(
-              (ws) =>
-                `${new Date(ws.start_time).toLocaleString('ru-RU')} - ${new Date(ws.end_time).toLocaleString('ru-RU')} (${ws.is_available ? 'Доступен' : 'Недоступен'})`,
-            )
-            .join('; ')
-        : '-';
-
-      return {
-        employee_id: (row.employee_id as string).slice(0, 8),
-        employee_name: row.employee_name,
-        position_name: row.position_name,
-        hireDate: new Date(row.hireDate as string).toLocaleDateString('ru-RU'),
-        salary: row.salary,
-        order_count: row.order_count,
-        schedule,
-      };
-    });
+    const rows = (result.rows || []).map((row: Record<string, unknown>) => ({
+      employee_id: (row.employee_id as string).slice(0, 8),
+      employee_name: row.employee_name,
+      position_name: row.position_name,
+      hireDate: new Date(row.hireDate as string).toLocaleDateString('ru-RU'),
+      salary: row.salary,
+      order_count: row.order_count,
+      schedule: this.formatWorkSchedule(row.schedule),
+    }));
 
     return {
       title: 'Отчёт о работе сотрудников',
@@ -379,6 +370,32 @@ export class ReportService {
     };
   }
 
+  private formatWorkSchedule(raw: unknown): string {
+    if (!Array.isArray(raw) || raw.length === 0) {
+      return '-';
+    }
+
+    const fmtTime = (value: string) =>
+      new Date(value).toLocaleTimeString('ru-RU', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+    return (raw as Array<{ start_time: string; end_time: string }>)
+      .slice()
+      .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+      .map((ws) => {
+        const start = new Date(ws.start_time);
+        const date = start.toLocaleDateString('ru-RU', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+        });
+        return `${date} · ${fmtTime(ws.start_time)}–${fmtTime(ws.end_time)}`;
+      })
+      .join('\n');
+  }
+
   // ── Export helpers ─────────────────────────────────────────────────────────
 
   toCsv(report: ReportData): string {
@@ -404,10 +421,12 @@ export class ReportService {
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
 
+      registerPdfFonts(doc);
+
       // Title
-      doc.fontSize(16).font('Helvetica-Bold').text(report.title, { align: 'center' });
+      doc.fontSize(16).font(PDF_FONT_BOLD).text(report.title, { align: 'center' });
       doc.moveDown(0.5);
-      doc.fontSize(9).font('Helvetica').text(
+      doc.fontSize(9).font(PDF_FONT_REGULAR).text(
         `Сформирован: ${new Date().toLocaleString('ru-RU')}`,
         { align: 'right' },
       );
@@ -418,8 +437,8 @@ export class ReportService {
 
       const drawRow = (values: string[], isHeader: boolean) => {
         const y = doc.y;
-        if (isHeader) doc.font('Helvetica-Bold').fontSize(8);
-        else doc.font('Helvetica').fontSize(7);
+        if (isHeader) doc.font(PDF_FONT_BOLD).fontSize(8);
+        else doc.font(PDF_FONT_REGULAR).fontSize(7);
 
         values.forEach((val, i) => {
           const x = 40 + i * colWidth;

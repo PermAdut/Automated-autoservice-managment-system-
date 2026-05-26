@@ -10,6 +10,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { schema } from '../pgSchema';
 import { cars, orders, reviews, subscriptions } from '../schema';
+import { branches } from './branches.model';
 import { tenantSettings } from './tenant.model';
 
 export const genderEnum = schema.enum('gender', ['M', 'F']);
@@ -46,6 +47,7 @@ export const users = schema.table(
     oauthId: varchar('oauthId'),
     avatarUrl: text('avatarUrl'),
     isBlocked: boolean('isBlocked').default(false).notNull(),
+    branchId: uuid('branchId').references(() => branches.id),
     createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
     updatedAt: timestamp('updatedAt', { mode: 'date' }),
     tenantId: uuid('tenantId').references(() => tenantSettings.id),
@@ -93,6 +95,11 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   role: one(roles, {
     fields: [users.roleId],
     references: [roles.id],
+  }),
+  branch: one(branches, {
+    fields: [users.branchId],
+    references: [branches.id],
+    relationName: 'branchScope',
   }),
   passport: one(passports, {
     fields: [users.id],

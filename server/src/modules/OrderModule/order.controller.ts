@@ -21,6 +21,7 @@ import { RolesGuard } from '../AuthModule/guards/roles.guard';
 import { Roles } from '../AuthModule/decorators/roles.decorator';
 import { CreateOrderDto, UpdateOrderDto } from './Dto/create-order.dto';
 import type { AuthenticatedRequest } from '../AuthModule/types/auth.types';
+import { resolveBranchFilter } from '../AuthModule/helpers/branch-scope.helper';
 
 @Controller('api/v1.0/orders')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -32,6 +33,7 @@ export class OrderController {
     return {
       userId: authUser?.userId,
       role: authUser?.roleName,
+      branchId: authUser?.branchId ?? undefined,
     };
   }
 
@@ -45,15 +47,17 @@ export class OrderController {
   ): Promise<OrderResponseDto[]> {
     const { userId, role } = this.getAuth(req);
     const isAdminOrManager = role === 'admin' || role === 'manager';
-
-    // Если isAdmin === 'true' из query параметров, возвращаем все заказы
     const shouldReturnAllOrders = isAdmin === 'true' || isAdminOrManager;
+    const scopeBranchId = resolveBranchFilter(
+      (req as AuthenticatedRequest)?.user,
+    );
 
     return await this.orderService.findAll(
       search,
       sortBy,
       sortOrder,
-      shouldReturnAllOrders ? undefined : userId
+      shouldReturnAllOrders ? undefined : userId,
+      scopeBranchId,
     );
   }
 

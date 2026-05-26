@@ -15,12 +15,14 @@ export interface Order {
     name: string;
     description: string;
     price: string;
+    quantity?: number;
   }[];
   sparePart?: {
     id: string;
     name: string;
     partNumber: string;
     price: string;
+    quantity?: number;
     category: {
       id: string;
       name: string;

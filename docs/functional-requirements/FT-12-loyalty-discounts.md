@@ -60,10 +60,42 @@ server/src/modules/PromotionsModule/
 | gold | ≥ 5 000 |
 | platinum | ≥ 10 000 |
 
+## Тест-кейсы
+
+### TC-12.1 Просмотр баллов и tier
+
+**Роль:** customer (`user1@gmail.com` / `password123`)
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | `GET /api/v1.0/promotions/loyalty/my` | points, tier, totalEarned |
+| 2 | `GET /api/v1.0/promotions/loyalty/my/transactions` | История earn/spend/bonus |
+| 3 | UI `LoyaltyPage.tsx` | Отображение tier и баллов |
+
+### TC-12.2 Промокод и персональная скидка
+
+**Роль:** customer + admin
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | `GET /api/v1.0/promotions/discounts/active` | Список активных кодов |
+| 2 | `GET /api/v1.0/promotions/discounts/personal` | Скидки, привязанные к userId |
+| 3 | `POST /api/v1.0/promotions/discounts/apply` с orderId, code | Скидка в `OrderDiscounts` |
+
+### TC-12.3 Начисление и списание баллов
+
+**Роль:** customer
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | Завершить заказ на сумму 10 000 ₽ | Автоначисление через `earnForCompletedOrder` |
+| 2 | `POST /api/v1.0/promotions/loyalty/spend-points` на заказ | Списание с cap 20% (`loyaltyMaxSpendPercent`) |
+| 3 | Попытка списать > 20% суммы заказа | 400 Bad Request |
+
 ## Пробелы
 
 - [ ] Привести tiers к ТЗ: Standard / Silver / Gold / Premium
-- [ ] Коэффициент начисления в `TenantSettings`
-- [ ] Cap 20% при `spendPoints`
-- [ ] Персональные скидки (userId ↔ discount)
-- [ ] Авtonачисление баллов при completed order
+- [x] Коэффициент начисления в `TenantSettings.loyaltyPointsPerRub`
+- [x] Cap 20% при `spendPoints` (`loyaltyMaxSpendPercent`)
+- [x] Персональные скидки (`GET /discounts/personal`, `Discounts.userId`)
+- [x] Автоначисление баллов при completed order

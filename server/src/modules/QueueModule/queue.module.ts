@@ -3,7 +3,6 @@ import { BullModule } from '@nestjs/bullmq';
 import { NOTIFICATION_QUEUE } from './queue.constants';
 import { NotificationQueueService } from './services/notification-queue.service';
 import { NotificationProcessor } from './processors/notification.processor';
-import { SmsService } from '../NotificationModule/sms.service';
 import { EmailService } from '../NotificationModule/email.service';
 import { DatabaseModule } from '../database/database.module';
 
@@ -30,7 +29,6 @@ import { DatabaseModule } from '../database/database.module';
   providers: [
     NotificationQueueService,
     NotificationProcessor,
-    SmsService,
     EmailService,
   ],
   exports: [NotificationQueueService, BullModule],

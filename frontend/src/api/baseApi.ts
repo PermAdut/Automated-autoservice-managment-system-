@@ -14,6 +14,7 @@ import {
 } from "../store/slices/authSlice";
 import type { AppDispatch } from "../store";
 import { apiTags } from "./tags";
+import { enqueue } from "../offline/syncQueue";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: `${serverConfig.url}/api/v1.0`,
@@ -35,6 +36,26 @@ const baseQueryWithReauth: BaseQueryFn<
   unknown,
   FetchBaseQueryError
 > = async (args, api, extraOptions) => {
+  const isMutation =
+    typeof args !== "string" &&
+    ["POST", "PUT", "PATCH", "DELETE"].includes((args.method ?? "GET").toUpperCase());
+
+  if (!navigator.onLine && isMutation) {
+    const req = typeof args === "string" ? { url: args, method: "GET" as const } : args;
+    const url = req.url.startsWith("http")
+      ? req.url
+      : `${serverConfig.url}/api/v1.0${req.url.startsWith("/") ? req.url : `/${req.url}`}`;
+    await enqueue({
+      method: (req.method ?? "POST").toUpperCase() as "POST" | "PATCH" | "PUT" | "DELETE",
+      url,
+      body: req.body,
+      maxRetries: 5,
+    });
+    return {
+      data: { queued: true, offline: true },
+    } as QueryReturnValue<unknown, FetchBaseQueryError, FetchBaseQueryMeta>;
+  }
+
   let result = await baseQuery(args, api, extraOptions);
 
   if (result.error && result.error.status === 401) {
@@ -178,11 +199,12 @@ export const baseApi = createApi({
     }),
     logout: builder.mutation<{ message: string }, { refresh_token: string }>({
       queryFn: async (data, _api, _extraOptions) => {
+        const accessToken = localStorage.getItem("access_token");
         const result = await authBaseQuery(
           {
             url: "/auth/logout",
             method: "POST",
-            body: data,
+            body: { ...data, access_token: accessToken ?? undefined },
           },
           _api,
           _extraOptions

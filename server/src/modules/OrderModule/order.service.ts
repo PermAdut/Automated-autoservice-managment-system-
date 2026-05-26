@@ -2,9 +2,17 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { DatabaseService } from '../database/database.service';
+import { StockService } from '../SpareModule/stock.service';
+import { NotificationService } from '../NotificationModule/notification.service';
+import { PromotionsService } from '../PromotionsModule/promotions.service';
+import { CorporateService } from '../CorporateModule/corporate.service';
+import { WarrantyService } from '../WarrantyModule/warranty.service';
+import { ScheduleOptimizationService } from '../ScheduleModule/schedule.service';
 import { OrderResponseDto } from './Dto/order.response';
 import { CreateOrderDto, UpdateOrderDto } from './Dto/create-order.dto';
 import {
@@ -14,18 +22,60 @@ import {
   sparePartOrders,
   spareParts,
   categories,
+  payments,
 } from '../database/schema';
 import { eq, like, desc, asc, or, and, sql, type SQL } from 'drizzle-orm';
 
+const VALID_STATUSES = [
+  'pending',
+  'diagnosed',
+  'in_progress',
+  'quality_check',
+  'completed',
+  'cancelled',
+  // legacy values in DB
+  'created',
+  'quality_control',
+] as const;
+
+/** State machine — см. docs/functional-requirements/FT-04-orders.md */
+const STATUS_TRANSITIONS: Record<string, string[]> = {
+  pending: ['diagnosed', 'cancelled'],
+  diagnosed: ['in_progress'],
+  in_progress: ['quality_check', 'diagnosed', 'cancelled'],
+  quality_check: ['completed', 'in_progress'],
+  completed: [],
+  cancelled: [],
+  // legacy aliases
+  created: ['diagnosed', 'cancelled'],
+  quality_control: ['completed', 'in_progress'],
+};
+
+function normalizeOrderStatus(status: string | null | undefined): string {
+  if (!status || status === 'created') return 'pending';
+  if (status === 'quality_control') return 'quality_check';
+  return status;
+}
+
 @Injectable()
 export class OrderService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(
+    private readonly databaseService: DatabaseService,
+    private readonly stockService: StockService,
+    private readonly notificationService: NotificationService,
+    private readonly promotionsService: PromotionsService,
+    private readonly corporateService: CorporateService,
+    private readonly warrantyService: WarrantyService,
+    @Inject(forwardRef(() => ScheduleOptimizationService))
+    private readonly scheduleService: ScheduleOptimizationService,
+  ) {}
 
   async findAll(
     search?: string,
     sortBy?: string,
     sortOrder?: 'asc' | 'desc',
-    userId?: string
+    userId?: string,
+    branchId?: string,
   ): Promise<OrderResponseDto[]> {
     try {
       const query = this.databaseService.db.select().from(orders).$dynamic();
@@ -33,6 +83,9 @@ export class OrderService {
       const conditions: SQL[] = [];
       if (userId) {
         conditions.push(eq(orders.userId, userId));
+      }
+      if (branchId) {
+        conditions.push(eq(orders.branchId, branchId));
       }
 
       if (search) {
@@ -207,13 +260,11 @@ export class OrderService {
   async create(
     orderData: CreateOrderDto & { userId: string }
   ): Promise<OrderResponseDto> {
-    let createdOrderId: string | null = null;
-
     if (!orderData.userId) {
       throw new BadRequestException('User ID is required');
     }
 
-    await this.databaseService.db.transaction(async tx => {
+    const newOrderId = await this.databaseService.db.transaction(async tx => {
       const [newOrder] = await tx
         .insert(orders)
         .values({
@@ -236,8 +287,6 @@ export class OrderService {
         })
         .returning();
 
-      createdOrderId = newOrder.id;
-
       if (orderData.services?.length) {
         await tx.insert(servicesOrders).values(
           orderData.services.map(service => ({
@@ -249,6 +298,16 @@ export class OrderService {
       }
 
       if (orderData.spareParts?.length) {
+        await this.stockService.reserveForOrder(
+          tx,
+          newOrder.id,
+          orderData.userId,
+          orderData.spareParts.map(sp => ({
+            sparePartId: sp.sparePartId,
+            quantity: sp.quantity,
+          })),
+        );
+
         await tx.insert(sparePartOrders).values(
           orderData.spareParts.map(sparePart => ({
             ordersId: newOrder.id,
@@ -257,22 +316,70 @@ export class OrderService {
           }))
         );
       }
+
+      return newOrder.id;
     });
 
-    if (!createdOrderId) {
-      throw new BadRequestException('Failed to create order');
+    void this.scheduleService.optimizeSchedule().catch(() => undefined);
+
+    const created = await this.findById(newOrderId);
+    await this.notificationService.notifyUser(
+      orderData.userId,
+      'Заказ создан',
+      `Заказ #${newOrderId.slice(0, 8)} принят в обработку`,
+    );
+
+    if (orderData.carId) {
+      const amount = await this.getOrderTotalRub(newOrderId);
+      const alert = await this.corporateService.checkCreditLimitAlert(
+        orderData.carId,
+        amount,
+      );
+      if (alert?.alert && alert.managerUserId) {
+        await this.notificationService.notifyUser(
+          alert.managerUserId,
+          'Лимит договора',
+          `${alert.companyName}: расход ${alert.percent}% от лимита (${alert.spent?.toFixed(0)} / ${alert.limit?.toFixed(0)} BYN)`,
+        );
+      }
     }
 
-    return this.findById(createdOrderId);
+    return created;
   }
 
   async update(
     id: string,
-    orderData: UpdateOrderDto
+    orderData: UpdateOrderDto,
+    expectedVersion?: number,
   ): Promise<OrderResponseDto> {
     let targetOrderId = id;
+    let previousStatus: string | null = null;
+    let orderUserId: string | null = null;
+    let shouldEarnLoyalty = false;
 
     await this.databaseService.db.transaction(async tx => {
+      const [existing] = await tx
+        .select()
+        .from(orders)
+        .where(eq(orders.id, id))
+        .limit(1);
+
+      if (!existing) {
+        throw new NotFoundException(`Order with id ${id} not found`);
+      }
+
+      if (
+        expectedVersion !== undefined &&
+        existing.version !== expectedVersion
+      ) {
+        throw new BadRequestException(
+          `Version conflict: expected ${expectedVersion}, got ${existing.version}`,
+        );
+      }
+
+      previousStatus = existing.status ?? null;
+      orderUserId = existing.userId;
+
       const updatePayload: Partial<typeof orders.$inferInsert> = {};
 
       if (orderData.userId !== undefined) {
@@ -287,14 +394,37 @@ export class OrderService {
         updatePayload.employeeId = orderData.employeeId;
       }
 
-      if (orderData.status !== undefined) {
-        updatePayload.status = orderData.status;
+      if (orderData.status !== undefined && orderData.status !== null) {
+        const next = orderData.status;
+        const current = normalizeOrderStatus(existing.status);
+        const allowed =
+          STATUS_TRANSITIONS[current] ?? STATUS_TRANSITIONS.pending;
+        if (!VALID_STATUSES.includes(next as (typeof VALID_STATUSES)[number])) {
+          throw new BadRequestException(`Invalid status: ${next}`);
+        }
+        const normalizedNext = normalizeOrderStatus(next);
+        if (current !== normalizedNext && !allowed.includes(normalizedNext)) {
+          throw new BadRequestException(
+            `Cannot transition from ${current} to ${next}`,
+          );
+        }
+
+        if (normalizedNext === 'completed' && current !== 'completed') {
+          await this.stockService.writeOffOnComplete(tx, id, existing.userId);
+          shouldEarnLoyalty = true;
+        }
+        if (normalizedNext === 'cancelled' && current !== 'cancelled') {
+          await this.stockService.releaseOnCancel(tx, id, existing.userId);
+        }
+
+        updatePayload.status =
+          next === 'quality_control' ? 'quality_check' : next;
         updatePayload.updatedAt = new Date();
         if (orderData.completedAt !== undefined) {
           updatePayload.completedAt = orderData.completedAt
             ? new Date(orderData.completedAt)
             : null;
-        } else if (orderData.status === 'completed') {
+        } else if (normalizedNext === 'completed') {
           updatePayload.completedAt = new Date();
         }
       }
@@ -307,36 +437,16 @@ export class OrderService {
         updatePayload.updatedAt = new Date(orderData.updatedAt);
       }
 
-      if (
-        updatePayload.status !== undefined ||
-        updatePayload.userId !== undefined ||
-        updatePayload.carId !== undefined ||
-        updatePayload.employeeId !== undefined ||
-        updatePayload.createdAt !== undefined ||
-        updatePayload.updatedAt !== undefined ||
-        updatePayload.completedAt !== undefined
-      ) {
+      updatePayload.version = (existing.version ?? 1) + 1;
+
+      if (Object.keys(updatePayload).length > 0) {
         const [updatedOrder] = await tx
           .update(orders)
           .set(updatePayload)
           .where(eq(orders.id, id))
           .returning();
 
-        if (!updatedOrder) {
-          throw new NotFoundException(`Order with id ${id} not found`);
-        }
-
         targetOrderId = updatedOrder.id;
-      } else {
-        const [existing] = await tx
-          .select()
-          .from(orders)
-          .where(eq(orders.id, id))
-          .limit(1);
-
-        if (!existing) {
-          throw new NotFoundException(`Order with id ${id} not found`);
-        }
       }
 
       if (orderData.services !== undefined) {
@@ -354,11 +464,21 @@ export class OrderService {
       }
 
       if (orderData.spareParts !== undefined) {
+        await this.stockService.releaseOnCancel(tx, id, existing.userId);
         await tx
           .delete(sparePartOrders)
           .where(eq(sparePartOrders.ordersId, id));
 
         if (orderData.spareParts.length) {
+          await this.stockService.reserveForOrder(
+            tx,
+            id,
+            existing.userId,
+            orderData.spareParts.map(sp => ({
+              sparePartId: sp.sparePartId,
+              quantity: sp.quantity,
+            })),
+          );
           await tx.insert(sparePartOrders).values(
             orderData.spareParts.map(sparePart => ({
               ordersId: id,
@@ -370,7 +490,75 @@ export class OrderService {
       }
     });
 
+    if (
+      orderData.status &&
+      orderUserId &&
+      previousStatus !== orderData.status
+    ) {
+      await this.notificationService.notifyUser(
+        orderUserId,
+        'Статус заказа изменён',
+        `Заказ #${id.slice(0, 8)}: ${previousStatus} → ${orderData.status}`,
+      );
+    }
+
+    if (shouldEarnLoyalty && orderUserId) {
+      const amount = await this.getOrderTotalRub(id);
+      void this.promotionsService
+        .earnForCompletedOrder(orderUserId, id, amount)
+        .catch(() => undefined);
+
+      const existing = await this.warrantyService.findByOrder(id);
+      if (!existing.length) {
+        void this.warrantyService
+          .create({
+            orderId: id,
+            type: 'work',
+            description: 'Гарантия на выполненные работы',
+            durationMonths: 6,
+          })
+          .catch(() => undefined);
+      }
+    }
+
+    void this.scheduleService.optimizeSchedule().catch(() => undefined);
+
     return this.findById(targetOrderId);
+  }
+
+  private async getOrderTotalRub(orderId: string): Promise<number> {
+    const [payment] = await this.databaseService.db
+      .select({ amount: payments.amount })
+      .from(payments)
+      .where(eq(payments.orderId, orderId))
+      .limit(1);
+
+    if (payment?.amount) {
+      return parseFloat(String(payment.amount));
+    }
+
+    const svcRows = await this.databaseService.db
+      .select({ price: services.price, quantity: servicesOrders.quantity })
+      .from(servicesOrders)
+      .innerJoin(services, eq(servicesOrders.servicesId, services.id))
+      .where(eq(servicesOrders.orderId, orderId));
+
+    const partsRows = await this.databaseService.db
+      .select({ price: spareParts.price, quantity: sparePartOrders.quantity })
+      .from(sparePartOrders)
+      .innerJoin(spareParts, eq(sparePartOrders.sparePartId, spareParts.id))
+      .where(eq(sparePartOrders.ordersId, orderId));
+
+    const svcTotal = svcRows.reduce(
+      (sum, r) => sum + parseFloat(String(r.price)) * (r.quantity ?? 1),
+      0,
+    );
+    const partsTotal = partsRows.reduce(
+      (sum, r) => sum + parseFloat(String(r.price)) * (r.quantity ?? 1),
+      0,
+    );
+
+    return svcTotal + partsTotal;
   }
 
   async delete(id: string): Promise<void> {

@@ -57,9 +57,42 @@ server/src/modules/BranchModule/
 | `Invoices` | счёт по закупке |
 | `StoreTransfers` | fromStoreId, toStoreId, sparePartId, quantity, status |
 
+## Тест-кейсы
+
+### TC-5.1 Каталог запчастей и остатки
+
+**Роль:** manager (`manager1@gmail.com` / `password123`)
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | `GET /api/v1.0/stores` | 200, список запчастей с quantity по складам |
+| 2 | `POST /api/v1.0/stores` с name, partNumber, price, categoryId | 201, позиция создана |
+| 3 | `GET /api/v1.0/stores/meta/stores` | Справочник складов с branchId |
+| 4 | `PUT /api/v1.0/stores/:id` — обновить minQuantity | 200, minQuantity сохранён |
+
+### TC-5.2 Поставщики и закупки
+
+**Роль:** admin (`admin@gmail.com` / `password123`)
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | `GET /api/v1.0/supplier` | 200, список поставщиков |
+| 2 | `POST /api/v1.0/supplier` с name, contact, address | 201 |
+| 3 | `PUT /api/v1.0/stores/:id` с supplierId | Запчасть привязана к поставщику |
+
+### TC-5.3 Журнал движений и алерт низкого остатка
+
+**Роль:** manager
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | Завершить заказ с запчастями (ФТ-4) | — |
+| 2 | `GET /api/v1.0/stores/movements` | Записи reserve/issue с orderId |
+| 3 | `GET /api/v1.0/analytics/low-stock?threshold=5` | Позиции с quantity < threshold |
+
 ## Пробелы
 
-- [ ] `minQuantity` на `SparePart` + автоматический алерт менеджеру
-- [ ] Привязка поставщика к запчасти
-- [ ] Таблица `StockMovements` для полного журнала и инвентаризации
-- [ ] Автоматическое списание при завершении заказа (см. ФТ-4)
+- [x] `minQuantity` на `SparePart` + алерт через `GET /analytics/low-stock`
+- [x] Привязка поставщика к запчасти (`SparePart.supplierId`)
+- [x] Таблица `StockMovements` + `GET /stores/movements`
+- [x] Автоматическое списание при завершении заказа (см. ФТ-4)

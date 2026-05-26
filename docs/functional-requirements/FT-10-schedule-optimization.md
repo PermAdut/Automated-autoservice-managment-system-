@@ -17,11 +17,11 @@
 | Ручной reassign | ✅ | `PATCH /api/v1.0/schedule/reassign` |
 | UI Gantt | ✅ | `frontend/src/components/GanttChart/SchedulePage.tsx` |
 | WebSocket при назначении | ✅ | `EventsGateway.notifyOrderUpdated()` |
-| Автозапуск при новом заказе | ❌ | Только ручной `POST /schedule/optimize` |
+| Автозапуск при новом заказе | ✅ | `order.service.ts` → `optimizeSchedule()` после create/update |
 | Drag-and-drop на Gantt | ❌ | Reassign через API, DnD UI не реализован |
-| Проверка квалификации | ❌ | Нет qualification matrix |
-| Производственные посты | ❌ | Нет сущности `Post` / `Bay` |
-| Предупреждение при неверной квалификации | ❌ | — |
+| Проверка квалификации | ✅ | `EmployeeQualificationService` в `schedule.service.ts` |
+| Производственные посты | ✅ | `productionPosts` — `GET/POST /api/v1.0/branches/:id/posts` |
+| Предупреждение при неверной квалификации | ✅ | `PATCH /schedule/reassign` → `warning` в ответе |
 
 ### Backend
 
@@ -56,10 +56,42 @@ complexity   = min(totalDurationMin / 480, 1)   // нормализация к 8
 clientLevel  = 1.2 (tier platinum|gold) | 1.0
 ```
 
+## Тест-кейсы
+
+### TC-10.1 Оптимизация расписания
+
+**Роль:** manager (`manager1@gmail.com` / `password123`)
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | Создать 3 pending-заказа с разной сложностью | — |
+| 2 | `POST /api/v1.0/schedule/optimize` | Заказы назначены мастерам по priority formula |
+| 3 | `GET /api/v1.0/schedule/gantt?date=YYYY-MM-DD` | Данные для Gantt: orders, employees, slots |
+
+### TC-10.2 Ручное переназначение с проверкой квалификации
+
+**Роль:** manager
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | `PATCH /api/v1.0/schedule/reassign` orderId + qualified employeeId | 200, заказ переназначен |
+| 2 | Reassign на мастера без квалификации | 200, в ответе поле `warning` |
+| 3 | UI `SchedulePage.tsx` | Gantt отображает обновлённое назначение |
+
+### TC-10.3 Автозапуск после создания заказа
+
+**Роль:** manager
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | `POST /api/v1.0/orders` с pending-статусом | 201 |
+| 2 | Без ручного optimize — `GET /schedule/gantt` | Заказ уже имеет employeeId |
+| 3 | WebSocket event `order:updated` | Клиент получает обновление |
+
 ## Пробелы
 
-- [ ] Hook: вызывать `optimizeSchedule()` после create/update order и изменения WorkSchedule
+- [x] Hook: вызывать `optimizeSchedule()` после create/update order
 - [ ] Drag-and-drop на Gantt → PATCH reassign
-- [ ] Сущность «производственный пост» + привязка timeSlots
-- [ ] Валидация квалификации мастера при reassign
+- [x] Сущность «производственный пост» + `GET/POST /branches/:id/posts`
+- [x] Валидация квалификации мастера при reassign
 - [ ] Автобронирование `TimeSlots` при назначении

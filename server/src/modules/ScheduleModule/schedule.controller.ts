@@ -30,8 +30,11 @@ export class ScheduleController {
 
   @Post('optimize')
   @ApiOperation({ summary: 'Run post-load optimization algorithm' })
-  optimize(@Body() body: { windowHours?: number }) {
-    return this.scheduleService.optimizeSchedule(body.windowHours ?? 8);
+  optimize(@Body() body: { date?: string; windowHours?: number }) {
+    return this.scheduleService.optimizeSchedule({
+      date: body.date,
+      windowHours: body.windowHours,
+    });
   }
 
   @Patch('reassign')

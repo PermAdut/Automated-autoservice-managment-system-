@@ -1,8 +1,25 @@
 import { FC, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { ModalOverlay } from "../../components/ui/modal-overlay";
 import { useSelector } from "react-redux";
-import { UserDetailed, useGetRolesQuery } from "../../api/usersApi";
+import { UserDetailed, useGetRolesQuery, type RoleOption } from "../../api/usersApi";
 import type { RootState } from "../../store";
+
+const resolveRole = (
+  data: UserDetailed,
+  rolesList: RoleOption[],
+): { id: string; name: string } => {
+  if (data.roleId) {
+    const byId = rolesList.find((r) => r.id === data.roleId);
+    if (byId) return byId;
+  }
+  if (typeof data.role === "object" && data.role?.id) {
+    return data.role;
+  }
+  const roleName = typeof data.role === "string" ? data.role : data.role?.name ?? "";
+  const byName = rolesList.find((r) => r.name === roleName);
+  return byName ?? { id: "", name: roleName };
+};
 
 interface EditUserModalProps {
   isOpen: boolean;
@@ -34,8 +51,12 @@ export const EditUserModal: FC<EditUserModalProps> = ({
   }, [isOpen]);
 
   useEffect(() => {
-    setFormData(initialData);
-  }, [initialData]);
+    if (!isOpen) return;
+    setFormData({
+      ...initialData,
+      role: resolveRole(initialData, roles),
+    });
+  }, [initialData, roles, isOpen]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -47,9 +68,11 @@ export const EditUserModal: FC<EditUserModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const role = typeof formData.role === "object" ? formData.role : resolveRole(formData, roles);
     onSave({
       ...formData,
-      roleId: formData.role?.id,
+      role,
+      roleId: role.id,
       isBlocked: formData.isBlocked,
     });
     onClose();
@@ -57,7 +80,9 @@ export const EditUserModal: FC<EditUserModalProps> = ({
   const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const roleId = e.target.value;
     const roleName =
-      roles.find((r) => r.id === roleId)?.name || formData.role?.name || "";
+      roles.find((r) => r.id === roleId)?.name ||
+      (typeof formData.role === "object" ? formData.role?.name : formData.role) ||
+      "";
     setFormData((prev) => ({
       ...prev,
       role: { id: roleId, name: roleName },
@@ -67,12 +92,12 @@ export const EditUserModal: FC<EditUserModalProps> = ({
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 sm:p-6">
-      <div className="bg-white p-6 sm:p-8 rounded-2xl w-full max-w-lg shadow-xl border-2 border-gray-200 max-h-[90vh] overflow-y-auto m-2.5">
+    <ModalOverlay>
+      <div className="bg-white p-6 sm:p-8 rounded-2xl w-full max-w-lg shadow-xl border-2 border-gray-200 max-h-[90vh] overflow-y-auto">
         <h3 className="mb-6 text-2xl font-bold text-gray-900 text-center">
           Редактирование пользователя
         </h3>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form key={initialData.id} onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <label htmlFor="name" className="text-sm font-medium text-gray-700">
               Имя:
@@ -135,7 +160,11 @@ export const EditUserModal: FC<EditUserModalProps> = ({
             </label>
             <select
               id="role"
-              value={formData.role?.id ?? ""}
+              value={
+                typeof formData.role === "object"
+                  ? formData.role?.id ?? ""
+                  : resolveRole(formData, roles).id
+              }
               onChange={handleRoleChange}
               required
               className="px-3 py-2 border border-gray-300 rounded-md text-base transition-colors focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
@@ -183,7 +212,7 @@ export const EditUserModal: FC<EditUserModalProps> = ({
           </div>
         </form>
       </div>
-    </div>,
+    </ModalOverlay>,
     document.body
   );
 };

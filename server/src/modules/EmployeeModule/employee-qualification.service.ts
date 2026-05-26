@@ -11,7 +11,7 @@ import {
   servicesOrders,
   workTypes,
 } from '../database/schema';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, desc, sql } from 'drizzle-orm';
 import { QualificationItemDto } from './Dto/set-qualifications.dto';
 
 export interface EmployeeQualificationResponse {
@@ -130,7 +130,7 @@ export class EmployeeQualificationService {
     const details = missing
       .map(
         req =>
-          `${req.workTypeName}: требуется ${req.requiredLevel}, у мастера ${employeeLevels.get(req.workTypeId) ?? 0}`,
+          `${req.workTypeName}: требуется ${req.requiredLevel}-й разряд, у мастера ${employeeLevels.get(req.workTypeId) ?? 0}-й`,
       )
       .join('; ');
 
@@ -173,6 +173,62 @@ export class EmployeeQualificationService {
     }
 
     return qualified;
+  }
+
+  async findQualifiedEmployeesForService(serviceId: string) {
+    const [service] = await this.databaseService.db
+      .select({
+        workTypeId: services.workTypeId,
+        requiredLevel: services.requiredQualificationLevel,
+      })
+      .from(services)
+      .where(eq(services.id, serviceId))
+      .limit(1);
+
+    if (!service) {
+      throw new NotFoundException(`Service ${serviceId} not found`);
+    }
+
+    if (!service.workTypeId) {
+      const all = await this.databaseService.db
+        .select({
+          id: employees.id,
+          name: employees.name,
+          surName: employees.surName,
+        })
+        .from(employees);
+      return all.map(e => ({
+        employeeId: e.id,
+        name: `${e.name} ${e.surName}`.trim(),
+        level: null,
+        requiredLevel: null,
+      }));
+    }
+
+    const requiredLevel = service.requiredLevel ?? 1;
+    const rows = await this.databaseService.db
+      .select({
+        employeeId: employees.id,
+        name: employees.name,
+        surName: employees.surName,
+        level: employeeQualifications.level,
+      })
+      .from(employeeQualifications)
+      .innerJoin(employees, eq(employees.id, employeeQualifications.employeeId))
+      .where(
+        and(
+          eq(employeeQualifications.workTypeId, service.workTypeId),
+          sql`${employeeQualifications.level} >= ${requiredLevel}`,
+        ),
+      )
+      .orderBy(desc(employeeQualifications.level));
+
+    return rows.map(r => ({
+      employeeId: r.employeeId,
+      name: `${r.name} ${r.surName}`.trim(),
+      level: r.level,
+      requiredLevel,
+    }));
   }
 
   private async getOrderQualificationRequirements(orderId: string) {

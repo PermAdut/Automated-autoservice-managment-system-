@@ -12,6 +12,7 @@ import {
   useSetEmployeeQualificationsMutation,
   type QualificationInput,
 } from "../../../api/employeesApi";
+import { ModalOverlay } from "../../ui/modal-overlay";
 
 const inputBase =
   "w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-base transition-all focus:outline-none focus:border-primary focus:ring-3 focus:ring-primary/10";
@@ -162,28 +163,28 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
   if (isLoadingEmployee || isLoadingPositions) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 sm:p-6">
-        <div className="bg-white rounded-xl p-6 sm:p-8 text-center text-gray-500 m-2.5">
+      <ModalOverlay>
+        <div className="bg-white rounded-xl p-6 sm:p-8 text-center text-gray-500">
           Загрузка...
         </div>
-      </div>
+      </ModalOverlay>
     );
   }
 
   if (positionsError) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 sm:p-6">
-        <div className="bg-white rounded-xl p-6 sm:p-8 text-center text-red-500 m-2.5">
+      <ModalOverlay>
+        <div className="bg-white rounded-xl p-6 sm:p-8 text-center text-red-500">
           Ошибка загрузки должностей.
         </div>
-      </div>
+      </ModalOverlay>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 sm:p-6" onClick={onClose}>
+    <ModalOverlay onClick={onClose}>
       <div
-        className="bg-white rounded-xl p-6 sm:p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl m-2.5"
+        className="bg-white rounded-xl p-6 sm:p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-2xl font-bold text-gray-800 mb-6">
@@ -246,7 +247,7 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({
               </div>
               {qualifications.length === 0 ? (
                 <p className="text-sm text-gray-500">
-                  Виды работ и уровень мастерства не заданы.
+                  Виды работ и разряд мастерства не заданы.
                 </p>
               ) : (
                 <div className="flex flex-col gap-3">
@@ -274,7 +275,7 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({
                       >
                         {[1, 2, 3, 4, 5].map((level) => (
                           <option key={level} value={level}>
-                            Уровень {level}
+                            {level}-й разряд
                           </option>
                         ))}
                       </select>
@@ -311,6 +312,6 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({
           </div>
         </form>
       </div>
-    </div>
+    </ModalOverlay>
   );
 };

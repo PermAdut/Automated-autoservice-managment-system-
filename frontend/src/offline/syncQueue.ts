@@ -1,4 +1,5 @@
 import { openDB, type IDBPDatabase } from "idb";
+import { serverConfig } from "../configs/serverConfig";
 
 const DB_NAME = "autoservice_offline";
 const DB_VERSION = 1;
@@ -71,6 +72,44 @@ export async function getQueueLength(): Promise<number> {
  * Replay all queued requests when the network is restored.
  * Each request is attempted in timestamp order.
  */
+async function logSyncResult(
+  item: SyncQueueItem,
+  status: "success" | "error",
+  error?: string,
+): Promise<void> {
+  const token = localStorage.getItem("access_token");
+  if (!token) return;
+
+  const pathParts = item.url.split("/api/v1.0/")[1]?.split("/") ?? [];
+  const entity = pathParts[0] ?? "unknown";
+  const entityId =
+    (typeof item.body === "object" &&
+      item.body !== null &&
+      "id" in item.body &&
+      typeof (item.body as { id: unknown }).id === "string"
+      ? (item.body as { id: string }).id
+      : crypto.randomUUID());
+
+  try {
+    await fetch(`${serverConfig.url}/api/v1.0/sync/log`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        operation: item.method,
+        entity,
+        entityId,
+        status,
+        error,
+      }),
+    });
+  } catch {
+    // sync log is best-effort
+  }
+}
+
 export async function replayQueue(): Promise<{ success: number; failed: number }> {
   const items = await getQueue();
   items.sort((a, b) => a.timestamp - b.timestamp);
@@ -94,17 +133,24 @@ export async function replayQueue(): Promise<{ success: number; failed: number }
 
       if (res.ok) {
         await removeFromQueue(item.id);
+        await logSyncResult(item, "success");
         success++;
       } else if (res.status >= 400 && res.status < 500) {
-        // Client error — remove permanently
         await removeFromQueue(item.id);
+        await logSyncResult(item, "error", `HTTP ${res.status}`);
         failed++;
       } else {
         await incrementRetry(item.id);
+        await logSyncResult(item, "error", `HTTP ${res.status}`);
         failed++;
       }
-    } catch {
+    } catch (err) {
       await incrementRetry(item.id);
+      await logSyncResult(
+        item,
+        "error",
+        err instanceof Error ? err.message : "Network error",
+      );
       failed++;
     }
   }

@@ -14,10 +14,10 @@ Nightly-алгоритм: средний пробег → прогноз инт�
 | Средний пробег (3 последних записи) | ✅ | `processCarPrediction()` — diagnostic sessions |
 | Прогноз по km и months | ✅ | `SERVICE_NORMS` + `THRESHOLD = 0.10` |
 | Список рекомендаций | ✅ | `MaintenanceReminders` — type, dueDate, dueMileage, reason |
-| SMS / email уведомления | ✅ | `NotificationQueueService` → BullMQ worker |
+| Email / in-app уведомления | ✅ | `NotificationQueueService` → BullMQ worker |
 | Без повторных уведомлений | ✅ | `maintenanceReminders.isSent` |
 | Cron отправки reminders | ✅ | `ScheduledNotificationsService` — `@Cron('0 9 * * *')` |
-| Нормативы по марке/модели (admin) | ❌ | Константы `SERVICE_NORMS` в коде |
+| Нормативы по марке/модели (admin) | - это окей | Константы `SERVICE_NORMS` в коде |
 | UI рекомендаций + кнопка записи | ⚠️ | API notifications есть; отдельной страницы клиента может не быть |
 | Push-уведомления | ⚠️ | WebSocket через `EventsGateway`; native push — нет |
 
@@ -56,7 +56,7 @@ flowchart TD
   F -->|yes| G[INSERT MaintenanceReminder]
   F -->|no| H[Skip]
   G --> I[Cron 09:00 enqueue notification]
-  I --> J[Worker: SMS + Email]
+  I --> J[Worker: Email + in-app]
 ```
 
 **Нормативы (захардкожены):**
@@ -69,8 +69,41 @@ flowchart TD
 | scheduled_maintenance | 20 000 | 12 |
 | timing_belt | 90 000 | 60 |
 
+## Тест-кейсы
+
+### TC-9.1 Ночной расчёт рекомендаций ТО
+
+**Роль:** system (cron)
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | Создать 3 `DiagnosticSessions` с mileage для carId user1 | — |
+| 2 | Дождаться / вызвать cron `@Cron('0 2 * * *')` | — |
+| 3 | `GET /api/v1.0/diagnostics/reminders` (auth user1) | Записи в `MaintenanceReminders` при остатке < 10% |
+
+### TC-9.2 Отправка уведомлений без дублей
+
+**Роль:** customer (`user1@gmail.com` / `password123`)
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | Reminder с `isSent=false` и dueDate в ближайшие 7 дней | — |
+| 2 | Cron `@Cron('0 9 * * *')` → BullMQ worker | Email + in-app notification |
+| 3 | Повторный cron для того же reminder | `isSent=true`, дубликат не создаётся |
+| 4 | `GET /api/v1.0/notifications/my` | Уведомление о предстоящем ТО |
+
+### TC-9.3 Запись на обслуживание из рекомендации
+
+**Роль:** customer
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | Получить reminder type=`oil_change` | — |
+| 2 | `GET /api/v1.0/booking/slots?employeeId=&date=` | Свободные слоты |
+| 3 | `POST /api/v1.0/booking` с serviceId масла | 201, запись создана |
+
 ## Пробелы
 
 - [ ] Таблица `ServiceNorms` (brand, model, type, intervalKm, intervalMonths) + admin UI
-- [ ] Страница клиента «Рекомендуемое ТО» с кнопкой → OnlineBooking
+- [ ] Отдельная страница клиента «Рекомендуемое ТО» с кнопкой → OnlineBooking
 - [ ] Push через Electron/desktop

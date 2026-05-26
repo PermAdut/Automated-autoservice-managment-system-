@@ -16,7 +16,8 @@ export interface User {
 
 export interface UserDetailed {
   id: string;
-  role: { id: string; name: string };
+  role: { id: string; name: string } | string;
+  roleId?: string;
   login: string;
   name: string;
   surName: string;

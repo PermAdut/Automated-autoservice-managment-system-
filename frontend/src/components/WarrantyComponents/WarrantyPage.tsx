@@ -3,7 +3,7 @@ import {
   useGetMyClaimsQuery,
   useGetActiveWarrantiesQuery,
   useCreateClaimMutation,
-  getCertificateUrl,
+  downloadWarrantyCertificate,
   type Warranty,
   type WarrantyClaim,
 } from "../../api/warrantyApi";
@@ -34,6 +34,7 @@ const typeLabels: Record<string, string> = {
 function WarrantyCard({ warranty }: { warranty: Warranty }) {
   const [showClaimForm, setShowClaimForm] = useState(false);
   const [description, setDescription] = useState("");
+  const [isDownloading, setIsDownloading] = useState(false);
   const [createClaim, { isLoading }] = useCreateClaimMutation();
   const cfg = statusConfig[warranty.status] ?? { label: warranty.status, variant: "secondary" as const };
 
@@ -42,6 +43,15 @@ function WarrantyCard({ warranty }: { warranty: Warranty }) {
     await createClaim({ warrantyId: warranty.id, description });
     setShowClaimForm(false);
     setDescription("");
+  };
+
+  const handleDownloadCertificate = async () => {
+    try {
+      setIsDownloading(true);
+      await downloadWarrantyCertificate(warranty.id);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const daysLeft = Math.ceil((new Date(warranty.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
@@ -69,14 +79,16 @@ function WarrantyCard({ warranty }: { warranty: Warranty }) {
             )}
           </div>
           <div className="flex flex-col gap-2 shrink-0">
-            <a
-              href={getCertificateUrl(warranty.id)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="text-indigo-700 border-indigo-200 bg-indigo-50 hover:bg-indigo-100"
+              disabled={isDownloading}
+              onClick={() => void handleDownloadCertificate()}
             >
-              📄 Талон PDF
-            </a>
+              {isDownloading ? "Загрузка..." : "📄 Талон PDF"}
+            </Button>
             {warranty.status === "active" && (
               <Button size="sm" variant="outline" onClick={() => setShowClaimForm(!showClaimForm)}>
                 Гарантийный случай

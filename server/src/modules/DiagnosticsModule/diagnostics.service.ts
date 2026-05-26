@@ -1,12 +1,26 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import PDFDocument = require('pdfkit');
 import { DatabaseService } from '../database/database.service';
+import { PDF_FONT_BOLD, PDF_FONT_REGULAR, registerPdfFonts } from '../../utils/pdfFonts';
 import {
   diagnosticCodesCatalog,
   diagnosticSessions,
   diagnosticResults,
   maintenanceReminders,
+  cars,
+  employees,
 } from '../database/schema';
 import { eq, and, desc, like } from 'drizzle-orm';
+
+function parseSessionMeta(rawData?: string | null): { photoUrls: string[] } {
+  if (!rawData) return { photoUrls: [] };
+  try {
+    const parsed = JSON.parse(rawData) as { photoUrls?: string[] };
+    return { photoUrls: parsed.photoUrls ?? [] };
+  } catch {
+    return { photoUrls: [] };
+  }
+}
 
 @Injectable()
 export class DiagnosticsService {
@@ -62,13 +76,19 @@ export class DiagnosticsService {
     mileage?: number;
     notes?: string;
     rawData?: string;
+    photoUrls?: string[];
     codes?: { codeId: string; notes?: string }[];
   }) {
-    const { codes, ...sessionData } = data;
+    const { codes, photoUrls, rawData, ...sessionData } = data;
+    const meta = {
+      ...(rawData ? (() => { try { return JSON.parse(rawData); } catch { return {}; } })() : {}),
+      ...(photoUrls?.length ? { photoUrls } : {}),
+    };
+    const storedRaw = Object.keys(meta).length ? JSON.stringify(meta) : rawData;
 
     const [session] = await this.databaseService.db
       .insert(diagnosticSessions)
-      .values(sessionData)
+      .values({ ...sessionData, rawData: storedRaw })
       .returning();
 
     if (codes?.length) {
@@ -85,11 +105,13 @@ export class DiagnosticsService {
   }
 
   async getSessionsBycar(carId: string) {
-    return this.databaseService.db
+    const rows = await this.databaseService.db
       .select()
       .from(diagnosticSessions)
       .where(eq(diagnosticSessions.carId, carId))
       .orderBy(desc(diagnosticSessions.createdAt));
+
+    return rows.map(r => ({ ...r, ...parseSessionMeta(r.rawData) }));
   }
 
   async getSession(id: string) {
@@ -117,7 +139,70 @@ export class DiagnosticsService {
       )
       .where(eq(diagnosticResults.sessionId, id));
 
-    return { ...session, results };
+    return { ...session, ...parseSessionMeta(session.rawData), results };
+  }
+
+  async generateSessionPdf(sessionId: string): Promise<Buffer> {
+    const session = await this.getSession(sessionId);
+    const [car] = await this.databaseService.db
+      .select()
+      .from(cars)
+      .where(eq(cars.id, session.carId))
+      .limit(1);
+
+    let employeeName = '';
+    if (session.employeeId) {
+      const [emp] = await this.databaseService.db
+        .select({ name: employees.name, surName: employees.surName })
+        .from(employees)
+        .where(eq(employees.id, session.employeeId))
+        .limit(1);
+      employeeName = emp ? `${emp.surName} ${emp.name}` : '';
+    }
+
+    return new Promise((resolve, reject) => {
+      const doc = new PDFDocument({ margin: 40, size: 'A4' });
+      const chunks: Buffer[] = [];
+      doc.on('data', (c: Buffer) => chunks.push(c));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+
+      registerPdfFonts(doc);
+
+      doc.fontSize(16).font(PDF_FONT_BOLD).text('Диагностическая карта');
+      doc.moveDown(0.5);
+      doc.fontSize(10).font(PDF_FONT_REGULAR);
+      doc.text(`Дата: ${session.createdAt.toLocaleDateString('ru-RU')}`);
+      if (car) {
+        doc.text(`Автомобиль: ${car.brand} ${car.model} ${car.year ?? ''}`.trim());
+        if (car.licensePlate) doc.text(`Гос. номер: ${car.licensePlate}`);
+      }
+      if (session.mileage) doc.text(`Пробег: ${session.mileage.toLocaleString('ru-RU')} км`);
+      if (employeeName) doc.text(`Мастер: ${employeeName}`);
+      doc.moveDown(1);
+
+      if (session.notes) {
+        doc.font(PDF_FONT_BOLD).text('Заметки');
+        doc.font(PDF_FONT_REGULAR).text(session.notes);
+        doc.moveDown(0.5);
+      }
+
+      if (session.results?.length) {
+        doc.font(PDF_FONT_BOLD).text('Коды ошибок');
+        session.results.forEach(r => {
+          doc.font(PDF_FONT_REGULAR).text(`• ${r.code}: ${r.description ?? ''} (${r.severity ?? ''})`);
+        });
+        doc.moveDown(0.5);
+      }
+
+      const { photoUrls } = parseSessionMeta(session.rawData);
+      if (photoUrls.length) {
+        doc.font(PDF_FONT_BOLD).text('Фотографии');
+        photoUrls.forEach(url => doc.font(PDF_FONT_REGULAR).text(`• ${url}`));
+      }
+
+      doc.end();
+    });
   }
 
   // Maintenance Reminders

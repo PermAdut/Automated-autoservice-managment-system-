@@ -7,6 +7,7 @@ import {
   useUpdateServiceMutation,
   useGetServiceByIdQuery,
 } from "../../../../api/servicesApi";
+import { ModalOverlay } from "../../../ui/modal-overlay";
 
 const inputBase =
   "w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-base transition-all focus:outline-none focus:border-primary focus:ring-3 focus:ring-primary/10";
@@ -84,15 +85,15 @@ export const ServiceForm: React.FC<ServiceFormProps> = ({
 
   if (isLoadingService) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 sm:p-6">
+      <ModalOverlay>
         <div className="bg-white rounded-xl p-6 sm:p-8 text-center text-gray-500">Загрузка...</div>
-      </div>
+      </ModalOverlay>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 sm:p-6" onClick={onClose}>
-      <div className="bg-white rounded-xl p-6 sm:p-8 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto m-2.5" onClick={(e) => e.stopPropagation()}>
+    <ModalOverlay onClick={onClose}>
+      <div className="bg-white rounded-xl p-6 sm:p-8 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-2xl font-bold text-gray-800 mb-6">
           {serviceId ? "Редактировать услугу" : "Добавить услугу"}
         </h2>
@@ -142,6 +143,6 @@ export const ServiceForm: React.FC<ServiceFormProps> = ({
           </div>
         </form>
       </div>
-    </div>
+    </ModalOverlay>
   );
 };

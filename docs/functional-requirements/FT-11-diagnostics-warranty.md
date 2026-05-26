@@ -56,9 +56,42 @@ server/src/modules/StorageModule/
 | `Warranties` | orderId, sparePartId, type, status, durationMonths, expiresAt |
 | `WarrantyClaims` | warrantyId, userId, description, status, resolution |
 
+## Тест-кейсы
+
+### TC-11.1 Диагностическая сессия
+
+**Роль:** manager (`manager1@gmail.com` / `password123`)
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | `GET /api/v1.0/diagnostics/dtc` | Каталог DTC-кодов |
+| 2 | `POST /api/v1.0/diagnostics/sessions` с carId, mileage, results[] | 201, session создана |
+| 3 | `GET /api/v1.0/diagnostics/sessions/car/:carId` | История сессий по авто |
+| 4 | `GET /api/v1.0/diagnostics/sessions/:id/pdf` | PDF диагностической карты |
+
+### TC-11.2 Гарантия и PDF талон
+
+**Роль:** manager + customer
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | Завершить заказ (`PUT /orders/:id` status=completed) | Автосоздание warranty |
+| 2 | `GET /api/v1.0/warranty/order/:orderId` | Гарантия type=`work`, status=`active` |
+| 3 | `GET /api/v1.0/warranty/:id/certificate` | PDF гарантийного талона |
+
+### TC-11.3 Гарантийное обращение
+
+**Роль:** customer (`user1@gmail.com` / `password123`)
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | `POST /api/v1.0/warranty/claims` с warrantyId, description | 201, claim status=`open` |
+| 2 | Manager получает `GET /api/v1.0/notifications/my` | Уведомление о новом claim |
+| 3 | Manager: `PATCH /api/v1.0/warranty/claims/:id/status` | status=`approved` / `resolved` |
+
 ## Пробелы
 
 - [ ] Полноценная «диагностическая карта» с фото при приёмке (UI + S3 gallery)
-- [ ] PDF диагностической карты (отдельно от гарантийного талона)
-- [ ] Авто-уведомление менеджера при новом warranty claim
-- [ ] Автосоздание warranty при закрытии заказа
+- [x] PDF диагностической карты (`GET /diagnostics/sessions/:id/pdf`)
+- [x] Авто-уведомление менеджера при новом warranty claim
+- [x] Автосоздание warranty при закрытии заказа

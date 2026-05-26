@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ColumnDef,
   SortingState,
@@ -36,30 +36,48 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize });
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
-    onGlobalFilterChange: (value) => {
-      setGlobalFilter(value);
-      setPagination((p) => ({ ...p, pageIndex: 0 }));
+    onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: "includesString",
+    state: { sorting, globalFilter },
+    initialState: {
+      pagination: { pageIndex: 0, pageSize },
     },
-    onPaginationChange: setPagination,
-    state: { sorting, globalFilter, pagination },
+    autoResetPageIndex: true,
   });
 
+  const { pageIndex, pageSize: currentPageSize } = table.getState().pagination;
   const pageCount = table.getPageCount();
-  const pageIndex = table.getState().pagination.pageIndex;
+  const totalRows = table.getRowCount();
+  const pageStart = totalRows === 0 ? 0 : pageIndex * currentPageSize + 1;
+  const pageEnd = Math.min((pageIndex + 1) * currentPageSize, totalRows);
+
+  const visiblePageIndexes = useMemo(() => {
+    if (pageCount <= 7) {
+      return Array.from({ length: pageCount }, (_, i) => i);
+    }
+
+    const pages = new Set<number>([0, pageCount - 1, pageIndex]);
+    for (let offset = -1; offset <= 1; offset += 1) {
+      const page = pageIndex + offset;
+      if (page >= 0 && page < pageCount) {
+        pages.add(page);
+      }
+    }
+
+    return Array.from(pages).sort((a, b) => a - b);
+  }, [pageCount, pageIndex]);
 
   return (
     <div className="space-y-4">
-      {/* Search */}
       <div className="w-full max-w-md">
         <InputWithIcon
           placeholder={searchPlaceholder}
@@ -69,7 +87,6 @@ export function DataTable<TData, TValue>({
         />
       </div>
 
-      {/* Table */}
       <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
         <Table>
           <TableHeader className="bg-gray-50">
@@ -81,7 +98,7 @@ export function DataTable<TData, TValue>({
                       <div
                         className={cn(
                           "flex items-center gap-1",
-                          header.column.getCanSort() && "cursor-pointer select-none hover:text-gray-900"
+                          header.column.getCanSort() && "cursor-pointer select-none hover:text-gray-900",
                         )}
                         onClick={header.column.getToggleSortingHandler()}
                       >
@@ -91,13 +108,13 @@ export function DataTable<TData, TValue>({
                             <CaretUpOutlined
                               className={cn(
                                 "text-[8px]",
-                                header.column.getIsSorted() === "asc" ? "text-indigo-600" : "text-gray-300"
+                                header.column.getIsSorted() === "asc" ? "text-indigo-600" : "text-gray-300",
                               )}
                             />
                             <CaretDownOutlined
                               className={cn(
                                 "text-[8px]",
-                                header.column.getIsSorted() === "desc" ? "text-indigo-600" : "text-gray-300"
+                                header.column.getIsSorted() === "desc" ? "text-indigo-600" : "text-gray-300",
                               )}
                             />
                           </span>
@@ -131,19 +148,14 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
 
-      {/* Pagination */}
       {pageCount > 1 && (
         <div className="flex items-center justify-between px-1">
           <p className="text-sm text-gray-500">
             Показано{" "}
             <span className="font-medium text-gray-700">
-              {pageIndex * pageSize + 1}–
-              {Math.min((pageIndex + 1) * pageSize, table.getFilteredRowModel().rows.length)}
+              {pageStart}–{pageEnd}
             </span>{" "}
-            из{" "}
-            <span className="font-medium text-gray-700">
-              {table.getFilteredRowModel().rows.length}
-            </span>
+            из <span className="font-medium text-gray-700">{totalRows}</span>
           </p>
           <div className="flex items-center gap-1">
             <Button
@@ -154,17 +166,24 @@ export function DataTable<TData, TValue>({
             >
               <LeftOutlined />
             </Button>
-            {Array.from({ length: pageCount }, (_, i) => i).map((i) => (
-              <Button
-                key={i}
-                variant={i === pageIndex ? "default" : "ghost"}
-                size="icon-sm"
-                onClick={() => table.setPageIndex(i)}
-                className={cn("min-w-8", i === pageIndex && "pointer-events-none")}
-              >
-                {i + 1}
-              </Button>
-            ))}
+            {visiblePageIndexes.map((page, index) => {
+              const prevPage = visiblePageIndexes[index - 1];
+              const showEllipsis = index > 0 && prevPage !== undefined && page - prevPage > 1;
+
+              return (
+                <span key={page} className="flex items-center gap-1">
+                  {showEllipsis && <span className="px-1 text-gray-400">…</span>}
+                  <Button
+                    variant={page === pageIndex ? "default" : "ghost"}
+                    size="icon-sm"
+                    onClick={() => table.setPageIndex(page)}
+                    className={cn("min-w-8", page === pageIndex && "pointer-events-none")}
+                  >
+                    {page + 1}
+                  </Button>
+                </span>
+              );
+            })}
             <Button
               variant="outline"
               size="icon-sm"

@@ -9,6 +9,8 @@ export const apiTags = {
   SERVICE: "Service",
   SUPPLIERS: "Suppliers",
   SUPPLIER: "Supplier",
+  INVOICES: "Invoices",
+  INVOICE: "Invoice",
   SPARE_PARTS: "SpareParts",
   SPARE_PART: "SparePart",
   POSITIONS: "Positions",
@@ -20,4 +22,5 @@ export const apiTags = {
   Branch: "Branch",
   Corporate: "Corporate",
   Schedule: "Schedule",
+  Notifications: "Notifications",
 } as const;

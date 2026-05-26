@@ -5,9 +5,13 @@ import {
   useGetContractsQuery,
   useCreateContractMutation,
   useUpdateContractStatusMutation,
+  useGetDriversQuery,
+  useGetCompanySpendQuery,
+  getMonthlyActUrl,
   type Company,
   type CompanyContract,
 } from "../../api/corporateApi";
+import { serverConfig } from "../../configs/serverConfig";
 import { PageLayout } from "../layout/PageLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
@@ -81,6 +85,8 @@ function ContractCard({ contract }: { contract: CompanyContract }) {
 
 function CompanyDetail({ company, onBack }: { company: Company; onBack: () => void }) {
   const { data: contracts = [], isLoading } = useGetContractsQuery(company.id);
+  const { data: drivers = [] } = useGetDriversQuery(company.id);
+  const { data: spend } = useGetCompanySpendQuery(company.id);
   const [createContract, { isLoading: isCreating }] = useCreateContractMutation();
   const [showContractForm, setShowContractForm] = useState(false);
   const [contractForm, setContractForm] = useState({
@@ -111,8 +117,34 @@ function CompanyDetail({ company, onBack }: { company: Company; onBack: () => vo
           {company.contactPerson && <div><span className="text-gray-500">Контакт:</span> {company.contactPerson}</div>}
           {company.phone && <div><span className="text-gray-500">Телефон:</span> {company.phone}</div>}
           {company.email && <div><span className="text-gray-500">Email:</span> {company.email}</div>}
+          {company.bankAccount && <div><span className="text-gray-500">Р/с:</span> {company.bankAccount}</div>}
+          {company.bic && <div><span className="text-gray-500">БИК:</span> {company.bic}</div>}
+          {spend && <div><span className="text-gray-500">Расход по договору:</span> {spend.total.toLocaleString()} BYN</div>}
         </CardContent>
       </Card>
+
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold text-gray-800">Водители ({drivers.length})</h3>
+        <a
+          href={`${serverConfig.url}${getMonthlyActUrl(company.id)}`}
+          target="_blank"
+          rel="noreferrer"
+          className="text-sm text-indigo-600 hover:underline"
+        >
+          Скачать акт (PDF)
+        </a>
+      </div>
+      {drivers.length > 0 && (
+        <Card>
+          <CardContent className="p-4 space-y-2">
+            {drivers.map((d) => (
+              <div key={d.userId} className="text-sm">
+                {d.surName} {d.name} {d.email ? `· ${d.email}` : ""}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-gray-800">Договоры ({contracts.length})</h3>

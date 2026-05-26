@@ -1,17 +1,25 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Order } from "../../../api/ordersApi";
 import { useGetUserByIdQuery } from "../../../api/usersApi";
 import { useGetEmployeesQuery } from "../../../api/employeesApi";
-import { useGetServicesQuery } from "../../../api/servicesApi";
+import { formatEmployeeName } from "../../../utils/formatEmployeeName";
+import { useGetServicesQuery, useGetQualifiedEmployeesQuery } from "../../../api/servicesApi";
 import { useGetSparePartsQuery } from "../../../api/sparePartsApi";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store";
+import { ModalOverlay } from "../../ui/modal-overlay";
 
 const inputBase =
   "w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg text-sm transition-all focus:outline-none focus:border-primary focus:ring-3 focus:ring-primary/10";
+
+const selectInRow =
+  "flex-1 min-w-0 px-3 py-2.5 border-2 border-gray-200 rounded-lg text-sm transition-all focus:outline-none focus:border-primary focus:ring-3 focus:ring-primary/10 bg-white";
+
+const quantityInput =
+  "w-20 shrink-0 px-3 py-2.5 border-2 border-gray-200 rounded-lg text-sm transition-all focus:outline-none focus:border-primary focus:ring-3 focus:ring-primary/10";
 
 const serviceItemSchema = z.object({
   serviceId: z.string().min(1, "Выберите услугу"),
@@ -31,6 +39,26 @@ const orderSchema = z.object({
 });
 
 type OrderFormValues = z.infer<typeof orderSchema>;
+
+const buildFormValuesFromOrder = (source: Order | null): OrderFormValues => {
+  if (!source) {
+    return { carId: "", employeeId: "", services: [], spareParts: [] };
+  }
+  return {
+    carId: source.carId ?? "",
+    employeeId: source.employeeId ?? "",
+    services:
+      source.services?.map((s) => ({
+        serviceId: s.id,
+        quantity: s.quantity ?? 1,
+      })) ?? [],
+    spareParts:
+      source.sparePart?.map((p) => ({
+        sparePartId: p.id,
+        quantity: p.quantity ?? 1,
+      })) ?? [],
+  };
+};
 
 interface OrderFormProps {
   order: Order | null;
@@ -52,12 +80,7 @@ const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
     watch,
   } = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
-    defaultValues: {
-      carId: order?.carId ?? "",
-      employeeId: order?.employeeId ?? "",
-      services: order?.services?.map((s) => ({ serviceId: s.id, quantity: 1 })) ?? [],
-      spareParts: order?.sparePart?.map((p) => ({ sparePartId: p.id, quantity: 1 })) ?? [],
-    },
+    defaultValues: buildFormValuesFromOrder(order),
   });
 
   const { fields: serviceFields, append: appendService, remove: removeService } = useFieldArray({ control, name: "services" });
@@ -79,22 +102,32 @@ const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
   }, [selectedUser, order, setValue, watch]);
 
   const { data: employees = [] } = useGetEmployeesQuery({ sortBy: "name", sortOrder: "asc" });
+  const watchedServices = watch("services");
+  const primaryServiceId = watchedServices?.[0]?.serviceId;
+  const { data: qualified = [] } = useGetQualifiedEmployeesQuery(primaryServiceId ?? "", {
+    skip: !primaryServiceId,
+  });
 
-  useEffect(() => {
-    reset({
-      carId: order?.carId ?? "",
-      employeeId: order?.employeeId ?? "",
-      services: order?.services?.map((s) => ({ serviceId: s.id, quantity: 1 })) ?? [],
-      spareParts: order?.sparePart?.map((p) => ({ sparePartId: p.id, quantity: 1 })) ?? [],
-    });
-  }, [order, reset]);
-
-  useEffect(() => {
-    if (!order && selectedUser?.cars?.length && !watch("carId")) {
-      const carId = selectedUser.cars[0]?.id;
-      if (carId) setValue("carId", carId);
+  const filteredEmployees = useMemo(() => {
+    let result = employees;
+    if (primaryServiceId && qualified.length) {
+      const ids = new Set(qualified.map((q) => q.employeeId));
+      result = employees.filter((e) => ids.has(e.id));
     }
-  }, [selectedUser, order, setValue, watch]);
+    if (order?.employeeId) {
+      const assigned = employees.find((e) => e.id === order.employeeId);
+      if (assigned && !result.some((e) => e.id === assigned.id)) {
+        result = [assigned, ...result];
+      }
+    }
+    return result;
+  }, [employees, qualified, primaryServiceId, order?.employeeId]);
+
+  useEffect(() => {
+    if (!order) return;
+    if (selectedUserId && !selectedUser) return;
+    reset(buildFormValuesFromOrder(order));
+  }, [order, selectedUser, selectedUserId, reset]);
 
   useEffect(() => {
     if (!order && serviceFields.length === 0 && services.length > 0) {
@@ -103,17 +136,24 @@ const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
   }, [order, serviceFields.length, services, appendService]);
 
   const onSubmitForm = async (values: OrderFormValues) => {
-    const payload = { ...values, userId: currentUserId! } as OrderFormValues & { userId: string };
+    const payload = {
+      ...values,
+      userId: order?.userId ?? currentUserId!,
+    } as OrderFormValues & { userId: string };
     await onSubmit(payload, order?.id);
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 sm:p-6">
-      <div className="bg-white rounded-xl p-6 sm:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl m-2.5">
+    <ModalOverlay>
+      <div className="bg-white rounded-xl p-6 sm:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
         <h3 className="text-2xl font-bold text-gray-800 mb-6">
           {order ? "Редактировать заказ" : "Новый заказ"}
         </h3>
-        <form className="flex flex-col gap-5" onSubmit={handleSubmit(onSubmitForm)}>
+        <form
+          key={order?.id ?? "new-order"}
+          className="flex flex-col gap-5"
+          onSubmit={handleSubmit(onSubmitForm)}
+        >
           {order && (
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-semibold text-gray-600">Пользователь</label>
@@ -141,9 +181,9 @@ const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
               <label className="text-sm font-semibold text-gray-600">Сотрудник *</label>
               <select {...register("employeeId")} className={inputBase}>
                 <option value="">Выберите сотрудника</option>
-                {Array.isArray(employees) &&
-                  employees.map((e) => (
-                    <option key={e.id} value={e.id}>{e.name}</option>
+                {Array.isArray(filteredEmployees) &&
+                  filteredEmployees.map((e) => (
+                    <option key={e.id} value={e.id}>{formatEmployeeName(e)}</option>
                   ))}
               </select>
               {errors.employeeId && <span className="text-red-500 text-xs">{errors.employeeId.message}</span>}
@@ -165,10 +205,18 @@ const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
             {serviceFields.length === 0 && (
               <p className="text-gray-400 text-sm italic">Не выбрано ни одной услуги</p>
             )}
+            {serviceFields.length > 0 && (
+              <div className="grid grid-cols-[1fr_5rem_auto] gap-2 mb-2 text-xs font-semibold text-gray-500">
+                <span>Услуга</span>
+                <span className="text-center">Кол-во</span>
+                <span className="sr-only">Действия</span>
+              </div>
+            )}
             <div className="flex flex-col gap-2">
               {serviceFields.map((field, index) => (
-                <div className="flex items-center gap-2" key={field.id}>
-                  <select {...register(`services.${index}.serviceId` as const)} className={`${inputBase} flex-1`}>
+                <div className="grid grid-cols-[1fr_5rem_auto] items-center gap-2" key={field.id}>
+                  <select {...register(`services.${index}.serviceId` as const)} className={selectInRow}>
+                    <option value="">Выберите услугу</option>
                     {services.map((s) => (
                       <option key={s.id} value={s.id}>{s.name}</option>
                     ))}
@@ -176,8 +224,9 @@ const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
                   <input
                     type="number"
                     min={1}
+                    title="Количество"
                     {...register(`services.${index}.quantity` as const, { valueAsNumber: true })}
-                    className={`${inputBase} w-20`}
+                    className={quantityInput}
                   />
                   <button
                     type="button"
@@ -207,10 +256,18 @@ const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
             {spareFields.length === 0 && (
               <p className="text-gray-400 text-sm italic">Не выбрана ни одна запчасть</p>
             )}
+            {spareFields.length > 0 && (
+              <div className="grid grid-cols-[1fr_5rem_auto] gap-2 mb-2 text-xs font-semibold text-gray-500">
+                <span>Запчасть</span>
+                <span className="text-center">Кол-во</span>
+                <span className="sr-only">Действия</span>
+              </div>
+            )}
             <div className="flex flex-col gap-2">
               {spareFields.map((field, index) => (
-                <div className="flex items-center gap-2" key={field.id}>
-                  <select {...register(`spareParts.${index}.sparePartId` as const)} className={`${inputBase} flex-1`}>
+                <div className="grid grid-cols-[1fr_5rem_auto] items-center gap-2" key={field.id}>
+                  <select {...register(`spareParts.${index}.sparePartId` as const)} className={selectInRow}>
+                    <option value="">Выберите запчасть</option>
                     {spareParts.map((sp) => (
                       <option key={sp.sparePart.id} value={sp.sparePart.id}>{sp.sparePart.name}</option>
                     ))}
@@ -218,8 +275,9 @@ const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
                   <input
                     type="number"
                     min={1}
+                    title="Количество"
                     {...register(`spareParts.${index}.quantity` as const, { valueAsNumber: true })}
-                    className={`${inputBase} w-20`}
+                    className={quantityInput}
                   />
                   <button
                     type="button"
@@ -244,7 +302,7 @@ const OrderForm = ({ order, onClose, onSubmit }: OrderFormProps) => {
           </div>
         </form>
       </div>
-    </div>
+    </ModalOverlay>
   );
 };
 

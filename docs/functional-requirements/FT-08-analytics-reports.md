@@ -57,8 +57,40 @@ server/src/modules/ReportService/
 | Генератор отчётов | `frontend/src/components/Reports/ReportGenerator.tsx` |
 | API | `analyticsApi.ts`, `reportsApi.ts` |
 
+## Тест-кейсы
+
+### TC-8.1 Dashboard KPI
+
+**Роль:** admin (`admin@gmail.com` / `password123`)
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | `GET /api/v1.0/analytics/kpi?period=month` | orders, revenue, newUsers, avgRating + growth |
+| 2 | `GET /api/v1.0/analytics/orders-by-status` | Группировка pending/in_progress/completed |
+| 3 | `GET /api/v1.0/analytics/revenue-by-month` | 12 месяцев выручки |
+
+### TC-8.2 Фильтр по филиалу (manager)
+
+**Роль:** manager (`manager1@gmail.com` / `password123`)
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | `GET /api/v1.0/analytics/kpi?period=week` | KPI только по branchId менеджера |
+| 2 | `GET /api/v1.0/analytics/top-services?limit=10` | Топ услуг в рамках филиала |
+| 3 | Admin: `GET /api/v1.0/analytics/branches-comparison` | KPI по всем филиалам |
+
+### TC-8.3 Экспорт отчётов
+
+**Роль:** admin
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | `GET /api/v1.0/reports/orders?from=&to=` | JSON отчёт по заказам |
+| 2 | `GET /api/v1.0/reports/revenue/csv` | Content-Type text/csv |
+| 3 | `GET /api/v1.0/reports/stock/pdf` | PDF buffer, status 200 |
+
 ## Пробелы
 
-- [ ] Фильтрация KPI и отчётов по `branchId`
-- [ ] Загрузка производственных постов на dashboard (посты не в схеме)
+- [x] Фильтрация KPI и отчётов по `branchId` (`resolveBranchFilter`)
+- [ ] Загрузка производственных постов на dashboard
 - [ ] WebSocket push для live dashboard updates

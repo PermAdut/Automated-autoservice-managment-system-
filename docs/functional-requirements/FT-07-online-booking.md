@@ -60,9 +60,42 @@ sequenceDiagram
   API->>DB: UPDATE TimeSlots SET isBooked=true
 ```
 
+## Тест-кейсы
+
+### TC-7.1 Онлайн-запись клиента
+
+**Роль:** customer (`user1@gmail.com` / `password123`)
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | `GET /api/v1.0/booking/slots?employeeId={id}&date=YYYY-MM-DD` | Свободные слоты (`isBooked=false`) |
+| 2 | `POST /api/v1.0/booking` с carId, serviceId, employeeId, timeSlotId | 201, status=`pending`, `confirmationCode` |
+| 3 | Повторный GET slots для того же timeSlotId | Слот `isBooked=true` |
+| 4 | `GET /api/v1.0/booking/my` | Запись в списке клиента |
+
+### TC-7.2 Отмена записи и генерация слотов
+
+**Роль:** admin + customer
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | Admin: `POST /api/v1.0/booking/slots/generate` с employeeId, date, interval | 201, слоты созданы |
+| 2 | Customer: `PATCH /api/v1.0/booking/:id/cancel` | 200, status=`cancelled` |
+| 3 | GET slot после отмены | `isBooked=false`, слот снова доступен |
+
+### TC-7.3 Уведомления о записи
+
+**Роль:** customer
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | Создать запись `POST /api/v1.0/booking` | Job `bookingConfirmation` в очереди |
+| 2 | Проверить email / `GET /api/v1.0/notifications/my` | Подтверждение с confirmationCode |
+| 3 | Запись за ~24ч — cron `ScheduledNotificationsService` | Напоминание поставлено в очередь |
+
 ## Пробелы
 
-- [ ] Cron: напоминание за 24ч до `scheduledAt`
-- [ ] Email/SMS при подтверждении записи
+- [x] Cron: напоминание за 24ч до `scheduledAt` (`ScheduledNotificationsService`)
+- [x] Email при подтверждении записи (`queueBookingConfirmation`)
 - [ ] Endpoint «рекомендованные слоты» с учётом загрузки постов (ФТ-10)
 - [ ] Привязка слота к производственному посту

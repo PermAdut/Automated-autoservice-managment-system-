@@ -39,6 +39,22 @@ export const branches = schema.table(
   })
 );
 
+export const productionPosts = schema.table(
+  'ProductionPosts',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    branchId: uuid('branchId')
+      .notNull()
+      .references(() => branches.id),
+    name: varchar('name').notNull(),
+    isActive: boolean('isActive').default(true).notNull(),
+    createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
+  },
+  table => ({
+    branchIdx: index('production_post_branch_idx').on(table.branchId),
+  })
+);
+
 export const branchEmployees = schema.table(
   'BranchEmployees',
   {
@@ -82,12 +98,21 @@ export const storeTransfers = schema.table(
   })
 );
 
+export const productionPostsRelations = relations(productionPosts, ({ one }) => ({
+  branch: one(branches, {
+    fields: [productionPosts.branchId],
+    references: [branches.id],
+  }),
+}));
+
 export const branchesRelations = relations(branches, ({ one, many }) => ({
   manager: one(users, {
     fields: [branches.managerId],
     references: [users.id],
   }),
   branchEmployees: many(branchEmployees),
+  productionPosts: many(productionPosts),
+  scopedUsers: many(users, { relationName: 'branchScope' }),
 }));
 
 export const branchEmployeesRelations = relations(

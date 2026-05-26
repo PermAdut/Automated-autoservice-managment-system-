@@ -7,6 +7,20 @@ import { eq } from 'drizzle-orm';
 export class TenantService {
   constructor(private readonly databaseService: DatabaseService) {}
 
+  /** Strip read-only / server-managed fields (JSON sends dates as strings). */
+  private pickTenantSettingsUpdate(
+    data: Partial<typeof tenantSettings.$inferInsert>,
+  ): Partial<typeof tenantSettings.$inferInsert> {
+    const {
+      id: _id,
+      createdAt: _createdAt,
+      updatedAt: _updatedAt,
+      setupCompletedAt: _setupCompletedAt,
+      ...rest
+    } = data;
+    return rest;
+  }
+
   /**
    * Returns the single tenant settings row.
    * Creates a default one on first access (embedded mode).
@@ -31,10 +45,11 @@ export class TenantService {
 
   async updateSettings(data: Partial<typeof tenantSettings.$inferInsert>) {
     const current = await this.getSettings();
+    const payload = this.pickTenantSettingsUpdate(data);
 
     const [updated] = await this.databaseService.db
       .update(tenantSettings)
-      .set({ ...data, updatedAt: new Date() })
+      .set({ ...payload, updatedAt: new Date() })
       .where(eq(tenantSettings.id, current.id))
       .returning();
 
@@ -86,7 +101,6 @@ export class TenantService {
         partnerNetwork: settings.featurePartnerNetwork,
         multiBranch: settings.featureMultiBranch,
         corporateClients: settings.featureCorporateClients,
-        smsNotifications: settings.featureSmsNotifications,
         emailNotifications: settings.featureEmailNotifications,
       },
     };

@@ -16,8 +16,8 @@
 | Публичный просмотр без auth | ✅ | `@Public()` на GET endpoints |
 | Поиск и фильтр | ✅ | Query params в `service.controller.ts` |
 | Цена/время в заказе | ✅ | Берутся из справочника при создании `ServicesOrders` |
-| Требуемая квалификация мастера | ❌ | Нет поля в `Services` |
-| Подбор мастеров по квалификации | ❌ | Нет API matching |
+| Требуемая квалификация мастера | ✅ | `Services.workTypeId`, `requiredQualificationLevel` |
+| Подбор мастеров по квалификации | ✅ | `GET /services/:id/qualified-employees` |
 
 ### Backend
 
@@ -56,8 +56,40 @@ server/src/modules/ServiceModule/
 | `ServiceCategories` | name, description, parentId, isActive |
 | `Services` | name, description, price, durationMinutes, categoryId, isActive |
 
+## Тест-кейсы
+
+### TC-6.1 Публичный каталог услуг
+
+**Роль:** без авторизации (guest)
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | `GET /api/v1.0/services` | 200, список услуг с price, durationMinutes |
+| 2 | `GET /api/v1.0/services/categories` | 200, дерево категорий |
+| 3 | `GET /api/v1.0/services/:id` | 200, детали услуги |
+
+### TC-6.2 CRUD услуг (admin)
+
+**Роль:** admin (`admin@gmail.com` / `password123`)
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | `POST /api/v1.0/services` с name, price, durationMinutes, categoryId | 201 |
+| 2 | `PUT /api/v1.0/services/:id` — изменить price | 200 |
+| 3 | Customer: `POST /api/v1.0/services` | 403 Forbidden |
+
+### TC-6.3 Подбор мастеров по квалификации
+
+**Роль:** manager (`manager1@gmail.com` / `password123`)
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | Услуга с workTypeId и requiredQualificationLevel=4 | — |
+| 2 | `GET /api/v1.0/services/:id/qualified-employees` | Только мастера с level ≥ 4 |
+| 3 | Создать заказ с этой услугой | Цена/время из справочника в `ServicesOrders` |
+
 ## Пробелы
 
-- [ ] Поле `requiredQualificationLevel` или связь service ↔ position
-- [ ] Endpoint «рекомендованные мастера для услуги X»
+- [x] Поле `requiredQualificationLevel` + `workTypeId` на `Services`
+- [x] Endpoint `GET /services/:id/qualified-employees`
 - [ ] VIN-decoder интеграция с услугами (feature flag `featureVinDecoder` в tenant)

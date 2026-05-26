@@ -18,6 +18,7 @@ import {
   CarOutlined,
   SafetyCertificateOutlined,
   StarOutlined,
+  BellOutlined,
   MedicineBoxOutlined,
   ApartmentOutlined,
   SolutionOutlined,
@@ -128,7 +129,9 @@ const Header = () => {
         { to: "/diagnostics", label: "Диагностика", icon: <MedicineBoxOutlined /> },
         { to: "/warranty", label: "Гарантия", icon: <SafetyCertificateOutlined /> },
         { to: "/loyalty", label: "Лояльность", icon: <StarOutlined /> },
+        { to: "/notifications", label: "Уведомления", icon: <BellOutlined /> },
         ...([
+          { to: "/notifications/admin", label: "Все уведомления", icon: <BellOutlined />, roles: ["admin", "manager"] },
           { to: "/branches", label: "Филиалы", icon: <ApartmentOutlined />, roles: ["admin", "manager"] },
           { to: "/corporate", label: "Корп. клиенты", icon: <SolutionOutlined />, roles: ["admin", "manager"] },
           { to: "/suppliers", label: "Поставщики", icon: <TruckOutlined />, roles: ["admin", "manager"] },

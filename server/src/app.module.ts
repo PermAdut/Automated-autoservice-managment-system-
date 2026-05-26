@@ -30,10 +30,14 @@ import { RedisModule } from './modules/RedisModule/redis.module';
 import { QueueModule } from './modules/QueueModule/queue.module';
 import { GatewayModule } from './modules/GatewayModule/gateway.module';
 import { ScheduleOptimizationModule } from './modules/ScheduleModule/schedule.module';
+import { HealthModule } from './modules/HealthModule/health.module';
+import { SyncModule } from './modules/SyncModule/sync.module';
 
 @Module({
   imports: [
     DatabaseModule,
+    HealthModule,
+    SyncModule,
     AuthModule,
     SupplierModule,
     UserModule,

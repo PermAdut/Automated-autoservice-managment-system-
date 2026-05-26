@@ -166,7 +166,7 @@ export const EmployeeItem: React.FC<EmployeeItemProps> = ({
           <h3 className="text-lg font-medium text-gray-700 mb-2">Квалификации</h3>
           {qualifications.map((item) => (
             <p key={`${item.workTypeName}-${item.level}`}>
-              <strong>{item.workTypeName}:</strong> уровень {item.level}
+              <strong>{item.workTypeName}:</strong> {item.level}-й разряд
             </p>
           ))}
         </div>

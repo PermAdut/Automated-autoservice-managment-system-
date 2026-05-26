@@ -12,6 +12,7 @@ import {
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { SpareService } from './spare.service';
+import { StockService } from './stock.service';
 import { SparePartStockResponseDto } from './Dto/spare.response';
 import { JwtAuthGuard } from '../AuthModule/guards/jwt-auth.guard';
 import { RolesGuard } from '../AuthModule/guards/roles.guard';
@@ -25,7 +26,16 @@ import {
 @Controller('api/v1.0/stores')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class SpareController {
-  constructor(private readonly spareService: SpareService) {}
+  constructor(
+    private readonly spareService: SpareService,
+    private readonly stockService: StockService,
+  ) {}
+
+  @Get('movements')
+  @Roles('admin', 'manager')
+  getMovements(@Query('limit') limit?: string) {
+    return this.stockService.getMovements(limit ? parseInt(limit, 10) : 100);
+  }
 
   @Get()
   @Public()

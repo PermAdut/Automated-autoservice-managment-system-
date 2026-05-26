@@ -1,6 +1,7 @@
 import { relations } from 'drizzle-orm';
 import {
   bigint,
+  integer,
   numeric,
   primaryKey,
   text,
@@ -9,7 +10,8 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core';
 import { schema } from '../pgSchema';
-import { sparePartOrders } from '../schema';
+import { orders, sparePartOrders, users } from '../schema';
+import { branches } from './branches.model';
 import { tenantSettings } from './tenant.model';
 
 export const suppliers = schema.table('Suppliers', {
@@ -26,6 +28,7 @@ export const stores = schema.table('Store', {
   location: varchar('location', { length: 200 }).notNull(),
   phone: varchar('phone', { length: 20 }),
   workingHours: varchar('workingHours', { length: 100 }),
+  branchId: uuid('branchId').references(() => branches.id),
   tenantId: uuid('tenantId').references(() => tenantSettings.id),
 });
 
@@ -44,7 +47,26 @@ export const spareParts = schema.table('SparePart', {
   categoryId: uuid('categoryId')
     .notNull()
     .references(() => categories.id),
+  minQuantity: integer('minQuantity').default(0).notNull(),
+  supplierId: uuid('supplierId').references(() => suppliers.id),
+  reservedQuantity: integer('reservedQuantity').default(0).notNull(),
   tenantId: uuid('tenantId').references(() => tenantSettings.id),
+});
+
+export const stockMovements = schema.table('StockMovements', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  sparePartId: uuid('sparePartId')
+    .notNull()
+    .references(() => spareParts.id),
+  storeId: uuid('storeId')
+    .notNull()
+    .references(() => stores.id),
+  type: varchar('type').notNull(),
+  quantity: bigint('quantity', { mode: 'number' }).notNull(),
+  orderId: uuid('orderId').references(() => orders.id),
+  userId: uuid('userId').references(() => users.id),
+  notes: text('notes'),
+  createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
 });
 
 export const sparePartStore = schema.table(
@@ -69,6 +91,7 @@ export const positionsForBuying = schema.table('PositionsForBuying', {
   supplierId: uuid('supplierId')
     .notNull()
     .references(() => suppliers.id),
+  sparePartId: uuid('sparePartId').references(() => spareParts.id),
   quantity: bigint('quantity', { mode: 'number' }).notNull(),
   deliveryDate: timestamp('deliveryDate', { mode: 'date' })
     .defaultNow()
@@ -101,6 +124,10 @@ export const positionsForBuyingRelations = relations(
       fields: [positionsForBuying.supplierId],
       references: [suppliers.id],
     }),
+    sparePart: one(spareParts, {
+      fields: [positionsForBuying.sparePartId],
+      references: [spareParts.id],
+    }),
     invoices: many(invoices),
   })
 );
@@ -112,8 +139,13 @@ export const invoicesRelations = relations(invoices, ({ one }) => ({
   }),
 }));
 
-export const storesRelations = relations(stores, ({ many }) => ({
+export const storesRelations = relations(stores, ({ one, many }) => ({
+  branch: one(branches, {
+    fields: [stores.branchId],
+    references: [branches.id],
+  }),
   sparePartStore: many(sparePartStore),
+  stockMovements: many(stockMovements),
 }));
 
 export const sparePartsRelations = relations(spareParts, ({ one, many }) => ({
@@ -121,8 +153,32 @@ export const sparePartsRelations = relations(spareParts, ({ one, many }) => ({
     fields: [spareParts.categoryId],
     references: [categories.id],
   }),
+  supplier: one(suppliers, {
+    fields: [spareParts.supplierId],
+    references: [suppliers.id],
+  }),
   sparePartStore: many(sparePartStore),
   sparePartOrders: many(sparePartOrders),
+  stockMovements: many(stockMovements),
+}));
+
+export const stockMovementsRelations = relations(stockMovements, ({ one }) => ({
+  sparePart: one(spareParts, {
+    fields: [stockMovements.sparePartId],
+    references: [spareParts.id],
+  }),
+  store: one(stores, {
+    fields: [stockMovements.storeId],
+    references: [stores.id],
+  }),
+  order: one(orders, {
+    fields: [stockMovements.orderId],
+    references: [orders.id],
+  }),
+  user: one(users, {
+    fields: [stockMovements.userId],
+    references: [users.id],
+  }),
 }));
 
 export const categoriesRelations = relations(categories, ({ many }) => ({

@@ -4,18 +4,15 @@ import {
   notifications,
   notificationTemplates,
   notificationChannels,
+  users,
 } from '../database/schema';
 import { eq, desc, and } from 'drizzle-orm';
-import { SmsService } from './sms.service';
 
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
 
-  constructor(
-    private readonly databaseService: DatabaseService,
-    private readonly smsService: SmsService,
-  ) {}
+  constructor(private readonly databaseService: DatabaseService) {}
 
   async notifyUser(
     userId: string,
@@ -33,25 +30,6 @@ export class NotificationService {
         body,
         recipient: recipient ?? userId,
         sentAt: new Date(),
-      })
-      .returning();
-
-    return notification;
-  }
-
-  async sendSms(userId: string, phone: string, message: string) {
-    const result = await this.smsService.send(phone, message);
-
-    const [notification] = await this.databaseService.db
-      .insert(notifications)
-      .values({
-        userId,
-        channel: 'sms',
-        status: result.success ? 'sent' : 'failed',
-        body: message,
-        recipient: phone,
-        sentAt: result.success ? new Date() : undefined,
-        errorMessage: result.error,
       })
       .returning();
 
@@ -84,21 +62,17 @@ export class NotificationService {
       body = body.replace(new RegExp(`{{${key}}}`, 'g'), value);
     }
 
-    if (template.channel === 'sms') {
-      return this.sendSms(userId, recipient, body);
-    }
-
-    // For email/push — save as pending for future integration
     const [notification] = await this.databaseService.db
       .insert(notifications)
       .values({
         userId,
         templateId: template.id,
-        channel: template.channel,
-        status: 'pending',
+        channel: template.channel === 'sms' ? 'push' : template.channel,
+        status: template.channel === 'email' ? 'pending' : 'sent',
         subject: template.subject ?? undefined,
         body,
         recipient,
+        sentAt: template.channel === 'email' ? undefined : new Date(),
       })
       .returning();
 
@@ -115,8 +89,24 @@ export class NotificationService {
 
   async findAll(limit = 50) {
     return this.databaseService.db
-      .select()
+      .select({
+        id: notifications.id,
+        userId: notifications.userId,
+        templateId: notifications.templateId,
+        channel: notifications.channel,
+        status: notifications.status,
+        subject: notifications.subject,
+        body: notifications.body,
+        recipient: notifications.recipient,
+        sentAt: notifications.sentAt,
+        errorMessage: notifications.errorMessage,
+        createdAt: notifications.createdAt,
+        userName: users.name,
+        userSurName: users.surName,
+        userEmail: users.email,
+      })
       .from(notifications)
+      .leftJoin(users, eq(notifications.userId, users.id))
       .orderBy(desc(notifications.createdAt))
       .limit(limit);
   }
@@ -130,7 +120,7 @@ export class NotificationService {
 
   async createTemplate(data: {
     name: string;
-    channel: 'email' | 'sms' | 'push';
+    channel: 'email' | 'push';
     subject?: string;
     body: string;
     variables?: string;
@@ -151,10 +141,9 @@ export class NotificationService {
 
   async upsertChannel(
     userId: string,
-    channel: 'email' | 'sms' | 'push',
+    channel: 'email' | 'push',
     address: string,
   ) {
-    // Delete existing for same user+channel, then insert
     await this.databaseService.db
       .delete(notificationChannels)
       .where(

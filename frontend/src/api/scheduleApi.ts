@@ -28,7 +28,10 @@ export const scheduleApi = baseApi.injectEndpoints({
       query: (date) => `/schedule/gantt?date=${date}`,
       providesTags: ['Schedule'],
     }),
-    optimizeSchedule: builder.mutation<OptimizeResult, { windowHours?: number }>({
+    optimizeSchedule: builder.mutation<
+      OptimizeResult,
+      { date?: string; windowHours?: number }
+    >({
       query: (body) => ({ url: '/schedule/optimize', method: 'POST', body }),
       invalidatesTags: ['Schedule', 'Order'],
     }),

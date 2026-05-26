@@ -49,6 +49,14 @@ export class UserResponseDto {
 
   @Expose()
   @ApiProperty({
+    description: 'User role id',
+    type: String,
+    required: false,
+  })
+  roleId?: string;
+
+  @Expose()
+  @ApiProperty({
     description: 'Profile avatar URL',
     type: String,
     nullable: true,

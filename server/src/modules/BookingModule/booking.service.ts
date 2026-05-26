@@ -8,14 +8,21 @@ import {
   appointments,
   timeSlots,
   cars,
+  users,
+  services,
+  tenantSettings,
 } from '../database/schema';
 import { eq, and, gte, lte, desc } from 'drizzle-orm';
 import { CreateAppointmentDto, UpdateAppointmentDto } from './Dto/create-appointment.dto';
 import { randomBytes } from 'crypto';
+import { NotificationQueueService } from '../QueueModule/services/notification-queue.service';
 
 @Injectable()
 export class BookingService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(
+    private readonly databaseService: DatabaseService,
+    private readonly notificationQueue: NotificationQueueService,
+  ) {}
 
   async getAvailableSlots(employeeId: string, date: string) {
     const targetDate = new Date(date);
@@ -37,7 +44,6 @@ export class BookingService {
   }
 
   async createAppointment(userId: string, dto: CreateAppointmentDto) {
-    // Validate car belongs to user
     const car = await this.databaseService.db
       .select()
       .from(cars)
@@ -48,7 +54,6 @@ export class BookingService {
       throw new BadRequestException('Car not found or does not belong to user');
     }
 
-    // If timeSlotId provided — mark slot as booked
     if (dto.timeSlotId) {
       const slot = await this.databaseService.db
         .select()
@@ -83,7 +88,45 @@ export class BookingService {
       })
       .returning();
 
+    void this.queueBookingConfirmation(created, userId).catch(() => undefined);
+
     return created;
+  }
+
+  private async queueBookingConfirmation(
+    appointment: typeof appointments.$inferSelect,
+    userId: string,
+  ) {
+    const [[user], [service], [tenant]] = await Promise.all([
+      this.databaseService.db
+        .select({ email: users.email, name: users.name })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1),
+      appointment.serviceId
+        ? this.databaseService.db
+            .select({ name: services.name })
+            .from(services)
+            .where(eq(services.id, appointment.serviceId))
+            .limit(1)
+        : Promise.resolve([]),
+      this.databaseService.db
+        .select({ companyName: tenantSettings.companyName, phone: tenantSettings.phone })
+        .from(tenantSettings)
+        .limit(1),
+    ]);
+
+    await this.notificationQueue.addBookingConfirmationJob({
+      userId,
+      appointmentId: appointment.id,
+      confirmationCode: appointment.confirmationCode ?? '',
+      scheduledAt: appointment.scheduledAt.toLocaleString('ru-RU'),
+      serviceName: service?.name,
+      userEmail: user?.email ?? undefined,
+      userName: user?.name ?? undefined,
+      companyName: tenant?.companyName ?? 'АвтоСервис',
+      companyPhone: tenant?.phone ?? undefined,
+    });
   }
 
   async findByUser(userId: string) {
@@ -146,7 +189,6 @@ export class BookingService {
       throw new BadRequestException(`Appointment is already ${appointment.status}`);
     }
 
-    // Free the time slot
     if (appointment.timeSlotId) {
       await this.databaseService.db
         .update(timeSlots)

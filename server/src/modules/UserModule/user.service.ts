@@ -348,6 +348,7 @@ export class UserService {
       UserResponseDto,
       {
         id: user.id,
+        roleId: user.roleId ?? undefined,
         role: user.roleName || '',
         login: user.login,
         name: user.name,

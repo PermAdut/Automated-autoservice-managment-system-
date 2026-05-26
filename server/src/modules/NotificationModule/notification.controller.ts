@@ -20,16 +20,6 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-class SendSmsDto {
-  @ApiProperty()
-  @IsString()
-  phone: string;
-
-  @ApiProperty()
-  @IsString()
-  message: string;
-}
-
 class SendFromTemplateDto {
   @ApiProperty()
   @IsString()
@@ -50,9 +40,9 @@ class CreateTemplateDto {
   @IsString()
   name: string;
 
-  @ApiProperty({ enum: ['email', 'sms', 'push'] })
-  @IsEnum(['email', 'sms', 'push'])
-  channel: 'email' | 'sms' | 'push';
+  @ApiProperty({ enum: ['email', 'push'] })
+  @IsEnum(['email', 'push'])
+  channel: 'email' | 'push';
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -70,9 +60,9 @@ class CreateTemplateDto {
 }
 
 class UpsertChannelDto {
-  @ApiProperty({ enum: ['email', 'sms', 'push'] })
-  @IsEnum(['email', 'sms', 'push'])
-  channel: 'email' | 'sms' | 'push';
+  @ApiProperty({ enum: ['email', 'push'] })
+  @IsEnum(['email', 'push'])
+  channel: 'email' | 'push';
 
   @ApiProperty()
   @IsString()
@@ -97,14 +87,6 @@ export class NotificationController {
   @ApiOperation({ summary: 'Get all notifications (admin/manager)' })
   getAll() {
     return this.notificationService.findAll();
-  }
-
-  @Post('sms')
-  @UseGuards(RolesGuard)
-  @Roles('admin', 'manager')
-  @ApiOperation({ summary: 'Send SMS to a phone number' })
-  sendSms(@Request() req: AuthenticatedRequest, @Body() dto: SendSmsDto) {
-    return this.notificationService.sendSms(req.user.userId, dto.phone, dto.message);
   }
 
   @Post('send')

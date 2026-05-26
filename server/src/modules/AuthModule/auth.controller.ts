@@ -47,8 +47,8 @@ export class AuthController {
   @Post('logout')
   @Public()
   @HttpCode(200)
-  async logout(@Body() body: { refresh_token: string }) {
-    await this.authService.revokeRefreshToken(body.refresh_token);
+  async logout(@Body() body: { refresh_token: string; access_token?: string }) {
+    await this.authService.logout(body.refresh_token, body.access_token);
     return { message: 'Logged out successfully' };
   }
 

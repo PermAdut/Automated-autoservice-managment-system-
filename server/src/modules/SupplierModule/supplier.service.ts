@@ -7,7 +7,7 @@ import { DatabaseService } from '../database/database.service';
 import { SupplierResponseDto } from './Dto/SupplierResponseDto';
 import { InvoiceResponseDto } from './Dto/invoice-response.dto';
 import { plainToInstance } from 'class-transformer';
-import { suppliers, positionsForBuying, invoices } from '../database/schema';
+import { suppliers, positionsForBuying, invoices, spareParts } from '../database/schema';
 import { eq, ilike, desc, asc, or, sql } from 'drizzle-orm';
 import { CreateSupplierDto } from './Dto/create-supplier.dto';
 import { UpdateSupplierDto } from './Dto/update-supplier.dto';
@@ -17,6 +17,35 @@ import { UpdateInvoiceDto } from './Dto/update-invoice.dto';
 @Injectable()
 export class SupplierService {
   constructor(private readonly databaseService: DatabaseService) {}
+
+  private async loadPositionsForSupplier(supplierId: string) {
+    const rows = await this.databaseService.db
+      .select({
+        id: positionsForBuying.id,
+        quantity: positionsForBuying.quantity,
+        deliveryDate: positionsForBuying.deliveryDate,
+        status: positionsForBuying.status,
+        sparePartName: spareParts.name,
+        sparePartNumber: spareParts.partNumber,
+      })
+      .from(positionsForBuying)
+      .leftJoin(spareParts, eq(positionsForBuying.sparePartId, spareParts.id))
+      .where(eq(positionsForBuying.supplierId, supplierId))
+      .orderBy(desc(positionsForBuying.deliveryDate));
+
+    return rows.map(p => ({
+      id: p.id,
+      quantity: p.quantity,
+      deliverDate: p.deliveryDate.toISOString(),
+      status: p.status,
+      ...(p.sparePartName
+        ? {
+            sparePartName: p.sparePartName,
+            sparePartNumber: p.sparePartNumber ?? undefined,
+          }
+        : {}),
+    }));
+  }
 
   async findAll(
     search?: string,
@@ -56,25 +85,13 @@ export class SupplierService {
       const suppliersList = await baseQuery;
 
       const suppliersResponse: SupplierResponseDto[] = await Promise.all(
-        suppliersList.map(async supplier => {
-          const positions = await this.databaseService.db
-            .select()
-            .from(positionsForBuying)
-            .where(eq(positionsForBuying.supplierId, supplier.id));
-
-          return {
-            id: supplier.id,
-            name: supplier.name,
-            contact: supplier.contact || '',
-            address: supplier.address || '',
-            positionsForBuying: positions.map(p => ({
-              id: p.id,
-              quantity: p.quantity,
-              deliverDate: p.deliveryDate.toISOString(),
-              status: p.status,
-            })),
-          };
-        })
+        suppliersList.map(async supplier => ({
+          id: supplier.id,
+          name: supplier.name,
+          contact: supplier.contact || '',
+          address: supplier.address || '',
+          positionsForBuying: await this.loadPositionsForSupplier(supplier.id),
+        }))
       );
 
       return plainToInstance(SupplierResponseDto, suppliersResponse, {
@@ -96,23 +113,19 @@ export class SupplierService {
       throw new NotFoundException(`Supplier with id ${id} not found`);
     }
 
-    const positions = await this.databaseService.db
-      .select()
-      .from(positionsForBuying)
-      .where(eq(positionsForBuying.supplierId, supplier.id));
+    const positionsForBuyingList = await this.loadPositionsForSupplier(supplier.id);
 
-    return {
-      id: supplier.id,
-      name: supplier.name,
-      contact: supplier.contact || '',
-      address: supplier.address || '',
-      positionsForBuying: positions.map(p => ({
-        id: p.id,
-        quantity: p.quantity,
-        deliverDate: p.deliveryDate.toISOString(),
-        status: p.status,
-      })),
-    };
+    return plainToInstance(
+      SupplierResponseDto,
+      {
+        id: supplier.id,
+        name: supplier.name,
+        contact: supplier.contact || '',
+        address: supplier.address || '',
+        positionsForBuying: positionsForBuyingList,
+      },
+      { excludeExtraneousValues: true },
+    );
   }
 
   async create(supplierData: CreateSupplierDto): Promise<SupplierResponseDto> {

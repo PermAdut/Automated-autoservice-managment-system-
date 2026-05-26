@@ -5,7 +5,9 @@ import {
   useGetMyAppointmentsQuery,
   useCancelAppointmentMutation,
 } from "../../api/bookingApi";
+import { formatEmployeeName } from "../../utils/formatEmployeeName";
 import { useGetEmployeesQuery } from "../../api/employeesApi";
+import { useGetServicesQuery, useGetQualifiedEmployeesQuery } from "../../api/servicesApi";
 import { useGetMyProfileQuery } from "../../api/usersApi";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
@@ -41,9 +43,17 @@ export default function OnlineBooking() {
   const [notes, setNotes] = useState("");
   const [successCode, setSuccessCode] = useState<string | null>(null);
   const [selectedCarId, setSelectedCarId] = useState("");
+  const [selectedServiceId, setSelectedServiceId] = useState("");
 
   const { data: profile } = useGetMyProfileQuery(undefined, { skip: !localStorage.getItem("access_token") });
-  const { data: employees } = useGetEmployeesQuery({});
+  const { data: services = [] } = useGetServicesQuery({ sortBy: "name", sortOrder: "asc" });
+  const { data: qualified = [] } = useGetQualifiedEmployeesQuery(selectedServiceId, {
+    skip: !selectedServiceId,
+  });
+  const { data: allEmployees } = useGetEmployeesQuery({});
+  const employees = selectedServiceId && qualified.length
+    ? (allEmployees ?? []).filter((e) => qualified.some((q) => q.employeeId === e.id))
+    : allEmployees;
   const { data: slots, isLoading: slotsLoading } = useGetAvailableSlotsQuery(
     { employeeId: selectedEmployee, date: selectedDate },
     { skip: !selectedEmployee || !selectedDate }
@@ -66,6 +76,7 @@ export default function OnlineBooking() {
     try {
       const result = await createAppointment({
         carId: selectedCarId,
+        serviceId: selectedServiceId || undefined,
         employeeId: selectedEmployee || undefined,
         timeSlotId: selectedSlot,
         scheduledAt: `${selectedDate}T${slot.startTime}`,
@@ -171,6 +182,24 @@ export default function OnlineBooking() {
               </div>
             )}
 
+            {/* Service */}
+            <div className="space-y-1.5">
+              <Label>Услуга</Label>
+              <Select
+                value={selectedServiceId}
+                onChange={(e) => {
+                  setSelectedServiceId(e.target.value);
+                  setSelectedEmployee("");
+                  setSelectedSlot("");
+                }}
+              >
+                <option value="">— Выберите услугу —</option>
+                {services.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </Select>
+            </div>
+
             {/* Master */}
             <div className="space-y-1.5">
               <Label>
@@ -187,7 +216,7 @@ export default function OnlineBooking() {
                 <option value="">— Любой мастер —</option>
                 {employees?.map((e) => (
                   <option key={e.id} value={e.id}>
-                    {e.name} {e.surName}
+                    {formatEmployeeName(e)}
                     {e.position?.name ? ` · ${e.position.name}` : ""}
                   </option>
                 ))}

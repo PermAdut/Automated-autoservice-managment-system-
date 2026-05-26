@@ -70,6 +70,41 @@ server/src/modules/VehicleModule/
 | `Orders` | история заказов по userId / carId |
 | `LoyaltyPrograms` | points, tier |
 
+## Тест-кейсы
+
+### TC-2.1 Admin: CRUD пользователей
+
+**Роль:** admin (`admin@gmail.com` / `password123`)
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | `GET /api/v1.0/users` | 200, список пользователей |
+| 2 | `POST /api/v1.0/users` с email, login, roleId | 201, пользователь создан |
+| 3 | `PUT /api/v1.0/users/:id` — изменить phone | 200, phone обновлён |
+| 4 | `DELETE /api/v1.0/users/:id` | 204, пользователь удалён |
+
+### TC-2.2 Самостоятельное редактирование профиля
+
+**Роль:** customer (`user1@gmail.com` / `password123`)
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | `GET /api/v1.0/users/profile/me` | 200, name, email, phone, avatarUrl |
+| 2 | `PUT /api/v1.0/users/profile/me` — изменить name | 200, name обновлён |
+| 3 | `GET /api/v1.0/vehicle` | 200, список авто текущего пользователя |
+| 4 | `POST /api/v1.0/vehicle` с brand, model, vin | 201, авто привязано к userId |
+
+### TC-2.3 Блокировка учётной записи
+
+**Роль:** admin + customer
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | Admin: `PUT /api/v1.0/users/:id` с `isBlocked: true` для user1 | 200 |
+| 2 | user1: `POST /auth/login` | 401 «Account is blocked» |
+| 3 | Admin: снять блокировку `isBlocked: false` | 200 |
+| 4 | user1: повторный login | 200, токены выданы |
+
 ## Пробелы
 
 - [x] Блокировка пользователя admin-ом

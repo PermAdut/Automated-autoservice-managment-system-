@@ -153,6 +153,43 @@ export class EmailService {
     };
   }
 
+  buildAppointmentReminderEmail(params: {
+    customerName: string;
+    dateStr: string;
+    confirmationCode?: string;
+    serviceName?: string;
+    companyName: string;
+    companyPhone?: string;
+  }): { subject: string; html: string } {
+    return {
+      subject: `${params.companyName}: напоминание о записи — ${params.dateStr}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #4f46e5;">${params.companyName}</h2>
+          <p>Уважаемый(ая) ${params.customerName},</p>
+          <p>Напоминаем, что завтра у вас запланирован визит в наш автосервис.</p>
+          <table style="border-collapse: collapse; width: 100%; margin: 16px 0;">
+            <tr>
+              <td style="padding: 8px; background: #f3f4f6; font-weight: bold;">Дата и время</td>
+              <td style="padding: 8px;">${params.dateStr}</td>
+            </tr>
+            ${params.serviceName ? `<tr>
+              <td style="padding: 8px; background: #f3f4f6; font-weight: bold;">Услуга</td>
+              <td style="padding: 8px;">${params.serviceName}</td>
+            </tr>` : ''}
+            ${params.confirmationCode ? `<tr>
+              <td style="padding: 8px; background: #f3f4f6; font-weight: bold;">Код подтверждения</td>
+              <td style="padding: 8px; font-weight: bold; color: #4f46e5;">${params.confirmationCode}</td>
+            </tr>` : ''}
+          </table>
+          ${params.companyPhone ? `<p>По вопросам звоните: <a href="tel:${params.companyPhone}">${params.companyPhone}</a></p>` : ''}
+          <hr/>
+          <p style="color: #666; font-size: 12px;">Это автоматическое уведомление.</p>
+        </div>
+      `,
+    };
+  }
+
   buildMaintenanceReminderEmail(params: {
     customerName: string;
     carInfo: string;

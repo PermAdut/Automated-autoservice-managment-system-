@@ -25,12 +25,16 @@ import { CreateServiceDto } from './Dto/create-service.dto';
 import { UpdateServiceDto } from './Dto/update-service.dto';
 import { CreateServiceCategoryDto } from './Dto/create-service-category.dto';
 import { UpdateServiceCategoryDto } from './Dto/update-service-category.dto';
+import { EmployeeQualificationService } from '../EmployeeModule/employee-qualification.service';
 
 @Controller('api/v1.0/services')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }))
 export class ServiceController {
-  constructor(private readonly serviceService: ServiceService) {}
+  constructor(
+    private readonly serviceService: ServiceService,
+    private readonly qualificationService: EmployeeQualificationService,
+  ) {}
 
   @Get()
   @Public()
@@ -46,6 +50,13 @@ export class ServiceController {
     @Query('sortOrder') sortOrder: 'asc' | 'desc' = 'asc'
   ): Promise<ServiceResponseDto[]> {
     return await this.serviceService.findAll(search, sortBy, sortOrder);
+  }
+
+  @Get(':id/qualified-employees')
+  @Roles('admin', 'manager', 'customer')
+  @ApiOperation({ summary: 'Get employees qualified for this service' })
+  getQualifiedEmployees(@Param('id', ParseUUIDPipe) id: string) {
+    return this.qualificationService.findQualifiedEmployeesForService(id);
   }
 
   @Get(':id')

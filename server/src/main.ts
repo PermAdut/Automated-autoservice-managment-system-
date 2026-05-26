@@ -49,7 +49,7 @@ async function bootstrap() {
       .addBearerAuth()
       .addTag('Auth', 'Authentication & authorization')
       .addTag('Booking', 'Online appointment booking')
-      .addTag('Notifications', 'SMS & email notifications')
+      .addTag('Notifications', 'Email & in-app notifications')
       .addTag('Analytics', 'Business analytics & KPIs')
       .addTag('Storage', 'File upload & S3 management')
       .addTag('Tenant', 'White-label configuration')

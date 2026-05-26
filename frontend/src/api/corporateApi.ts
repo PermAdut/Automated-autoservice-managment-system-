@@ -10,6 +10,8 @@ export interface Company {
   phone?: string;
   email?: string;
   managerUserId?: string;
+  bankAccount?: string;
+  bic?: string;
   isActive: boolean;
   createdAt: string;
 }
@@ -26,6 +28,15 @@ export interface CompanyContract {
   endDate: string;
   notes?: string;
   createdAt: string;
+}
+
+export interface CompanyDriver {
+  companyId: string;
+  userId: string;
+  name?: string;
+  surName?: string;
+  email?: string;
+  phone?: string;
 }
 
 export const corporateApi = baseApi.injectEndpoints({
@@ -50,8 +61,21 @@ export const corporateApi = baseApi.injectEndpoints({
       query: (companyId) => `/corporate/companies/${companyId}/contracts`,
       providesTags: ['Corporate'],
     }),
-    createContract: builder.mutation<CompanyContract, Omit<CompanyContract, 'id' | 'status' | 'createdAt'>>({
-      query: (body) => ({ url: '/corporate/contracts', method: 'POST', body }),
+    createContract: builder.mutation<CompanyContract, {
+      companyId: string;
+      contractNumber?: string;
+      discountPercent?: string;
+      creditLimit?: string;
+      paymentTermDays?: string;
+      startDate: string;
+      endDate: string;
+      notes?: string;
+    }>({
+      query: ({ companyId, ...body }) => ({
+        url: `/corporate/companies/${companyId}/contracts`,
+        method: 'POST',
+        body,
+      }),
       invalidatesTags: ['Corporate'],
     }),
     updateContractStatus: builder.mutation<CompanyContract, { id: string; status: CompanyContract['status'] }>({
@@ -61,6 +85,28 @@ export const corporateApi = baseApi.injectEndpoints({
     getCompanyCars: builder.query<{ companyId: string; carId: string; notes?: string }[], string>({
       query: (companyId) => `/corporate/companies/${companyId}/cars`,
       providesTags: ['Corporate'],
+    }),
+    getDrivers: builder.query<CompanyDriver[], string>({
+      query: (companyId) => `/corporate/companies/${companyId}/drivers`,
+      providesTags: ['Corporate'],
+    }),
+    addDriver: builder.mutation<unknown, { companyId: string; userId: string }>({
+      query: ({ companyId, userId }) => ({
+        url: `/corporate/companies/${companyId}/drivers`,
+        method: 'POST',
+        body: { userId },
+      }),
+      invalidatesTags: ['Corporate'],
+    }),
+    removeDriver: builder.mutation<void, { companyId: string; userId: string }>({
+      query: ({ companyId, userId }) => ({
+        url: `/corporate/companies/${companyId}/drivers/${userId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Corporate'],
+    }),
+    getCompanySpend: builder.query<{ total: number }, string>({
+      query: (companyId) => `/corporate/companies/${companyId}/spend`,
     }),
   }),
 });
@@ -74,4 +120,16 @@ export const {
   useCreateContractMutation,
   useUpdateContractStatusMutation,
   useGetCompanyCarsQuery,
+  useGetDriversQuery,
+  useAddDriverMutation,
+  useRemoveDriverMutation,
+  useGetCompanySpendQuery,
 } = corporateApi;
+
+export function getMonthlyActUrl(companyId: string, year?: number, month?: number) {
+  const params = new URLSearchParams();
+  if (year) params.set('year', String(year));
+  if (month) params.set('month', String(month));
+  const qs = params.toString();
+  return `/api/v1.0/corporate/companies/${companyId}/monthly-act${qs ? `?${qs}` : ''}`;
+}

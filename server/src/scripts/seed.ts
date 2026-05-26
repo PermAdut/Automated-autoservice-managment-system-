@@ -9,10 +9,12 @@ import {
   appointments, timeSlots, discounts, orderDiscounts,
   loyaltyPrograms, loyaltyTransactions,
   warranties, warrantyClaims,
-  companies, companyContracts, companyCars,
-  tenantSettings,
+  companies, companyContracts, companyCars, companyDrivers,
+  tenantSettings, productionPosts, stockMovements, syncLog,
+  diagnosticSessions, maintenanceReminders,
 } from '../drizzle/schema';
 import * as bcrypt from 'bcrypt';
+import { eq } from 'drizzle-orm';
 
 const FIRST_NAMES_M = ['Александр', 'Дмитрий', 'Иван', 'Михаил', 'Андрей', 'Алексей', 'Сергей', 'Николай', 'Артём', 'Роман', 'Евгений', 'Владимир', 'Илья', 'Кирилл', 'Павел', 'Тимур', 'Максим', 'Антон', 'Данила', 'Егор'];
 const FIRST_NAMES_F = ['Анна', 'Мария', 'Елена', 'Ольга', 'Наталья', 'Татьяна', 'Ирина', 'Светлана', 'Юлия', 'Екатерина', 'Алина', 'Виктория', 'Ксения', 'Дарья', 'Полина', 'Валерия', 'Надежда', 'Людмила', 'Вера', 'Галина'];
@@ -56,6 +58,13 @@ function futureDate(daysAhead: number): Date {
   return d;
 }
 
+function scheduleDayAt(dayOffset: number, hour: number, minute = 0): Date {
+  const d = new Date();
+  d.setDate(d.getDate() + dayOffset);
+  d.setHours(hour, minute, 0, 0);
+  return d;
+}
+
 async function seed() {
   const dbService = new DatabaseService();
 
@@ -63,20 +72,24 @@ async function seed() {
     console.log('Clearing tables...');
 
     // Clear in FK-safe order
+    await dbService.db.delete(syncLog);
+    await dbService.db.delete(stockMovements);
     await dbService.db.delete(loyaltyTransactions);
     await dbService.db.delete(loyaltyPrograms);
     await dbService.db.delete(orderDiscounts);
     await dbService.db.delete(discounts);
     await dbService.db.delete(warrantyClaims);
     await dbService.db.delete(warranties);
+    await dbService.db.delete(companyDrivers);
     await dbService.db.delete(companyCars);
     await dbService.db.delete(companyContracts);
     await dbService.db.delete(companies);
+    await dbService.db.delete(maintenanceReminders);
+    await dbService.db.delete(diagnosticSessions);
     await dbService.db.delete(invoices);
     await dbService.db.delete(positionsForBuying);
     await dbService.db.delete(storeTransfers);
     await dbService.db.delete(branchEmployees);
-    await dbService.db.delete(branches);
     await dbService.db.delete(appointments);
     await dbService.db.delete(timeSlots);
     await dbService.db.delete(reviews);
@@ -88,6 +101,7 @@ async function seed() {
     await dbService.db.delete(sparePartOrders);
     await dbService.db.delete(payments);
     await dbService.db.delete(orders);
+    await dbService.db.delete(productionPosts);
     await dbService.db.delete(cars);
     await dbService.db.delete(passports);
     await dbService.db.delete(spareParts);
@@ -99,6 +113,10 @@ async function seed() {
     await dbService.db.delete(employees);
     await dbService.db.delete(positions);
     await dbService.db.delete(suppliers);
+    // Break circular Users <-> Branches FK before delete
+    await dbService.db.update(users).set({ branchId: null });
+    await dbService.db.update(branches).set({ managerId: null });
+    await dbService.db.delete(branches);
     await dbService.db.delete(users);
     await dbService.db.delete(roles);
     await dbService.db.delete(tenantSettings);
@@ -128,8 +146,9 @@ async function seed() {
       featurePartnerNetwork: true,
       featureMultiBranch: true,
       featureCorporateClients: true,
-      featureSmsNotifications: true,
       featureEmailNotifications: true,
+      loyaltyPointsPerRub: '0.1',
+      loyaltyMaxSpendPercent: 20,
       isSetupComplete: true,
       setupCompletedAt: pastDate(90),
     }).returning();
@@ -208,6 +227,29 @@ async function seed() {
     const managerUsers = createdUsers.slice(1, 5);
     const customerUsers = createdUsers.slice(5);
 
+    // FT-9: dedicated user to demo predictive maintenance recommendations
+    console.log('Seeding predictive maintenance demo user...');
+    const [predictDemoUser] = await dbService.db.insert(users).values({
+      login: 'predictdemo',
+      name: 'Дмитрий',
+      surName: 'Автов',
+      email: 'predict.demo@gmail.com',
+      phone: '+375291009999',
+      passwordHash,
+      roleId: customerRole.id,
+      tenantId: tenant.id,
+      isBlocked: false,
+      avatarUrl: 'https://ui-avatars.com/api/?name=Dmitry+Autov&background=0ea5e9&color=fff',
+    }).returning();
+
+    const PREDICT_DEMO_MILEAGE = {
+      current: 82600,
+      lastOilService: 73000,
+      lastTireRotation: 68000,
+      lastBrakeService: 53000,
+      lastScheduledMaintenance: 62000,
+    };
+
     // ── Passports ─────────────────────────────────────────────────────────────
     console.log('Seeding passports...');
     const passportsToInsert = customerUsers.slice(0, 100).map((u, i) => ({
@@ -218,6 +260,13 @@ async function seed() {
       tenantId: tenant.id,
     }));
     await dbService.db.insert(passports).values(passportsToInsert as typeof passports.$inferInsert[]);
+    await dbService.db.insert(passports).values({
+      userId: predictDemoUser.id,
+      identityNumber: '4510 999001',
+      birthDate: new Date(1988, 4, 12),
+      gender: 'M',
+      tenantId: tenant.id,
+    });
 
     // ── Positions ─────────────────────────────────────────────────────────────
     console.log('Seeding positions...');
@@ -314,6 +363,27 @@ async function seed() {
     }
     await dbService.db.insert(employeeQualifications).values(qualificationsToInsert);
 
+    const masterCountForDemo = Math.min(10, createdEmployees.length);
+    const demoWorkTypeId = createdWorkTypes[0].id;
+    const extraQualifications: typeof employeeQualifications.$inferInsert[] = [];
+    for (let i = 0; i < masterCountForDemo; i++) {
+      const empId = createdEmployees[i].id;
+      const alreadyHas = qualificationsToInsert.some(
+        q => q.employeeId === empId && q.workTypeId === demoWorkTypeId,
+      );
+      if (!alreadyHas) {
+        extraQualifications.push({
+          employeeId: empId,
+          workTypeId: demoWorkTypeId,
+          level: 3,
+          tenantId: tenant.id,
+        });
+      }
+    }
+    if (extraQualifications.length > 0) {
+      await dbService.db.insert(employeeQualifications).values(extraQualifications);
+    }
+
     // ── Work Schedules ────────────────────────────────────────────────────────
     console.log('Seeding work schedules...');
     const workSchedulesToInsert: typeof workSchedules.$inferInsert[] = [];
@@ -332,6 +402,20 @@ async function seed() {
             tenantId: tenant.id,
           });
         }
+      }
+    }
+    // Current week — for Gantt chart & schedule optimization demo
+    for (const emp of createdEmployees) {
+      for (const dayOffset of [0, 1, 2, 3]) {
+        const start = scheduleDayAt(dayOffset, 8);
+        const end = scheduleDayAt(dayOffset, 20);
+        workSchedulesToInsert.push({
+          employeeId: emp.id,
+          startTime: start,
+          endTime: end,
+          isAvailable: true,
+          tenantId: tenant.id,
+        });
       }
     }
     await dbService.db.insert(workSchedules).values(workSchedulesToInsert);
@@ -418,6 +502,14 @@ async function seed() {
         tenantId: tenant.id,
       }))
     ).returning();
+
+    const optimizeDemoService =
+      createdServices.find(
+        s =>
+          s.workTypeId === createdWorkTypes[0].id &&
+          Number(s.requiredQualificationLevel) <= 2 &&
+          Number(s.durationMinutes) <= 60,
+      ) ?? createdServices.find(s => Number(s.durationMinutes) <= 60)!;
 
     // ── Stores ────────────────────────────────────────────────────────────────
     console.log('Seeding stores...');
@@ -513,12 +605,14 @@ async function seed() {
       { name: 'Диск литой R17 5x114.3', partNumber: 'WHL-ALY-R17', price: '7500', catIdx: 7 },
     ];
     const createdParts = await dbService.db.insert(spareParts).values(
-      sparePartsData.map(p => ({
+      sparePartsData.map((p, i) => ({
         name: p.name,
         partNumber: p.partNumber,
         price: p.price,
         categoryId: createdPartCats[p.catIdx].id,
+        supplierId: createdSuppliers[i % createdSuppliers.length].id,
         tenantId: tenant.id,
+        minQuantity: rnd(5, 20),
       }))
     ).returning();
 
@@ -544,33 +638,55 @@ async function seed() {
     await dbService.db.insert(sparePartStore).values(sparePartStoreData);
 
     // ── PositionsForBuying + Invoices ─────────────────────────────────────────
-    console.log('Seeding purchase orders...');
+    console.log('Seeding purchase orders and supplier invoices...');
+    const purchaseStatuses = ['pending', 'delivered', 'in_transit'] as const;
     const pfbToInsert: typeof positionsForBuying.$inferInsert[] = [];
-    for (let i = 0; i < 30; i++) {
-      pfbToInsert.push({
-        supplierId: createdSuppliers[i % createdSuppliers.length].id,
-        quantity: rnd(20, 200),
-        deliveryDate: i < 15 ? pastDate(rnd(10, 180)) : futureDate(rnd(5, 60)),
-        status: pick(['pending', 'delivered', 'in_transit']),
-        tenantId: tenant.id,
-      });
-    }
-    const createdPfb = await dbService.db.insert(positionsForBuying).values(pfbToInsert).returning();
 
-    const invoicesToInsert: typeof invoices.$inferInsert[] = [];
-    for (let i = 0; i < createdPfb.length; i++) {
-      if (i % 3 !== 2) {
-        const part = createdParts[i % createdParts.length];
-        invoicesToInsert.push({
-          positionForBuyingId: createdPfb[i].id,
-          amount: (parseFloat(part.price) * createdPfb[i].quantity).toString(),
-          invoiceDate: pastDate(rnd(1, 120)),
-          status: pick(['paid', 'paid', 'pending', 'overdue']),
+    for (const supplier of createdSuppliers) {
+      const supplierParts = createdParts.filter(part => part.supplierId === supplier.id);
+      const purchaseCount = rnd(3, 6);
+
+      for (let j = 0; j < purchaseCount; j++) {
+        const part = pick(supplierParts);
+        pfbToInsert.push({
+          supplierId: supplier.id,
+          sparePartId: part.id,
+          quantity: rnd(10, 150),
+          deliveryDate: j % 2 === 0 ? pastDate(rnd(5, 120)) : futureDate(rnd(3, 45)),
+          status: pick([...purchaseStatuses]),
           tenantId: tenant.id,
         });
       }
     }
-    await dbService.db.insert(invoices).values(invoicesToInsert);
+
+    const createdPfb = await dbService.db.insert(positionsForBuying).values(pfbToInsert).returning();
+
+    const invoicesToInsert: typeof invoices.$inferInsert[] = [];
+    for (let i = 0; i < createdPfb.length; i++) {
+      const position = createdPfb[i];
+      const part = createdParts.find(item => item.id === position.sparePartId);
+      const unitPrice = part ? parseFloat(part.price) : 1000;
+      const totalAmount = unitPrice * position.quantity;
+
+      invoicesToInsert.push({
+        positionForBuyingId: position.id,
+        amount: totalAmount.toFixed(2),
+        invoiceDate: pastDate(rnd(1, 90)),
+        status: pick(['paid', 'paid', 'pending', 'overdue']),
+        tenantId: tenant.id,
+      });
+
+      if (i % 4 === 0) {
+        invoicesToInsert.push({
+          positionForBuyingId: position.id,
+          amount: (totalAmount * 0.1).toFixed(2),
+          invoiceDate: pastDate(rnd(1, 30)),
+          status: pick(['paid', 'pending']),
+          tenantId: tenant.id,
+        });
+      }
+    }
+    const createdInvoices = await dbService.db.insert(invoices).values(invoicesToInsert).returning();
 
     // ── Cars ──────────────────────────────────────────────────────────────────
     console.log('Seeding cars...');
@@ -593,6 +709,16 @@ async function seed() {
       }
     }
     const createdCars = await dbService.db.insert(cars).values(carsToInsert).returning();
+
+    const [predictDemoCar] = await dbService.db.insert(cars).values({
+      userId: predictDemoUser.id,
+      brand: 'Toyota',
+      model: 'Camry',
+      information: 'Toyota Camry 2018, 2.5 AT — демо-авто для предиктивного ТО',
+      year: 2018,
+      vin: 'JTDBR32E000999001',
+      licensePlate: 'FT9 AB 7777',
+    }).returning();
 
     // ── Branches ──────────────────────────────────────────────────────────────
     console.log('Seeding branches...');
@@ -621,6 +747,28 @@ async function seed() {
       });
     }
     await dbService.db.insert(branchEmployees).values(branchEmpData);
+
+    // Production posts per branch
+    console.log('Seeding production posts...');
+    const postsData: typeof productionPosts.$inferInsert[] = [];
+    for (const branch of createdBranches) {
+      for (let p = 1; p <= 3; p++) {
+        postsData.push({
+          branchId: branch.id,
+          name: `Пост ${p}`,
+          isActive: true,
+        });
+      }
+    }
+    const createdPosts = await dbService.db.insert(productionPosts).values(postsData).returning();
+
+    // Assign managers to branches
+    for (let i = 0; i < managerUsers.length; i++) {
+      await dbService.db
+        .update(users)
+        .set({ branchId: createdBranches[i % createdBranches.length].id })
+        .where(eq(users.id, managerUsers[i].id));
+    }
 
     // ── Store Transfers ────────────────────────────────────────────────────────
     console.log('Seeding store transfers...');
@@ -665,7 +813,7 @@ async function seed() {
 
     // ── Orders ────────────────────────────────────────────────────────────────
     console.log('Seeding orders (400)...');
-    const statuses = ['pending', 'in_progress', 'completed', 'completed', 'completed', 'cancelled'];
+    const statuses = ['pending', 'diagnosed', 'in_progress', 'quality_check', 'completed', 'completed', 'completed', 'cancelled'];
     const ordersToInsert: typeof orders.$inferInsert[] = [];
     for (let i = 0; i < 400; i++) {
       const custIdx = i % customerUsers.length;
@@ -674,6 +822,8 @@ async function seed() {
         userId: customerUsers[custIdx].id,
         carId: custCars[i % custCars.length].id,
         employeeId: createdEmployees[i % createdEmployees.length].id,
+        branchId: createdBranches[i % createdBranches.length].id,
+        postId: createdPosts[i % createdPosts.length].id,
         status: pickIdx(statuses, i),
         createdAt: pastDate(rnd(0, 365)),
         completedAt: i % 3 !== 2 ? pastDate(rnd(0, 30)) : undefined,
@@ -741,6 +891,86 @@ async function seed() {
     }
     await dbService.db.insert(payments).values(paymentsData);
 
+    // ── Gantt / schedule optimization demo ───────────────────────────────────
+    console.log('Seeding Gantt demo orders (today + 2 days)...');
+    const ganttDemoOrdersData: typeof orders.$inferInsert[] = [];
+    const ganttServiceLinks: { servicesId: string; durationMin: number }[] = [];
+    const masterCount = Math.min(10, createdEmployees.length);
+    const ganttStatuses = ['pending', 'diagnosed', 'in_progress', 'in_progress', 'quality_check'] as const;
+    const ganttServicePool = createdServices.filter(s => Number(s.durationMinutes) <= 90);
+    const ganttServices = ganttServicePool.length > 0 ? ganttServicePool : createdServices.slice(0, 12);
+    const masterNextSlot = new Map<string, Date>();
+    const GANTT_BUFFER_MIN = 10;
+    const DAY_END_HOUR = 19;
+
+    for (const dayOffset of [0, 1, 2]) {
+      // Assigned — 2 orders per master, sequential (visible gaps for optimize demo)
+      for (let i = 0; i < masterCount * 2; i++) {
+        const cust = customerUsers[i % customerUsers.length];
+        const custCars = createdCars.filter(c => c.userId === cust.id);
+        if (custCars.length === 0) continue;
+
+        const emp = createdEmployees[i % masterCount];
+        const slotKey = `${dayOffset}:${emp.id}`;
+        const svc = ganttServices[i % ganttServices.length];
+        const durMin = Number(svc.durationMinutes) || 60;
+
+        const nextStart = masterNextSlot.get(slotKey) ?? scheduleDayAt(dayOffset, 8, 0);
+        const dayEndLimit = scheduleDayAt(dayOffset, DAY_END_HOUR, 0);
+        if (nextStart >= dayEndLimit) continue;
+
+        const slotEnd = new Date(nextStart.getTime() + durMin * 60 * 1000);
+        if (slotEnd > dayEndLimit) continue;
+
+        ganttDemoOrdersData.push({
+          userId: cust.id,
+          carId: custCars[i % custCars.length].id,
+          employeeId: emp.id,
+          branchId: createdBranches[i % createdBranches.length].id,
+          postId: createdPosts[i % createdPosts.length].id,
+          status: pickIdx([...ganttStatuses], i + dayOffset),
+          scheduledStartAt: nextStart,
+          createdAt: nextStart,
+          updatedAt: nextStart,
+        });
+        ganttServiceLinks.push({ servicesId: svc.id, durationMin: durMin });
+
+        masterNextSlot.set(
+          slotKey,
+          new Date(nextStart.getTime() + (durMin + GANTT_BUFFER_MIN) * 60 * 1000),
+        );
+      }
+
+      // Unassigned pending — same service all masters can do
+      for (let i = 0; i < 15; i++) {
+        const cust = customerUsers[(i + 40 + dayOffset * 7) % customerUsers.length];
+        const custCars = createdCars.filter(c => c.userId === cust.id);
+        if (custCars.length === 0) continue;
+
+        ganttDemoOrdersData.push({
+          userId: cust.id,
+          carId: custCars[0].id,
+          branchId: createdBranches[i % createdBranches.length].id,
+          status: 'pending',
+          scheduledStartAt: scheduleDayAt(dayOffset, 9 + (i % 8), (i % 2) * 30),
+          createdAt: new Date(),
+        });
+        ganttServiceLinks.push({
+          servicesId: optimizeDemoService.id,
+          durationMin: Number(optimizeDemoService.durationMinutes) || 60,
+        });
+      }
+    }
+
+    const ganttOrders = await dbService.db.insert(orders).values(ganttDemoOrdersData).returning();
+    await dbService.db.insert(servicesOrders).values(
+      ganttOrders.map((ord, i) => ({
+        orderId: ord.id,
+        servicesId: ganttServiceLinks[i]?.servicesId ?? ganttServices[i % ganttServices.length].id,
+        quantity: 1,
+      })),
+    );
+
     // ── Appointments ──────────────────────────────────────────────────────────
     console.log('Seeding appointments...');
     type ApptStatus = 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
@@ -762,23 +992,41 @@ async function seed() {
         confirmationCode: `APPT${String(1000 + i)}`,
       });
     }
+    // Demo: appointment in ~24h for user1 (cron reminder test)
+    const user1 = customerUsers[0];
+    const user1Cars = createdCars.filter(c => c.userId === user1.id);
+    if (user1Cars.length > 0) {
+      const reminderDate = new Date();
+      reminderDate.setHours(reminderDate.getHours() + 24);
+      apptsData.push({
+        userId: user1.id,
+        carId: user1Cars[0].id,
+        serviceId: createdServices[0].id,
+        employeeId: createdEmployees[0].id,
+        status: 'confirmed',
+        scheduledAt: reminderDate,
+        confirmationCode: 'DEMO24H',
+        notes: 'Демо-запись для теста напоминания за 24ч',
+      });
+    }
     await dbService.db.insert(appointments).values(apptsData);
 
     // ── Subscriptions ─────────────────────────────────────────────────────────
     console.log('Seeding subscriptions...');
-    const subNames = ['Базовый', 'Стандарт', 'Премиум', 'VIP'];
     const subsData: typeof subscriptions.$inferInsert[] = [];
-    for (let i = 0; i < 60; i++) {
-      const startDate = pastDate(rnd(30, 365));
-      const endDate = new Date(startDate);
-      endDate.setMonth(endDate.getMonth() + (3 * ((i % 4) + 1)));
+    for (let i = 0; i < 20; i++) {
+      const employee = createdEmployees[i % createdEmployees.length];
+      const customer = customerUsers[i % customerUsers.length];
+      const dateStart = new Date();
+      const dateEnd = new Date();
+      dateEnd.setMonth(dateEnd.getMonth() + 6);
       subsData.push({
-        userId: customerUsers[i % customerUsers.length].id,
-        employeeId: i % 3 === 0 ? createdEmployees[i % createdEmployees.length].id : undefined,
-        subscriptionName: pickIdx(subNames, i),
-        subscriptionDescription: `Подписка ${pickIdx(subNames, i)} — скидки, приоритетная запись`,
-        dateStart: startDate,
-        dateEnd: endDate,
+        userId: customer.id,
+        employeeId: employee.id,
+        subscriptionName: 'Подписка на рабочего',
+        subscriptionDescription: `Подписка на рабочего ${employee.name} ${employee.surName}`,
+        dateStart,
+        dateEnd,
       });
     }
     await dbService.db.insert(subscriptions).values(subsData);
@@ -799,10 +1047,11 @@ async function seed() {
     for (let i = 0; i < 120; i++) {
       reviewsData.push({
         userId: customerUsers[i % customerUsers.length].id,
-        employeeId: i % 2 === 0 ? createdEmployees[i % createdEmployees.length].id : undefined,
+        employeeId: createdEmployees[i % createdEmployees.length].id,
         description: pickIdx(reviewTexts, i),
         rate: rnd(3, 5),
         createdAt: pastDate(rnd(0, 300)),
+        deletedAt: i % 15 === 0 ? pastDate(rnd(0, 30)) : undefined,
       });
     }
     await dbService.db.insert(reviews).values(reviewsData);
@@ -816,6 +1065,7 @@ async function seed() {
       { code: 'VIP15', name: 'VIP скидка', type: 'percent', value: '15', isActive: true },
       { code: 'WINTER25', name: 'Зимняя акция 25%', type: 'percent', value: '25', isActive: false, startDate: pastDate(120), endDate: pastDate(30) },
       { code: 'BDAY', name: 'День рождения', type: 'percent', value: '12', isActive: true },
+      { code: 'USER1VIP', name: 'Персональная скидка user1', type: 'percent', value: '8', isActive: true, userId: customerUsers[0].id },
     ];
     const createdDiscounts = await dbService.db.insert(discounts).values(discountsData).returning();
 
@@ -833,12 +1083,11 @@ async function seed() {
 
     // ── Loyalty Programs ──────────────────────────────────────────────────────
     console.log('Seeding loyalty programs...');
-    const tiers = ['bronze', 'bronze', 'bronze', 'silver', 'silver', 'gold', 'platinum'] as const;
     const loyaltyData: typeof loyaltyPrograms.$inferInsert[] = customerUsers.slice(0, 100).map((u, i) => ({
       userId: u.id,
-      points: rnd(0, 5000),
-      tier: tiers[i % tiers.length],
-      totalEarned: rnd(500, 20000),
+      points: i === 0 ? 2500 : rnd(0, 5000),
+      tier: i === 0 ? 'gold' as const : (['bronze', 'bronze', 'bronze', 'silver', 'silver', 'gold', 'platinum'] as const)[i % 7],
+      totalEarned: i === 0 ? 8000 : rnd(500, 20000),
       totalSpent: rnd(0, 5000),
     }));
     const createdLoyalty = await dbService.db.insert(loyaltyPrograms).values(loyaltyData).returning();
@@ -897,11 +1146,11 @@ async function seed() {
     // ── Companies (Corporate clients) ─────────────────────────────────────────
     console.log('Seeding companies...');
     const companiesData: typeof companies.$inferInsert[] = [
-      { name: 'ООО "БелЛогистик"', inn: 'BY193456781', address: 'Минск, ул. Промышленная, 1', city: 'Минск', contactPerson: 'Карпов А.В.', phone: '+375291234001', email: 'fleet.bellogistic@gmail.com', managerUserId: managerUsers[0].id },
-      { name: 'ОАО "МинскТранс"', inn: 'BY192356789', address: 'Минск, пр-т Партизанский, 87', city: 'Минск', contactPerson: 'Глинский Б.И.', phone: '+375291234002', email: 'auto.minsktrans@gmail.com', managerUserId: managerUsers[1].id },
-      { name: 'ИП Ходасевич В.С.', inn: 'BY190034561', address: 'Гомель, ул. Ленина, 5', city: 'Гомель', contactPerson: 'Ходасевич В.С.', phone: '+375291234003', email: 'hadas.hodasevich@gmail.com', managerUserId: managerUsers[0].id },
-      { name: 'ООО "ТрансАвто"', inn: 'BY191234567', address: 'Брест, ул. Московская, 112', city: 'Брест', contactPerson: 'Симонов В.Г.', phone: '+375291234004', email: 'transavto.corp@gmail.com', managerUserId: managerUsers[2].id },
-      { name: 'ЗАО "АвтоПарк Плюс"', inn: 'BY193456780', address: 'Минск, ул. Притыцкого, 55', city: 'Минск', contactPerson: 'Купреевич К.Д.', phone: '+375291234005', email: 'avtopark.corp@gmail.com', managerUserId: managerUsers[3].id },
+      { name: 'ООО "БелЛогистик"', inn: 'BY193456781', address: 'Минск, ул. Промышленная, 1', city: 'Минск', contactPerson: 'Карпов А.В.', phone: '+375291234001', email: 'fleet.bellogistic@gmail.com', managerUserId: managerUsers[0].id, bankAccount: 'BY12ALFA30140000000000000000', bic: 'ALFABY2X' },
+      { name: 'ОАО "МинскТранс"', inn: 'BY192356789', address: 'Минск, пр-т Партизанский, 87', city: 'Минск', contactPerson: 'Глинский Б.И.', phone: '+375291234002', email: 'auto.minsktrans@gmail.com', managerUserId: managerUsers[1].id, bankAccount: 'BY22UNBS30140000000000000000', bic: 'UNBSBY2X' },
+      { name: 'ИП Ходасевич В.С.', inn: 'BY190034561', address: 'Гомель, ул. Ленина, 5', city: 'Гомель', contactPerson: 'Ходасевич В.С.', phone: '+375291234003', email: 'hadas.hodasevich@gmail.com', managerUserId: managerUsers[0].id, bankAccount: 'BY33MTBK30140000000000000000', bic: 'MTBKBANK' },
+      { name: 'ООО "ТрансАвто"', inn: 'BY191234567', address: 'Брест, ул. Московская, 112', city: 'Брест', contactPerson: 'Симонов В.Г.', phone: '+375291234004', email: 'transavto.corp@gmail.com', managerUserId: managerUsers[2].id, bankAccount: 'BY44BPSB30140000000000000000', bic: 'BPSBBY2X' },
+      { name: 'ЗАО "АвтоПарк Плюс"', inn: 'BY193456780', address: 'Минск, ул. Притыцкого, 55', city: 'Минск', contactPerson: 'Купреевич К.Д.', phone: '+375291234005', email: 'avtopark.corp@gmail.com', managerUserId: managerUsers[3].id, bankAccount: 'BY55PRIORB30140000000000000000', bic: 'POISBY2X' },
     ];
     const createdCompanies = await dbService.db.insert(companies).values(companiesData).returning();
 
@@ -938,17 +1187,136 @@ async function seed() {
     );
     await dbService.db.insert(companyCars).values(uniqueCompanyCars);
 
+    // Company drivers (user1 as driver for БелЛогистик)
+    await dbService.db.insert(companyDrivers).values([
+      { companyId: createdCompanies[0].id, userId: customerUsers[0].id },
+      { companyId: createdCompanies[0].id, userId: customerUsers[1].id },
+      { companyId: createdCompanies[1].id, userId: customerUsers[2].id },
+    ]);
+
+    // ── FT-9 Predictive maintenance demo data ─────────────────────────────────
+    console.log('Seeding predictive maintenance demo data...');
+    const predictNextOilMileage = PREDICT_DEMO_MILEAGE.lastOilService + 10000;
+    const predictNextTireMileage = PREDICT_DEMO_MILEAGE.lastTireRotation + 15000;
+    const predictNextBrakeMileage = PREDICT_DEMO_MILEAGE.lastBrakeService + 30000;
+    const predictScheduledDueDate = futureDate(28);
+
+    await dbService.db.insert(maintenanceReminders).values([
+      {
+        userId: predictDemoUser.id,
+        carId: predictDemoCar.id,
+        type: 'oil_change',
+        description: 'Замена масла: выполнено ранее',
+        dueMileage: PREDICT_DEMO_MILEAGE.lastOilService,
+        isCompleted: true,
+        isSent: true,
+        createdAt: pastDate(330),
+      },
+      {
+        userId: predictDemoUser.id,
+        carId: predictDemoCar.id,
+        type: 'tire_rotation',
+        description: 'Ротация шин: выполнено ранее',
+        dueMileage: PREDICT_DEMO_MILEAGE.lastTireRotation,
+        isCompleted: true,
+        isSent: true,
+        createdAt: pastDate(150),
+      },
+      {
+        userId: predictDemoUser.id,
+        carId: predictDemoCar.id,
+        type: 'brake_service',
+        description: 'Обслуживание тормозов: выполнено ранее',
+        dueMileage: PREDICT_DEMO_MILEAGE.lastBrakeService,
+        isCompleted: true,
+        isSent: true,
+        createdAt: pastDate(400),
+      },
+      {
+        userId: predictDemoUser.id,
+        carId: predictDemoCar.id,
+        type: 'scheduled_maintenance',
+        description: 'Плановое ТО: выполнено ранее',
+        dueMileage: PREDICT_DEMO_MILEAGE.lastScheduledMaintenance,
+        isCompleted: true,
+        isSent: true,
+        createdAt: pastDate(335),
+      },
+    ]);
+
+    await dbService.db.insert(diagnosticSessions).values([
+      {
+        carId: predictDemoCar.id,
+        employeeId: createdEmployees[0].id,
+        mileage: 75200,
+        notes: 'Диагностика: без ошибок, фиксация пробега для расчёта среднего',
+        createdAt: pastDate(120),
+      },
+      {
+        carId: predictDemoCar.id,
+        employeeId: createdEmployees[1].id,
+        mileage: 78800,
+        notes: 'Контрольный осмотр перед дальней поездкой',
+        createdAt: pastDate(55),
+      },
+      {
+        carId: predictDemoCar.id,
+        employeeId: createdEmployees[0].id,
+        mileage: PREDICT_DEMO_MILEAGE.current,
+        notes: 'Текущий пробег — до замены масла осталось менее 10% интервала',
+        createdAt: pastDate(7),
+      },
+    ]);
+
+    await dbService.db.insert(maintenanceReminders).values([
+      {
+        userId: predictDemoUser.id,
+        carId: predictDemoCar.id,
+        type: 'oil_change',
+        description: `Замена масла: осталось ~${predictNextOilMileage - PREDICT_DEMO_MILEAGE.current} км`,
+        dueMileage: predictNextOilMileage,
+      },
+      {
+        userId: predictDemoUser.id,
+        carId: predictDemoCar.id,
+        type: 'tire_rotation',
+        description: `Ротация шин: осталось ~${predictNextTireMileage - PREDICT_DEMO_MILEAGE.current} км`,
+        dueMileage: predictNextTireMileage,
+      },
+      {
+        userId: predictDemoUser.id,
+        carId: predictDemoCar.id,
+        type: 'brake_service',
+        description: `Обслуживание тормозов: осталось ~${predictNextBrakeMileage - PREDICT_DEMO_MILEAGE.current} км`,
+        dueMileage: predictNextBrakeMileage,
+      },
+      {
+        userId: predictDemoUser.id,
+        carId: predictDemoCar.id,
+        type: 'scheduled_maintenance',
+        description: 'Плановое ТО: осталось ~28 дней',
+        dueDate: predictScheduledDueDate,
+      },
+    ]);
+
     // ── Summary ───────────────────────────────────────────────────────────────
     console.log('\n✅ Seed completed!');
-    console.log(`  Users:           ${createdUsers.length} (1 admin, 4 managers, ${customerUsers.length} customers)`);
+    console.log(`  Users:           ${createdUsers.length + 1} (1 admin, 4 managers, ${customerUsers.length + 1} customers)`);
     console.log(`  Employees:       ${createdEmployees.length}`);
+    console.log(`  Work types:      ${createdWorkTypes.length}`);
+    console.log(`  Qualifications:  ${qualificationsToInsert.length}`);
+    console.log(`  Master subs:     ${subsData.length}`);
     console.log(`  Services:        ${createdServices.length}`);
     console.log(`  Spare parts:     ${createdParts.length}`);
     console.log(`  Stores:          ${createdStores.length}`);
     console.log(`  Suppliers:       ${createdSuppliers.length}`);
+    console.log(`  Purchase orders: ${createdPfb.length}`);
+    console.log(`  Supplier bills:  ${createdInvoices.length}`);
     console.log(`  Cars:            ${createdCars.length}`);
     console.log(`  Branches:        ${createdBranches.length}`);
-    console.log(`  Orders:          ${createdOrders.length}`);
+    console.log(`  Prod. posts:     ${createdPosts.length}`);
+    console.log(`  Orders:          ${createdOrders.length + ganttOrders.length}`);
+    console.log(`  Gantt demo:      ${ganttOrders.length} (today/tomorrow/day+2)`);
     console.log(`  Payments:        ${paymentsData.length}`);
     console.log(`  Appointments:    ${apptsData.length}`);
     console.log(`  Warranties:      ${warrantiesData.length}`);
@@ -956,6 +1324,9 @@ async function seed() {
     console.log(`  Companies:       ${createdCompanies.length}`);
     console.log('\n  Login: admin@gmail.com / password123');
     console.log('  Login: user1@gmail.com / password123');
+    console.log('  Predictive demo: predict.demo@gmail.com / password123');
+    console.log('    → Toyota Camry FT9 AB 7777, пробег ~82600 км');
+    console.log('    → 4 рекомендации ТО в профиле и /diagnostics');
     console.log('  Blocked:         user3@gmail.com, user8@gmail.com');
 
   } catch (error: unknown) {

@@ -2,6 +2,7 @@ import { relations } from 'drizzle-orm';
 import { boolean, index, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { schema } from '../pgSchema';
 import { cars, employees, services, users } from '../schema';
+import { productionPosts } from './branches.model';
 
 export const appointmentStatusEnum = schema.enum('appointment_status', [
   'pending',
@@ -22,6 +23,7 @@ export const timeSlots = schema.table(
     date: timestamp('date', { mode: 'date' }).notNull(),
     startTime: timestamp('startTime', { mode: 'date' }).notNull(),
     endTime: timestamp('endTime', { mode: 'date' }).notNull(),
+    postId: uuid('postId').references(() => productionPosts.id),
     isBooked: boolean('isBooked').default(false).notNull(),
   },
   table => ({
@@ -64,6 +66,10 @@ export const timeSlotsRelations = relations(timeSlots, ({ one, many }) => ({
   employee: one(employees, {
     fields: [timeSlots.employeeId],
     references: [employees.id],
+  }),
+  post: one(productionPosts, {
+    fields: [timeSlots.postId],
+    references: [productionPosts.id],
   }),
   appointments: many(appointments),
 }));

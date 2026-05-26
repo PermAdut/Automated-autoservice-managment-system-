@@ -1,5 +1,11 @@
 import { baseApi } from './baseApi';
-import { SERVER_URL } from '../configs/serverConfig';
+import { downloadAuthedFile } from "../utils/downloadAuthedFile";
+
+export const downloadWarrantyCertificate = (warrantyId: string) =>
+  downloadAuthedFile(
+    `/warranty/${warrantyId}/certificate`,
+    `warranty-${warrantyId.slice(0, 8)}.pdf`,
+  );
 
 export interface Warranty {
   id: string;
@@ -64,9 +70,6 @@ export const warrantyApi = baseApi.injectEndpoints({
     }),
   }),
 });
-
-export const getCertificateUrl = (warrantyId: string) =>
-  `${SERVER_URL}/warranty/${warrantyId}/certificate`;
 
 export const {
   useGetActiveWarrantiesQuery,

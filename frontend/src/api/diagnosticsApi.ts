@@ -8,6 +8,7 @@ export interface DiagnosticSession {
   mileage?: number;
   notes?: string;
   rawData?: string;
+  photoUrls?: string[];
   createdAt: string;
 }
 
@@ -29,6 +30,7 @@ export interface CreateSessionDto {
   mileage?: number;
   notes?: string;
   employeeId?: string;
+  photoUrls?: string[];
   codes?: { codeId: string; notes?: string }[];
 }
 

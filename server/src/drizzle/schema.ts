@@ -16,3 +16,4 @@ export * from './models/warranty.model';
 export * from './models/corporate.model';
 export * from './models/promotions.model';
 export * from './models/tenant.model';
+export * from './models/sync.model';

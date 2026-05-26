@@ -9,6 +9,8 @@ import { DataTable } from "../../ui/data-table";
 import { Button } from "../../ui/button";
 import { Badge } from "../../ui/badge";
 import SupplierForm from "../SupplierForm/SupplierForm";
+import { SupplierDetailModal } from "../SupplierDetailModal/SupplierDetailModal";
+import { useAppSelector } from "../../../hooks/redux";
 import {
   PlusOutlined,
   EditOutlined,
@@ -16,12 +18,17 @@ import {
   ShopOutlined,
   PhoneOutlined,
   EnvironmentOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import { PageLayout } from "../../layout/PageLayout";
 
 const SupplierList: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [detailSupplier, setDetailSupplier] = useState<Supplier | null>(null);
+  const roleName = useAppSelector((state) => state.auth.user?.roleName ?? "");
+  const canManage = roleName === "admin" || roleName === "manager";
+  const canDelete = roleName === "admin";
 
   const {
     data: suppliers = [],
@@ -108,6 +115,14 @@ const SupplierList: React.FC = () => {
           <Button
             variant="ghost"
             size="icon-sm"
+            onClick={() => setDetailSupplier(row.original)}
+            title="Подробнее"
+          >
+            <EyeOutlined />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={() => {
               setEditingId(row.original.id);
               setShowForm(true);
@@ -191,6 +206,15 @@ const SupplierList: React.FC = () => {
             setEditingId(null);
           }}
           supplierId={editingSupplier?.id ?? null}
+        />
+      )}
+
+      {detailSupplier && (
+        <SupplierDetailModal
+          supplier={detailSupplier}
+          canManage={canManage}
+          canDelete={canDelete}
+          onClose={() => setDetailSupplier(null)}
         />
       )}
     </PageLayout>

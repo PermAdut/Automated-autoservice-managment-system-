@@ -37,6 +37,8 @@ import LoyaltyPage from "./components/LoyaltyComponent/LoyaltyPage.tsx";
 import BranchesPage from "./components/BranchComponents/BranchesPage.tsx";
 import CorporatePage from "./components/CorporateComponents/CorporatePage.tsx";
 import SchedulePage from "./components/GanttChart/SchedulePage.tsx";
+import MyNotificationsPage from "./components/NotificationComponents/MyNotificationsPage.tsx";
+import AdminNotificationsPage from "./components/NotificationComponents/AdminNotificationsPage.tsx";
 
 const Router =
   typeof window !== "undefined" && window.location.protocol === "file:"
@@ -202,6 +204,14 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
+                  <Route
+                    path="/notifications"
+                    element={
+                      <ProtectedRoute allowedRoles={["customer", "admin", "manager"]}>
+                        <MyNotificationsPage />
+                      </ProtectedRoute>
+                    }
+                  />
 
                   {/* Admin / Manager only */}
                   <Route
@@ -225,6 +235,14 @@ function App() {
                     element={
                       <ProtectedRoute allowedRoles={["admin", "manager"]}>
                         <SchedulePage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/notifications/admin"
+                    element={
+                      <ProtectedRoute allowedRoles={["admin", "manager"]}>
+                        <AdminNotificationsPage />
                       </ProtectedRoute>
                     }
                   />

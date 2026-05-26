@@ -1,10 +1,10 @@
 export const NOTIFICATION_QUEUE = 'notifications';
 
-export const JOB_SEND_SMS = 'send-sms';
 export const JOB_SEND_EMAIL = 'send-email';
 export const JOB_MAINTENANCE_REMINDER = 'maintenance-reminder';
 export const JOB_ORDER_NOTIFICATION = 'order-notification';
 export const JOB_BOOKING_CONFIRMATION = 'booking-confirmation';
+export const JOB_APPOINTMENT_REMINDER = 'appointment-reminder';
 
 // Default job options: 3 retries with exponential backoff
 export const DEFAULT_JOB_OPTIONS = {
@@ -15,13 +15,6 @@ export const DEFAULT_JOB_OPTIONS = {
 };
 
 // Job data types
-export interface SendSmsJobData {
-  phone: string;
-  message: string;
-  userId?: string;
-  notificationId?: string;
-}
-
 export interface SendEmailJobData {
   to: string;
   subject: string;
@@ -36,7 +29,6 @@ export interface OrderNotificationJobData {
   orderId: string;
   orderNumber: string;
   status: string;
-  userPhone?: string;
   userEmail?: string;
   userName?: string;
   companyName?: string;
@@ -49,7 +41,6 @@ export interface MaintenanceReminderJobData {
   type: string;
   dueDate?: string;
   dueMileage?: number;
-  userPhone?: string;
   userEmail?: string;
   userName?: string;
   companyName?: string;
@@ -62,7 +53,18 @@ export interface BookingConfirmationJobData {
   confirmationCode: string;
   scheduledAt: string;
   serviceName?: string;
-  userPhone?: string;
+  userEmail?: string;
+  userName?: string;
+  companyName?: string;
+  companyPhone?: string;
+}
+
+export interface AppointmentReminderJobData {
+  appointmentId: string;
+  userId: string;
+  scheduledAt: string;
+  confirmationCode?: string;
+  serviceName?: string;
   userEmail?: string;
   userName?: string;
   companyName?: string;

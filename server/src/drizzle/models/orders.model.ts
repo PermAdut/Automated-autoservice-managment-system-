@@ -2,6 +2,7 @@ import { relations } from 'drizzle-orm';
 import {
   bigint,
   index,
+  integer,
   numeric,
   primaryKey,
   timestamp,
@@ -9,6 +10,7 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core';
 import { schema } from '../pgSchema';
+import { branches, productionPosts } from './branches.model';
 import { cars, employees, services, spareParts, users } from '../schema';
 
 export const paymentStatusEnum = schema.enum('payment_status', [
@@ -30,6 +32,10 @@ export const orders = schema.table(
       .references(() => cars.id),
     employeeId: uuid('employeeId')
       .references(() => employees.id),
+    branchId: uuid('branchId').references(() => branches.id),
+    postId: uuid('postId').references(() => productionPosts.id),
+    scheduledStartAt: timestamp('scheduledStartAt', { mode: 'date' }),
+    version: integer('version').default(1).notNull(),
     status: varchar('status', { length: 20 }),
     createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
     updatedAt: timestamp('updatedAt', { mode: 'date' }),
@@ -99,6 +105,14 @@ export const ordersRelations = relations(orders, ({ one, many }) => ({
   employee: one(employees, {
     fields: [orders.employeeId],
     references: [employees.id],
+  }),
+  branch: one(branches, {
+    fields: [orders.branchId],
+    references: [branches.id],
+  }),
+  post: one(productionPosts, {
+    fields: [orders.postId],
+    references: [productionPosts.id],
   }),
   payments: many(payments),
   servicesOrders: many(servicesOrders),

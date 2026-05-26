@@ -24,7 +24,6 @@ const FEATURES = [
   { key: "featureOnlineBooking", label: "Онлайн-запись" },
   { key: "featureVinDecoder", label: "VIN-декодер" },
   { key: "featureLoyaltyProgram", label: "Программа лояльности" },
-  { key: "featureSmsNotifications", label: "SMS-уведомления" },
   { key: "featureEmailNotifications", label: "Email-уведомления" },
   { key: "featureMultiBranch", label: "Мультифилиальность" },
   { key: "featureCorporateClients", label: "Корпоративные клиенты" },
@@ -307,11 +306,6 @@ export default function TenantSettings() {
                 Данные хранятся в переменных окружения сервера. Здесь отображается только статус интеграций.
               </p>
               {[
-                {
-                  name: "SMS.ru",
-                  desc: "SMS_RU_API_ID",
-                  enabled: form.featureSmsNotifications as boolean,
-                },
                 {
                   name: "SMTP Email",
                   desc: "SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS",

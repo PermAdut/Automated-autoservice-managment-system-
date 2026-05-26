@@ -1,4 +1,5 @@
 import { Expose, Type } from 'class-transformer';
+import { PositionForBuyingResponseDto } from './position-for-buying-response.dto';
 
 export class SupplierResponseDto {
   @Expose()
@@ -14,23 +15,6 @@ export class SupplierResponseDto {
   contact: string;
 
   @Expose()
-  @Type(() => Object)
-  positionsForBuying: {
-    id: string;
-    quantity: number;
-    deliverDate: string;
-    status: string;
-    sparePart?: {
-      id: string;
-      name: string;
-      price: number;
-      quantity: number;
-      description: string;
-      category: {
-        id: string;
-        name: string;
-        description: string;
-      };
-    }[];
-  }[];
+  @Type(() => PositionForBuyingResponseDto)
+  positionsForBuying: PositionForBuyingResponseDto[];
 }

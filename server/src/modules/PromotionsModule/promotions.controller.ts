@@ -81,6 +81,12 @@ export class PromotionsController {
     );
   }
 
+  @Get('discounts/personal')
+  @ApiOperation({ summary: 'Get personal discounts for current user' })
+  getPersonalDiscounts(@Request() req: AuthenticatedRequest) {
+    return this.promotionsService.findPersonalDiscounts(req.user.userId);
+  }
+
   @Get('loyalty/my')
   @ApiOperation({ summary: 'Get current user loyalty program info' })
   getMyLoyalty(@Request() req: AuthenticatedRequest) {
@@ -120,13 +126,20 @@ export class PromotionsController {
   @ApiOperation({ summary: 'Spend loyalty points (current user)' })
   spendPoints(
     @Request() req: AuthenticatedRequest,
-    @Body() body: { points: number; orderId?: string; description?: string },
+    @Body()
+    body: {
+      points: number;
+      orderId?: string;
+      description?: string;
+      orderAmount?: number;
+    },
   ) {
     return this.promotionsService.spendPoints(
       req.user.userId,
       body.points,
       body.orderId,
       body.description,
+      body.orderAmount,
     );
   }
 }

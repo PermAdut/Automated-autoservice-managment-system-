@@ -51,7 +51,7 @@ JWT_SECRET=your_long_secret_here
 FRONTEND_URL=http://localhost:5173
 ```
 
-Остальные параметры (AWS S3, SMTP, SMS, Google OAuth, Redis) — опциональны для локальной разработки. Сервер стартует и без них, недоступные функции будут отключены с предупреждением в логах.
+Остальные параметры (AWS S3, SMTP, Google OAuth, Redis) — опциональны для локальной разработки.
 
 ### 3. Создать базу данных
 
@@ -167,7 +167,7 @@ npm run lint             # проверка кода
 | Partners | `/partners` | Партнёрская сеть, API-ключи, перенаправления |
 | Schedule | `/schedule` | Оптимизация постов, диаграмма Ганта |
 | Reports | `/api/v1.0/reports` | Аналитические отчёты, экспорт CSV/PDF |
-| Notifications | `/notifications` | SMS, email, шаблоны, каналы |
+| Notifications | `/notifications` | Email, in-app, шаблоны, каналы |
 | Tenant | `/tenant` | White-label настройки, страницы |
 
 ---
@@ -176,7 +176,7 @@ npm run lint             # проверка кода
 
 Все переменные с описаниями находятся в `server/.env.example`.  
 Обязательные для локального запуска: `DB_*`, `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL`.  
-Остальные (S3, Redis, SMTP, SMS, Google OAuth) — опциональны.
+Остальные (S3, Redis, SMTP, Google OAuth) — опциональны.
 
 ---
 

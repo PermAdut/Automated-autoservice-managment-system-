@@ -27,7 +27,6 @@ export interface TenantBranding {
     partnerNetwork: boolean;
     multiBranch: boolean;
     corporateClients: boolean;
-    smsNotifications: boolean;
     emailNotifications: boolean;
   };
 }
@@ -40,8 +39,7 @@ export interface TenantSettings extends TenantBranding {
   updatedAt: string;
 }
 
-// Separate API for tenant — uses root URL (not /api/v1.0 prefix)
-// since tenant endpoints don't require auth for public branding
+// Separate RTK Query slice for tenant endpoints (public branding + admin settings).
 export interface TenantPage {
   id: string;
   slug: string;
@@ -54,7 +52,7 @@ export interface TenantPage {
 
 export const tenantApi = createApi({
   reducerPath: "tenantApi",
-  baseQuery: fetchBaseQuery({ baseUrl: `${serverConfig.url}` }),
+  baseQuery: fetchBaseQuery({ baseUrl: `${serverConfig.url}/api/v1.0` }),
   tagTypes: ["TenantBranding", "TenantSettings", "TenantPages"],
   endpoints: (builder) => ({
     getPublicBranding: builder.query<TenantBranding, void>({

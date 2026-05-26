@@ -7,9 +7,11 @@ import {
   Post,
   Query,
   Request,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { DiagnosticsService } from './diagnostics.service';
 import { JwtAuthGuard } from '../AuthModule/guards/jwt-auth.guard';
 import { RolesGuard } from '../AuthModule/guards/roles.guard';
@@ -62,6 +64,7 @@ export class DiagnosticsController {
     mileage?: number;
     notes?: string;
     rawData?: string;
+    photoUrls?: string[];
     codes?: { codeId: string; notes?: string }[];
   }) {
     return this.diagnosticsService.createSession(body);
@@ -71,6 +74,15 @@ export class DiagnosticsController {
   @ApiOperation({ summary: 'Get diagnostic sessions for a car' })
   getSessionsByCar(@Param('carId') carId: string) {
     return this.diagnosticsService.getSessionsBycar(carId);
+  }
+
+  @Get('sessions/:id/pdf')
+  @ApiOperation({ summary: 'Download diagnostic session PDF' })
+  async downloadSessionPdf(@Param('id') id: string, @Res() res: Response) {
+    const pdf = await this.diagnosticsService.generateSessionPdf(id);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="diagnostic-${id.slice(0, 8)}.pdf"`);
+    res.send(pdf);
   }
 
   @Get('sessions/:id')

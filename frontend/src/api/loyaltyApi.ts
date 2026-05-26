@@ -31,7 +31,7 @@ export const loyaltyApi = baseApi.injectEndpoints({
       providesTags: ['Loyalty'],
     }),
     getMyLoyaltyTransactions: builder.query<LoyaltyTransaction[], void>({
-      query: () => '/promotions/loyalty/transactions/my',
+      query: () => '/promotions/loyalty/my/transactions',
       providesTags: ['Loyalty'],
     }),
     getActiveDiscounts: builder.query<{ id: string; name: string; code?: string; type: string; value: string; endDate: string }[], void>({

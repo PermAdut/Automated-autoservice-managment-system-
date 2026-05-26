@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { ModalOverlay } from "../ui/modal-overlay";
 import { useLazyGetReportQuery } from "../../api/reportsApi";
 import type { ReportData } from "../../api/reportsApi";
 import { Card, CardContent } from "../ui/card";
@@ -21,6 +23,8 @@ import {
   LoadingOutlined,
   DownloadOutlined,
   FilePdfOutlined,
+  CalendarOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 import { serverConfig } from "../../configs/serverConfig";
 
@@ -35,7 +39,138 @@ const reportTypes = [
   { type: "subscriptions", label: "Подписки и отзывы", icon: <StarOutlined />, color: "bg-amber-50 text-amber-500" },
 ];
 
+const parseSchedule = (value: unknown): string[] => {
+  const text = String(value ?? "");
+  if (!text || text === "-") {
+    return [];
+  }
+  return text.split("\n");
+};
+
+const ScheduleCell: React.FC<{
+  value: unknown;
+  onOpen: () => void;
+}> = ({ value, onOpen }) => {
+  const entries = parseSchedule(value);
+  if (entries.length === 0) {
+    return <>—</>;
+  }
+
+  const shiftLabel =
+    entries.length === 1
+      ? "1 смена"
+      : entries.length < 5
+        ? `${entries.length} смены`
+        : `${entries.length} смен`;
+
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 transition-colors hover:bg-indigo-100"
+    >
+      <CalendarOutlined />
+      {shiftLabel}
+    </button>
+  );
+};
+
+const ScheduleModal: React.FC<{
+  isOpen: boolean;
+  employeeName: string;
+  positionName?: string;
+  entries: string[];
+  onClose: () => void;
+}> = ({ isOpen, employeeName, positionName, entries, onClose }) => {
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = "unset";
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) {
+    return null;
+  }
+
+  return createPortal(
+    <ModalOverlay onClick={onClose}>
+      <div
+        className="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-5 py-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Расписание</h3>
+            <p className="mt-0.5 text-sm text-gray-600">{employeeName}</p>
+            {positionName && (
+              <p className="text-xs text-gray-400">{positionName}</p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            aria-label="Закрыть"
+          >
+            <CloseOutlined />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto px-5 py-4">
+          {entries.length === 0 ? (
+            <p className="py-6 text-center text-sm text-gray-400">
+              Нет записей расписания
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {entries.map((entry, index) => (
+                <li
+                  key={index}
+                  className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2.5 text-sm text-gray-800"
+                >
+                  {entry}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="border-t border-gray-100 px-5 py-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+          >
+            Закрыть
+          </button>
+        </div>
+      </div>
+    </ModalOverlay>,
+    document.body,
+  );
+};
+
 const ReportTable: React.FC<{ data: ReportData }> = ({ data }) => {
+  const [scheduleModal, setScheduleModal] = useState<{
+    employeeName: string;
+    positionName?: string;
+    entries: string[];
+  } | null>(null);
+
   if (data.rows.length === 0) {
     return (
       <div className="text-center py-10 text-gray-400">
@@ -62,7 +197,20 @@ const ReportTable: React.FC<{ data: ReportData }> = ({ data }) => {
               <TableRow key={idx}>
                 {data.columns.map((col) => (
                   <TableCell key={col.key} className="text-sm">
-                    {String(row[col.key] ?? "—")}
+                    {col.key === "schedule" ? (
+                      <ScheduleCell
+                        value={row[col.key]}
+                        onOpen={() =>
+                          setScheduleModal({
+                            employeeName: String(row.employee_name ?? "Сотрудник"),
+                            positionName: String(row.position_name ?? ""),
+                            entries: parseSchedule(row[col.key]),
+                          })
+                        }
+                      />
+                    ) : (
+                      String(row[col.key] ?? "—")
+                    )}
                   </TableCell>
                 ))}
               </TableRow>
@@ -73,6 +221,14 @@ const ReportTable: React.FC<{ data: ReportData }> = ({ data }) => {
       <p className="text-xs text-gray-400 mt-2 text-right">
         Всего строк: {data.rows.length}
       </p>
+
+      <ScheduleModal
+        isOpen={scheduleModal !== null}
+        employeeName={scheduleModal?.employeeName ?? ""}
+        positionName={scheduleModal?.positionName}
+        entries={scheduleModal?.entries ?? []}
+        onClose={() => setScheduleModal(null)}
+      />
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import { FC, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { ModalOverlay } from '../../components/ui/modal-overlay';
 
 interface ModalWarningProps {
   isOpen: boolean;
@@ -28,8 +29,8 @@ export const ModalWarning: FC<ModalWarningProps> = ({
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 sm:p-6 overflow-auto">
-      <div className="bg-white p-6 sm:p-8 rounded-2xl w-full max-w-md shadow-xl border-2 border-gray-200 my-auto m-2.5">
+    <ModalOverlay className="overflow-auto">
+      <div className="bg-white p-6 sm:p-8 rounded-2xl w-full max-w-md shadow-xl border-2 border-gray-200">
         <h3 className="mb-6 text-2xl font-bold text-gray-900 text-center">
           Подтверждение
         </h3>
@@ -51,7 +52,7 @@ export const ModalWarning: FC<ModalWarningProps> = ({
           </button>
         </div>
       </div>
-    </div>,
+    </ModalOverlay>,
     document.body
   );
 };

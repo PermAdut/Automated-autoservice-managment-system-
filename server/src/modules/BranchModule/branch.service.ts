@@ -4,18 +4,20 @@ import {
   branches,
   branchEmployees,
   storeTransfers,
+  productionPosts,
 } from '../database/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, type SQL } from 'drizzle-orm';
 
 @Injectable()
 export class BranchService {
   constructor(private readonly databaseService: DatabaseService) {}
 
-  async findAll(activeOnly = true) {
+  async findAll(activeOnly = true, branchId?: string) {
     const query = this.databaseService.db.select().from(branches).$dynamic();
-    if (activeOnly) {
-      query.where(eq(branches.isActive, true));
-    }
+    const conditions: SQL[] = [];
+    if (activeOnly) conditions.push(eq(branches.isActive, true));
+    if (branchId) conditions.push(eq(branches.id, branchId));
+    if (conditions.length) query.where(and(...conditions));
     return query.orderBy(branches.name);
   }
 
@@ -139,5 +141,43 @@ export class BranchService {
       query.where(eq(storeTransfers.fromStoreId, fromStoreId));
     }
     return query.orderBy(desc(storeTransfers.createdAt));
+  }
+
+  async getPosts(branchId: string) {
+    return this.databaseService.db
+      .select()
+      .from(productionPosts)
+      .where(eq(productionPosts.branchId, branchId))
+      .orderBy(productionPosts.name);
+  }
+
+  async createPost(branchId: string, name: string) {
+    await this.findById(branchId);
+    const [created] = await this.databaseService.db
+      .insert(productionPosts)
+      .values({ branchId, name })
+      .returning();
+    return created;
+  }
+
+  async updatePost(
+    postId: string,
+    data: Partial<{ name: string; isActive: boolean }>,
+  ) {
+    const [updated] = await this.databaseService.db
+      .update(productionPosts)
+      .set(data)
+      .where(eq(productionPosts.id, postId))
+      .returning();
+    if (!updated) throw new NotFoundException(`Post ${postId} not found`);
+    return updated;
+  }
+
+  async deletePost(postId: string) {
+    const [deleted] = await this.databaseService.db
+      .delete(productionPosts)
+      .where(eq(productionPosts.id, postId))
+      .returning();
+    if (!deleted) throw new NotFoundException(`Post ${postId} not found`);
   }
 }

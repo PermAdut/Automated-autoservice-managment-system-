@@ -1,19 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { DatabaseService } from '../database/database.service';
-import { maintenanceReminders, users, cars, tenantSettings } from '../database/schema';
-import { eq, and, lte, gte } from 'drizzle-orm';
+import { maintenanceReminders, users, cars, tenantSettings, appointments, services } from '../database/schema';
+import { eq, and, lte, gte, sql } from 'drizzle-orm';
 import { NotificationQueueService } from '../QueueModule/services/notification-queue.service';
 
 /**
  * Scheduled jobs that push work onto the notification queue.
  *
  * The scheduler (cron) only identifies what needs to be done and enqueues jobs.
- * Actual SMS/email sending happens in NotificationProcessor (worker process).
+ * Actual email sending happens in NotificationProcessor (worker process).
  *
  * Benefits over inline sending:
  *  - HTTP response not blocked waiting for external APIs
- *  - Automatic retry on transient SMS/email failures
+ *  - Automatic retry on transient email failures
  *  - Worker scales independently from the API server
  *  - Job deduplication via jobId prevents double-sends on restart
  */
@@ -53,7 +53,6 @@ export class ScheduledNotificationsService {
         dueDate: maintenanceReminders.dueDate,
         dueMileage: maintenanceReminders.dueMileage,
         userEmail: users.email,
-        userPhone: users.phone,
         userName: users.name,
         carBrand: cars.brand,
         carModel: cars.model,
@@ -85,7 +84,6 @@ export class ScheduledNotificationsService {
         type: reminder.type,
         dueDate: reminder.dueDate?.toLocaleDateString('ru-RU'),
         dueMileage: reminder.dueMileage ?? undefined,
-        userPhone: reminder.userPhone ?? undefined,
         userEmail: reminder.userEmail ?? undefined,
         userName: reminder.userName ?? undefined,
         companyName,
@@ -94,6 +92,59 @@ export class ScheduledNotificationsService {
     }
 
     this.logger.log('Maintenance reminder jobs enqueued');
+  }
+
+  /** Every hour — queue appointment reminders ~24h before scheduledAt */
+  @Cron(CronExpression.EVERY_HOUR)
+  async sendAppointmentReminders() {
+    const now = new Date();
+    const windowStart = new Date(now.getTime() + 23 * 60 * 60 * 1000);
+    const windowEnd = new Date(now.getTime() + 25 * 60 * 60 * 1000);
+
+    const [tenant] = await this.databaseService.db
+      .select({ companyName: tenantSettings.companyName, phone: tenantSettings.phone })
+      .from(tenantSettings)
+      .limit(1);
+
+    const companyName = tenant?.companyName || 'АвтоСервис';
+    const companyPhone = tenant?.phone || undefined;
+
+    const upcoming = await this.databaseService.readDb
+      .select({
+        appointmentId: appointments.id,
+        userId: appointments.userId,
+        scheduledAt: appointments.scheduledAt,
+        confirmationCode: appointments.confirmationCode,
+        userEmail: users.email,
+        userName: users.name,
+        serviceName: services.name,
+      })
+      .from(appointments)
+      .leftJoin(users, eq(appointments.userId, users.id))
+      .leftJoin(services, eq(appointments.serviceId, services.id))
+      .where(
+        and(
+          sql`${appointments.status} IN ('pending', 'confirmed')`,
+          gte(appointments.scheduledAt, windowStart),
+          lte(appointments.scheduledAt, windowEnd),
+        ),
+      );
+
+    this.logger.log(`Queueing ${upcoming.length} appointment reminders (24h window)`);
+
+    for (const appt of upcoming) {
+      await this.notificationQueue.addAppointmentReminderJob({
+        appointmentId: appt.appointmentId,
+        userId: appt.userId,
+        scheduledAt: appt.scheduledAt.toLocaleString('ru-RU'),
+        confirmationCode: appt.confirmationCode ?? undefined,
+        serviceName: appt.serviceName ?? undefined,
+        userEmail: appt.userEmail ?? undefined,
+        userName: appt.userName ?? undefined,
+        companyName,
+        companyPhone,
+      });
+    }
   }
 
   /** Midnight — placeholder for future batch warranty status updates */

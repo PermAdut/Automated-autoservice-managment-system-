@@ -1,4 +1,4 @@
-import { boolean, integer, jsonb, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { boolean, integer, jsonb, numeric, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { schema } from '../pgSchema';
 
 /**
@@ -43,8 +43,11 @@ export const tenantSettings = schema.table('TenantSettings', {
   featurePartnerNetwork: boolean('featurePartnerNetwork').default(false).notNull(),
   featureMultiBranch: boolean('featureMultiBranch').default(false).notNull(),
   featureCorporateClients: boolean('featureCorporateClients').default(false).notNull(),
-  featureSmsNotifications: boolean('featureSmsNotifications').default(false).notNull(),
   featureEmailNotifications: boolean('featureEmailNotifications').default(false).notNull(),
+
+  // Loyalty settings
+  loyaltyPointsPerRub: numeric('loyaltyPointsPerRub').default('0.1').notNull(),
+  loyaltyMaxSpendPercent: integer('loyaltyMaxSpendPercent').default(20).notNull(),
 
   // Business limits
   maxEmployees: integer('maxEmployees').default(50),

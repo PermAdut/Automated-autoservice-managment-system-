@@ -9,15 +9,9 @@ import { PageLayout } from "../layout/PageLayout";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { cn } from "../../lib/utils";
+import { getOrderStatusLabel, ORDER_STATUS_COLORS } from "../../utils/orderStatus";
 
-const STATUS_COLORS: Record<string, string> = {
-  pending:    "bg-yellow-100 border-yellow-300 text-yellow-800",
-  created:    "bg-blue-100  border-blue-300  text-blue-800",
-  in_progress:"bg-indigo-100 border-indigo-300 text-indigo-800",
-  completed:  "bg-green-100 border-green-300 text-green-800",
-  cancelled:  "bg-gray-100  border-gray-300  text-gray-500",
-  urgent:     "bg-red-100   border-red-300   text-red-800",
-};
+const STATUS_COLORS = ORDER_STATUS_COLORS;
 
 function parseTime(iso: string) {
   const d = new Date(iso);
@@ -34,13 +28,57 @@ const HOURS = Array.from({ length: 13 }, (_, i) => i + 8); // 8:00 – 20:00
 const DAY_START = 8;
 const DAY_END = 21;
 const TOTAL_HOURS = DAY_END - DAY_START;
+const LANE_HEIGHT = 44;
 
 interface DragState {
   slotOrderId: string;
   sourceEmployeeId: string;
 }
 
-function GanttSlot({ slot, onDragStart }: { slot: ScheduleSlot; onDragStart: () => void }) {
+type SlotWithLane = ScheduleSlot & { lane: number };
+
+function assignLanes(slots: ScheduleSlot[]): SlotWithLane[] {
+  const sorted = [...slots].sort(
+    (a, b) =>
+      parseTime(a.startAt) - parseTime(b.startAt) ||
+      parseTime(a.endAt) - parseTime(b.endAt),
+  );
+  const laneEnds: number[] = [];
+  const result: SlotWithLane[] = [];
+
+  for (const slot of sorted) {
+    const start = parseTime(slot.startAt);
+    const end = parseTime(slot.endAt);
+    let lane = laneEnds.findIndex(endAt => endAt <= start);
+    if (lane === -1) {
+      lane = laneEnds.length;
+      laneEnds.push(end);
+    } else {
+      laneEnds[lane] = end;
+    }
+    result.push({ ...slot, lane });
+  }
+
+  return result;
+}
+
+function GanttSlot({
+  slot,
+  lane,
+  isDragging,
+  isDropTarget,
+  onDragStart,
+  onDragEnd,
+  onDrop,
+}: {
+  slot: ScheduleSlot;
+  lane: number;
+  isDragging: boolean;
+  isDropTarget: boolean;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+  onDrop: () => void;
+}) {
   const start = parseTime(slot.startAt);
   const end = parseTime(slot.endAt);
   const leftPct = ((start - DAY_START) / TOTAL_HOURS) * 100;
@@ -50,12 +88,37 @@ function GanttSlot({ slot, onDragStart }: { slot: ScheduleSlot; onDragStart: () 
   return (
     <div
       draggable
-      onDragStart={onDragStart}
-      style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
+      onDragStart={(e) => {
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", slot.orderId);
+        onDragStart();
+      }}
+      onDragEnd={onDragEnd}
+      onDragOver={(e) => {
+        if (isDropTarget) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+        }
+      }}
+      onDrop={(e) => {
+        if (isDropTarget) {
+          e.preventDefault();
+          e.stopPropagation();
+          onDrop();
+        }
+      }}
+      style={{
+        left: `${leftPct}%`,
+        width: `${widthPct}%`,
+        top: `${4 + lane * LANE_HEIGHT}px`,
+        height: `${LANE_HEIGHT - 8}px`,
+      }}
       className={cn(
-        "absolute top-1 bottom-1 rounded-lg border text-xs px-2 py-1 cursor-grab overflow-hidden select-none z-10",
+        "absolute rounded-lg border text-xs px-2 py-1 cursor-grab overflow-hidden select-none z-10",
         "flex flex-col justify-center shadow-sm hover:shadow-md transition-shadow",
         colorClass,
+        isDragging && "opacity-40 cursor-grabbing pointer-events-none",
+        isDropTarget && "ring-2 ring-blue-400 ring-inset",
       )}
       title={slot.serviceNames.join(", ") || `Заказ #${slot.orderId.slice(0, 6)}`}
     >
@@ -75,7 +138,7 @@ export default function SchedulePage() {
   const [lastResult, setLastResult] = useState<{ assignments: number; unscheduled: number } | null>(null);
 
   const handleOptimize = async () => {
-    const result = await optimize({ windowHours: 8 }).unwrap();
+    const result = await optimize({ date }).unwrap();
     setLastResult({ assignments: result.assignments.length, unscheduled: result.unscheduled.length });
     refetch();
   };
@@ -85,9 +148,14 @@ export default function SchedulePage() {
       setDragState(null);
       return;
     }
-    await reassign({ orderId: dragState.slotOrderId, employeeId: targetEmployeeId });
-    setDragState(null);
-    refetch();
+    try {
+      await reassign({ orderId: dragState.slotOrderId, employeeId: targetEmployeeId }).unwrap();
+      refetch();
+    } catch {
+      // keep dragState cleared below
+    } finally {
+      setDragState(null);
+    }
   };
 
   const totalSlots = ganttRows.reduce((sum, r) => sum + r.slots.length, 0);
@@ -97,7 +165,9 @@ export default function SchedulePage() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Расписание</h1>
-          <p className="text-gray-500 text-sm mt-0.5">Диаграмма Ганта — загрузка мастеров</p>
+          <p className="text-gray-500 text-sm mt-0.5">
+            Диаграмма Ганта — загрузка мастеров. «Оптимизировать» назначает неназначенные заказы на выбранную дату.
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <input
@@ -122,7 +192,7 @@ export default function SchedulePage() {
       <div className="flex items-center gap-4 text-xs flex-wrap">
         {Object.entries(STATUS_COLORS).map(([status, cls]) => (
           <span key={status} className={cn("px-2 py-0.5 rounded border", cls)}>
-            {status === "pending" ? "Ожидает" : status === "in_progress" ? "В работе" : status === "completed" ? "Завершён" : status === "urgent" ? "Срочный" : status}
+            {getOrderStatusLabel(status)}
           </span>
         ))}
         <span className="text-gray-400">Перетаскивайте карточки для переназначения</span>
@@ -154,26 +224,53 @@ export default function SchedulePage() {
               </div>
             </div>
 
-            {ganttRows.map((row) => (
+            {ganttRows.map((row) => {
+              const isDropTarget =
+                !!dragState && dragState.sourceEmployeeId !== row.employeeId;
+              const slotsWithLanes = assignLanes(row.slots);
+              const laneCount = Math.max(
+                1,
+                ...slotsWithLanes.map(s => s.lane + 1),
+              );
+              const rowHeight = laneCount * LANE_HEIGHT + 8;
+
+              return (
               <div
                 key={row.employeeId}
                 className={cn(
                   "flex border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors",
-                  dragState && dragState.sourceEmployeeId !== row.employeeId && "bg-blue-50/30",
+                  isDropTarget && "bg-blue-50/30",
                 )}
-                onDragOver={e => e.preventDefault()}
-                onDrop={() => handleDrop(row.employeeId)}
               >
                 {/* Employee label */}
                 <div className="w-40 shrink-0 px-4 py-3 flex items-center">
                   <div>
                     <p className="text-sm font-medium text-gray-800 truncate">{row.employeeName}</p>
-                    <p className="text-xs text-gray-400">{row.slots.length} заказов</p>
+                    <p className="text-xs text-gray-400">
+                      {row.slots.length} заказов
+                      {laneCount > 1 ? ` · ${laneCount} дорожки` : ""}
+                    </p>
                   </div>
                 </div>
 
                 {/* Timeline */}
-                <div className="flex-1 relative min-h-[52px]">
+                <div
+                  className={cn(
+                    "flex-1 relative",
+                    isDropTarget && "bg-blue-50/30 outline outline-blue-200 -outline-offset-1",
+                  )}
+                  style={{ minHeight: rowHeight }}
+                  onDragOver={(e) => {
+                    if (!isDropTarget) return;
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                  }}
+                  onDrop={(e) => {
+                    if (!isDropTarget) return;
+                    e.preventDefault();
+                    void handleDrop(row.employeeId);
+                  }}
+                >
                   {/* Hour grid lines */}
                   <div className="absolute inset-0 flex pointer-events-none">
                     {HOURS.map(h => (
@@ -181,16 +278,24 @@ export default function SchedulePage() {
                     ))}
                   </div>
 
-                  {row.slots.map(slot => (
+                  {slotsWithLanes.map(slot => (
                     <GanttSlot
                       key={slot.orderId}
                       slot={slot}
-                      onDragStart={() => setDragState({ slotOrderId: slot.orderId, sourceEmployeeId: row.employeeId })}
+                      lane={slot.lane}
+                      isDragging={dragState?.slotOrderId === slot.orderId}
+                      isDropTarget={isDropTarget}
+                      onDragStart={() =>
+                        setDragState({ slotOrderId: slot.orderId, sourceEmployeeId: row.employeeId })
+                      }
+                      onDragEnd={() => setDragState(null)}
+                      onDrop={() => void handleDrop(row.employeeId)}
                     />
                   ))}
                 </div>
               </div>
-            ))}
+            );
+            })}
           </CardContent>
         </Card>
       )}

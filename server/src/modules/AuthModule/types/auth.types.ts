@@ -15,6 +15,7 @@ export interface JwtUser {
   email: string;
   roleId: string;
   roleName?: string;
+  branchId?: string | null;
   id?: string;
 }
 

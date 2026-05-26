@@ -1,17 +1,42 @@
 import { baseApi } from "./baseApi";
 import { apiTags } from "./tags";
 
+export interface SupplierPosition {
+  id: string;
+  quantity: number;
+  deliverDate: string;
+  status: string;
+  sparePartName?: string;
+  sparePartNumber?: string;
+}
+
 export interface Supplier {
   id: string;
   name: string;
   contact: string;
   address: string;
-  positionsForBuying?: {
-    id: string;
-    quantity: number;
-    deliverDate: string;
-    status: string;
-  }[];
+  positionsForBuying?: SupplierPosition[];
+}
+
+export interface Invoice {
+  id: string;
+  positionForBuyingId: string;
+  amount: string;
+  invoiceDate: string;
+  status: string;
+}
+
+export type InvoiceStatus = "paid" | "pending" | "overdue";
+
+export interface CreateInvoicePayload {
+  positionForBuyingId: string;
+  amount: number;
+  status: InvoiceStatus;
+}
+
+export interface UpdateInvoicePayload {
+  amount?: number;
+  status?: InvoiceStatus;
 }
 
 export const suppliersApi = baseApi.injectEndpoints({
@@ -59,6 +84,53 @@ export const suppliersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [apiTags.SUPPLIERS],
     }),
+    getInvoicesByPosition: builder.query<Invoice[], string>({
+      query: (positionId) => `/supplier/position/${positionId}/invoices`,
+      providesTags: (_result, _error, positionId) => [
+        { type: apiTags.INVOICES, id: positionId },
+      ],
+    }),
+    getInvoiceById: builder.query<Invoice, string>({
+      query: (id) => `/supplier/invoice/${id}`,
+      providesTags: (_result, _error, id) => [{ type: apiTags.INVOICE, id }],
+    }),
+    createInvoice: builder.mutation<Invoice, CreateInvoicePayload>({
+      query: (body) => ({
+        url: "/supplier/invoice",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { positionForBuyingId }) => [
+        { type: apiTags.INVOICES, id: positionForBuyingId },
+      ],
+    }),
+    updateInvoice: builder.mutation<
+      Invoice,
+      { id: string; positionId: string; data: UpdateInvoicePayload }
+    >({
+      query: ({ id, data }) => ({
+        url: `/supplier/invoice/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: (_result, _error, { id, positionId }) => [
+        { type: apiTags.INVOICE, id },
+        { type: apiTags.INVOICES, id: positionId },
+      ],
+    }),
+    deleteInvoice: builder.mutation<
+      void,
+      { id: string; positionId: string }
+    >({
+      query: ({ id }) => ({
+        url: `/supplier/invoice/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_result, _error, { id, positionId }) => [
+        { type: apiTags.INVOICE, id },
+        { type: apiTags.INVOICES, id: positionId },
+      ],
+    }),
   }),
 });
 
@@ -68,4 +140,9 @@ export const {
   useCreateSupplierMutation,
   useUpdateSupplierMutation,
   useDeleteSupplierMutation,
+  useGetInvoicesByPositionQuery,
+  useGetInvoiceByIdQuery,
+  useCreateInvoiceMutation,
+  useUpdateInvoiceMutation,
+  useDeleteInvoiceMutation,
 } = suppliersApi;

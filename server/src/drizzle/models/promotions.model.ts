@@ -49,6 +49,7 @@ export const discounts = schema.table(
     isActive: boolean('isActive').default(true).notNull(),
     startDate: timestamp('startDate', { mode: 'date' }),
     endDate: timestamp('endDate', { mode: 'date' }),
+    userId: uuid('userId').references(() => users.id),
     createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
   },
   table => ({
@@ -114,7 +115,11 @@ export const loyaltyTransactions = schema.table(
   })
 );
 
-export const discountsRelations = relations(discounts, ({ many }) => ({
+export const discountsRelations = relations(discounts, ({ one, many }) => ({
+  user: one(users, {
+    fields: [discounts.userId],
+    references: [users.id],
+  }),
   orderDiscounts: many(orderDiscounts),
 }));
 

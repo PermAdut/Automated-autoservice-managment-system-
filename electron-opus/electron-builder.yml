@@ -18,14 +18,13 @@ mac:
   notarize: false
   target:
     - dmg
-    - zip
 dmg:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: managment-system.${ext}
 win:
   target:
     - nsis
 nsis:
-  artifactName: ${name}-${version}-setup.${ext}
+  artifactName: managment-system.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always

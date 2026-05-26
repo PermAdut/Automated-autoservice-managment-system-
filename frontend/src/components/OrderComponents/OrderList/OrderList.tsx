@@ -191,7 +191,6 @@ const OrderList: React.FC = () => {
                 status={order.status}
                 createdAt={order.createdAt}
                 updatedAt={order.updatedAt}
-                completedAt={order.completedAt}
                 services={order.services}
                 sparePart={order.sparePart}
               />

@@ -22,8 +22,6 @@
 | Brute-force: 5 попыток / 1 мин | ✅ | Redis key `login_fail:{email}` — `auth.service.ts` (`MAX_ATTEMPTS=5`, `BLOCK_TTL=60`) |
 | JWT guard на защищённых routes | ✅ | `JwtAuthGuard` — `guards/jwt-auth.guard.ts`; глобально в модулях через `@UseGuards` |
 | Публичные endpoints | ✅ | `@Public()` — `decorators/public.decorator.ts` |
-| OS secure storage (desktop) | ⚠️ | Токены в `localStorage`, не keychain — `baseApi.ts`, `authSlice.ts` |
-| Роль guest | ⚠️ | Есть в seed и fallback `roleName: 'guest'` — в ТЗ не описана |
 
 ### Backend
 
@@ -80,6 +78,39 @@ sequenceDiagram
   Auth-->>UI: access_token, refresh_token, user
   UI->>UI: localStorage.setItem tokens
 ```
+
+## Тест-кейсы
+
+### TC-1.1 Успешный вход по email и паролю
+
+**Роль:** admin (`admin@gmail.com` / `password123`)
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | `POST /auth/login` с email и password | 200, `access_token`, `refresh_token`, объект `user` с role |
+| 2 | Запрос `GET /api/v1.0/users/profile/me` с `Authorization: Bearer {access_token}` | 200, профиль admin |
+| 3 | Повторный login manager1@gmail.com / password123 | 200, в `user.roleName` — `manager` |
+
+### TC-1.2 Блокировка после 5 неудачных попыток
+
+**Роль:** customer (`user1@gmail.com` / `password123`)
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | 5× `POST /auth/login` с неверным password | После 5-й попытки 429 или сообщение о блокировке |
+| 2 | 6-й запрос с **верным** password в течение 60 сек | 429 — вход заблокирован |
+| 3 | Подождать 60 сек, login с верным password | 200, токены выданы |
+
+### TC-1.3 Refresh, logout и RBAC
+
+**Роль:** manager (`manager1@gmail.com` / `password123`)
+
+| Шаг | Действие | Ожидаемый результат |
+|---|---|---|
+| 1 | `POST /auth/refresh` с refresh_token | 200, новый access_token |
+| 2 | `POST /auth/logout` с refresh_token | 204, refresh удалён из `RefreshTokens` |
+| 3 | Повторный refresh со старым refresh_token | 401 Unauthorized |
+| 4 | Без токена: `DELETE /api/v1.0/users/:id` | 401; с токеном manager — 403 (только admin) |
 
 ## Пробелы
 

@@ -12,6 +12,7 @@ import { PageLayout } from "../layout/PageLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
+import { serverConfig } from "../../configs/serverConfig";
 import { cn } from "../../lib/utils";
 
 const reminderTypeLabels: Record<string, string> = {
@@ -70,6 +71,23 @@ function SessionCard({ session }: { session: DiagnosticSession }) {
             <p className="text-sm text-gray-500 mt-0.5">Пробег: {session.mileage.toLocaleString()} км</p>
           )}
           {session.notes && <p className="text-sm text-gray-600 mt-1">{session.notes}</p>}
+          {session.photoUrls && session.photoUrls.length > 0 && (
+            <div className="flex gap-2 mt-2 flex-wrap">
+              {session.photoUrls.map((url) => (
+                <a key={url} href={url} target="_blank" rel="noreferrer" className="text-xs text-indigo-600 underline">
+                  Фото
+                </a>
+              ))}
+            </div>
+          )}
+          <a
+            href={`${serverConfig.url}/api/v1.0/diagnostics/sessions/${session.id}/pdf`}
+            className="text-xs text-indigo-600 hover:underline mt-2 inline-block"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Скачать PDF
+          </a>
         </div>
       </div>
     </div>
